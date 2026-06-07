@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Klyph — capture a thought from anywhere and send it to Slack, Notion, Google Calendar, and more. One keystroke."
+    />
+    <title>Klyph — Capture anywhere. Send anywhere.</title>
+    <link rel="icon" href="/klyph-sphere.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <div class="page-curtain" aria-hidden="true">
+      <div class="page-curtain-orb">
+        <img src="/klyph-sphere.svg" alt="" width="80" height="80" />
+      </div>
+    </div>
+
+    <div class="scroll-progress" aria-hidden="true"></div>
+    <div class="cursor-spotlight" aria-hidden="true"></div>
+    <div class="bg-noise" aria-hidden="true"></div>
+    <div class="bg-blobs" aria-hidden="true">
+      <div class="bg-blob bg-blob-1"></div>
+      <div class="bg-blob bg-blob-2"></div>
+      <div class="bg-blob bg-blob-3"></div>
+    </div>
+    <div class="bg-particles" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span>
+    </div>
+
+    <header class="site-nav" data-reveal>
+      <div class="site-nav-inner">
+        <a class="brand" href="#">
+          <img src="/klyph-sphere.svg" alt="" width="28" height="28" class="brand-orb" />
+          <span>Klyph</span>
+        </a>
+        <nav aria-label="Primary">
+          <a href="#capture">Capture</a>
+          <a href="#smart">Smart</a>
+          <a href="#integrations">Integrations</a>
+          <a href="#privacy">Privacy</a>
+        </nav>
+        <a class="nav-cta magnetic" href="#download"><span>Get the app</span></a>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- Hero -->
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow" data-reveal>Desktop capture, reimagined</p>
+          <h1 id="hero-title" class="hero-title">
+            <span class="word">Think it.</span>
+            <span class="word">Capture it.</span>
+            <span class="word word-accent">Send it.</span>
+          </h1>
+          <p class="hero-lead" data-reveal data-reveal-delay="2">
+            A global hotkey opens a minimal prompt box. Type a thought, hit Enter — it lands in
+            Slack, Notion, Google Calendar, or stays in your local history.
+          </p>
+          <div class="hero-actions" data-reveal data-reveal-delay="3">
+            <a class="btn btn-primary magnetic" href="#download"><span>Download for Windows</span></a>
+            <a class="btn btn-ghost magnetic" href="#capture"><span>See how it works</span></a>
+          </div>
+          <p class="hero-note" data-reveal data-reveal-delay="4">
+            Beta · Free · <kbd class="inline-kbd">Ctrl</kbd>+<kbd class="inline-kbd">Shift</kbd>+<kbd class="inline-kbd">Space</kbd> from anywhere
+          </p>
+        </div>
+
+        <div class="hero-visual" data-reveal data-reveal-delay="2">
+          <div class="glow glow-hero" aria-hidden="true"></div>
+          <div class="hero-orb-bg" aria-hidden="true">
+            <img src="/klyph-sphere.svg" alt="" width="320" height="320" />
+          </div>
+          <figure class="product-frame product-frame-hero tilt" aria-label="Klyph capture window preview">
+            <div class="mock-capture mock-capture-hero">
+              <div class="mock-capture-header">
+                <img src="/klyph-sphere.svg" alt="" width="18" height="18" />
+                <span>Klyph</span>
+                <span class="mock-pill"><span class="mock-dot"></span>Capture</span>
+              </div>
+              <div class="mock-prompt" data-typewriter>
+                <span class="typewriter-text"></span><span class="caret"></span>
+              </div>
+              <div class="mock-meta">
+                <span class="mock-chip mock-chip-on" data-chip-delay="0">Slack</span>
+                <span class="mock-chip mock-chip-on" data-chip-delay="1">Notion</span>
+                <span class="mock-chip" data-chip-delay="2">GCal</span>
+                <span class="mock-time">Tomorrow · 3:00 PM</span>
+              </div>
+              <div class="mock-footer">
+                <span>Send to</span>
+                <span class="mock-kbd">Enter</span>
+                <span class="mock-kbd">Esc</span>
+              </div>
+            </div>
+          </figure>
+          <div class="hero-toast" aria-hidden="true" data-hero-toast>
+            <span class="hero-toast-check">✓</span>
+            <span class="hero-toast-text">Sent to <strong>Slack</strong></span>
+          </div>
+
+          <!-- Floating UI: history glance -->
+          <div class="hero-float hero-float-history" aria-hidden="true">
+            <div class="hero-float-eyebrow">History · earlier today</div>
+            <div class="hero-float-row">
+              <span class="hero-float-dot"></span>
+              Email Sarah about Q3 roadmap
+              <span class="hero-float-tag">Notion</span>
+            </div>
+            <div class="hero-float-row hero-float-row-muted">
+              <span class="hero-float-dot"></span>
+              Standup notes — orb polish
+              <span class="hero-float-tag">Slack</span>
+            </div>
+          </div>
+
+          <!-- Floating UI: tag pill -->
+          <div class="hero-float hero-float-tag-card" aria-hidden="true">
+            <span class="hero-float-key">#</span>
+            <span>idea</span>
+            <span class="hero-float-divider"></span>
+            <span class="hero-float-key">⌘</span>
+            <span>K</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stats strip -->
+      <section class="stats-strip" aria-label="At a glance">
+        <div class="stat" data-reveal>
+          <div class="stat-num"><span data-counter="0">0</span></div>
+          <div class="stat-label">clicks to capture</div>
+        </div>
+        <div class="stat" data-reveal data-reveal-delay="1">
+          <div class="stat-num"><span data-counter="1">0</span></div>
+          <div class="stat-label">keystroke, anywhere</div>
+        </div>
+        <div class="stat" data-reveal data-reveal-delay="2">
+          <div class="stat-num"><span data-counter="7">0</span></div>
+          <div class="stat-label">destinations, your call</div>
+        </div>
+        <div class="stat" data-reveal data-reveal-delay="3">
+          <div class="stat-num"><span class="stat-infinity">∞</span></div>
+          <div class="stat-label">searchable history</div>
+        </div>
+      </section>
+
+      <!-- Manifesto -->
+      <section class="section section-manifesto" aria-label="Manifesto">
+        <p class="manifesto" data-reveal>
+          A capture surface should
+          <span class="accent-serif">disappear</span>
+          when you don't need it, and arrive without ceremony when you do.
+          It should respect both your hands and your attention.
+          <span class="manifesto-sig">Nothing more is needed.<br />Nothing less will do.</span>
+        </p>
+      </section>
+
+      <!-- Chapter I -->
+      <div class="chapter" aria-hidden="true">
+        <span class="chapter-line"></span>
+        <span class="chapter-num">I</span>
+        <span class="chapter-title">The surface</span>
+        <span class="chapter-line"></span>
+      </div>
+
+      <!-- Integrations slider -->
+      <section class="slider-wrap" aria-label="Where captures go">
+        <p class="marquee-label">Sends captures to</p>
+
+        <div class="logo-slider" data-slider role="tablist" aria-label="Integrations">
+          <button type="button" class="logo-card" role="tab" aria-selected="true" data-slide="0" data-label="One-click webhook into any Slack channel.">
+            <span class="logo-card-glow" aria-hidden="true"></span>
+            <span class="brand-logo brand-logo-lg" data-logo="slack"></span>
+            <span class="logo-name">Slack</span>
+          </button>
+          <button type="button" class="logo-card" role="tab" aria-selected="false" data-slide="1" data-label="Append to a page or insert into a database.">
+            <span class="logo-card-glow" aria-hidden="true"></span>
+            <span class="brand-logo brand-logo-lg" data-logo="notion"></span>
+            <span class="logo-name">Notion</span>
+          </button>
+          <button type="button" class="logo-card" role="tab" aria-selected="false" data-slide="2" data-label="Timed text auto-routes into Calendar.">
+            <span class="logo-card-glow" aria-hidden="true"></span>
+            <span class="brand-logo brand-logo-lg" data-logo="gcal"></span>
+            <span class="logo-name">Google Calendar</span>
+          </button>
+          <button type="button" class="logo-card" role="tab" aria-selected="false" data-slide="3" data-label="Drop thoughts into any Discord server.">
+            <span class="logo-card-glow" aria-hidden="true"></span>
+            <span class="brand-logo brand-logo-lg" data-logo="discord"></span>
+            <span class="logo-name">Discord</span>
+          </button>
+          <button type="button" class="logo-card" role="tab" aria-selected="false" data-slide="4" data-label="Quick-add tasks to your Google list.">
+            <span class="logo-card-glow" aria-hidden="true"></span>
+            <span class="brand-logo brand-logo-lg" data-logo="gtasks"></span>
+            <span class="logo-name">Google Tasks</span>
+          </button>
+          <button type="button" class="logo-card" role="tab" aria-selected="false" data-slide="5" data-label="Save straight to Apple Notes on macOS.">
+            <span class="logo-card-glow" aria-hidden="true"></span>
+            <span class="brand-logo brand-logo-lg" data-logo="notes"></span>
+            <span class="logo-name">Apple Notes</span>
+          </button>
+          <button type="button" class="logo-card" role="tab" aria-selected="false" data-slide="6" data-label="Keep it offline — searchable history stays on your device.">
+            <span class="logo-card-glow" aria-hidden="true"></span>
+            <span class="brand-logo brand-logo-lg" data-logo="local"></span>
+            <span class="logo-name">On Device</span>
+          </button>
+        </div>
+
+        <div class="slider-caption-wrap">
+          <p class="slider-caption" data-slider-caption>One-click webhook into any Slack channel.</p>
+        </div>
+
+        <div class="slider-progress" aria-hidden="true">
+          <span data-slider-progress></span>
+        </div>
+      </section>
+
+      <!-- Bento grid — features at a glance -->
+      <section class="section section-bento" aria-labelledby="bento-title">
+        <div class="section-intro center" data-reveal>
+          <p class="eyebrow">Designed for thinking</p>
+          <h2 id="bento-title">
+            A small surface,<br />
+            <span class="accent-serif">considered</span> in every detail.
+          </h2>
+        </div>
+
+        <div class="bento" data-reveal data-reveal-delay="1">
+          <!-- Big hero cell: capture from anywhere -->
+          <article class="bento-card bento-1">
+            <div class="bento-card-body">
+              <p class="bento-eyebrow">01 · The capture</p>
+              <h3 class="bento-h">Anywhere a thought<br /> can interrupt&nbsp;you.</h3>
+              <p class="bento-p">
+                Browser. IDE. Spreadsheet. The capture box opens on top, takes one line,
+                and disappears.
+              </p>
+            </div>
+            <div class="bento-art bento-art-orb">
+              <div class="bento-orb-glow"></div>
+              <img src="/klyph-sphere.svg" alt="" width="200" height="200" />
+            </div>
+          </article>
+
+          <!-- Tags & lists -->
+          <article class="bento-card bento-2">
+            <p class="bento-eyebrow">02</p>
+            <h3 class="bento-h-sm">Tags &amp; lists,<br />without a sidebar.</h3>
+            <div class="bento-chips">
+              <span class="mock-tag mock-tag-on">Work</span>
+              <span class="mock-tag">Personal</span>
+              <span class="mock-tag">Idea</span>
+              <span class="mock-tag">Read later</span>
+            </div>
+          </article>
+
+          <!-- Lives in tray -->
+          <article class="bento-card bento-3">
+            <p class="bento-eyebrow">03</p>
+            <h3 class="bento-h-sm">Lives in the tray.<br />Quiet until you call.</h3>
+            <div class="bento-tray">
+              <div class="mock-tray">
+                <span class="mock-tray-icon"><img src="/klyph-sphere.svg" alt="" width="14" height="14" /></span>
+                <span class="mock-tray-app"><span class="mock-tray-dot"></span>chrome.exe</span>
+                <span class="mock-tray-time">11:42</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Smart times -->
+          <article class="bento-card bento-4">
+            <p class="bento-eyebrow">04</p>
+            <h3 class="bento-h-sm">Times find<br />the right home.</h3>
+            <div class="bento-cal">
+              <span class="bento-cal-time">Fri · 5:00 PM</span>
+              <span class="bento-cal-arrow">→</span>
+              <span class="brand-logo" data-logo="gcal"></span>
+            </div>
+          </article>
+
+          <!-- Local-first wide -->
+          <article class="bento-card bento-5">
+            <div class="bento-card-body">
+              <p class="bento-eyebrow">05</p>
+              <h3 class="bento-h-sm">Yours by default.<br />Cloud is opt-in.</h3>
+              <p class="bento-p">
+                Every capture saves to a local SQLite store before any network call.
+                You decide what leaves your machine.
+              </p>
+            </div>
+            <div class="bento-art bento-art-local">
+              <span class="brand-logo brand-logo-xl" data-logo="local"></span>
+              <span class="bento-badge">On device</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Hotkey + tray flow -->
+      <section class="section section-hotkey" id="hotkey" aria-labelledby="hotkey-title">
+        <div class="section-intro center" data-reveal>
+          <p class="eyebrow">The flow</p>
+          <h2 id="hotkey-title">From tray to thought<br />in under a second.</h2>
+          <p>
+            Klyph lives quietly in your tray. Hit the shortcut from a browser tab, IDE, or
+            spreadsheet — the capture box arrives, you type, you're back to work.
+          </p>
+        </div>
+
+        <div class="tray-flow" data-reveal data-reveal-delay="1">
+          <!-- Step 1: tray icon -->
+          <div class="tray-step">
+            <div class="tray-frame">
+              <div class="mock-tray">
+                <span class="mock-tray-icon"><img src="/klyph-sphere.svg" alt="" width="14" height="14" /></span>
+                <span class="mock-tray-app"><span class="mock-tray-dot"></span>chrome.exe</span>
+                <span class="mock-tray-time">11:42</span>
+              </div>
+            </div>
+            <p class="tray-step-label"><span>01</span> Lives in the tray</p>
+          </div>
+
+          <span class="tray-arrow" aria-hidden="true">→</span>
+
+          <!-- Step 2: hotkey -->
+          <div class="tray-step">
+            <div class="tray-frame tray-frame-keys">
+              <div class="keycap-row" id="hotkey-keys">
+                <kbd>Ctrl</kbd>
+                <span class="key-plus">+</span>
+                <kbd>Shift</kbd>
+                <span class="key-plus">+</span>
+                <kbd>Space</kbd>
+              </div>
+            </div>
+            <p class="tray-step-label"><span>02</span> Press the hotkey</p>
+          </div>
+
+          <span class="tray-arrow" aria-hidden="true">→</span>
+
+          <!-- Step 3: capture window opens -->
+          <div class="tray-step">
+            <div class="tray-frame">
+              <div class="mock-mini-capture">
+                <span class="mock-mini-caret"></span>
+                <span class="mock-mini-text">_</span>
+              </div>
+            </div>
+            <p class="tray-step-label"><span>03</span> Type. Hit Enter.</p>
+          </div>
+        </div>
+
+        <p class="hotkey-caption">Windows · <kbd class="inline-kbd">Cmd</kbd>+<kbd class="inline-kbd">Shift</kbd>+<kbd class="inline-kbd">Space</kbd> on macOS</p>
+      </section>
+
+      <!-- Capture -->
+      <section class="section section-capture" id="capture" aria-labelledby="capture-title">
+        <div class="section-intro" data-reveal>
+          <p class="eyebrow">The capture box</p>
+          <h2 id="capture-title">Built like a command palette.<br />Not a notes app.</h2>
+          <p>
+            Focus and Distraction lanes, tags, lists, and smart routing — without leaving the flow
+            of your work.
+          </p>
+        </div>
+
+        <figure class="product-stage" data-reveal data-reveal-delay="1">
+          <div class="glow glow-stage" aria-hidden="true"></div>
+          <div class="product-frame product-frame-wide tilt">
+            <div class="mock-capture mock-capture-wide">
+              <div class="mock-capture-header">
+                <img src="/klyph-sphere.svg" alt="" width="18" height="18" />
+                <span>Klyph</span>
+                <div class="mock-lanes">
+                  <span class="mock-lane mock-lane-on">Focus</span>
+                  <span class="mock-lane">Distraction</span>
+                </div>
+              </div>
+              <div class="mock-prompt mock-prompt-filled">
+                Ship beta build to testers · review onboarding copy
+              </div>
+              <div class="mock-row">
+                <div class="mock-tags">
+                  <span class="mock-tag mock-tag-on">Work</span>
+                  <span class="mock-tag">Personal</span>
+                  <span class="mock-tag">Idea</span>
+                </div>
+                <div class="mock-list">Inbox ▾</div>
+              </div>
+              <div class="mock-meta" data-ripple-chips>
+                <span class="mock-chip mock-chip-on">Slack</span>
+                <span class="mock-chip mock-chip-on">Discord</span>
+                <span class="mock-chip">Notion</span>
+                <span class="mock-chip mock-chip-on">GTasks</span>
+              </div>
+            </div>
+          </div>
+          <figcaption class="stage-caption">Lanes, tags, lists, and Send to — all in one surface.</figcaption>
+        </figure>
+      </section>
+
+      <!-- Chapter II -->
+      <div class="chapter" aria-hidden="true">
+        <span class="chapter-line"></span>
+        <span class="chapter-num">II</span>
+        <span class="chapter-title">The intelligence</span>
+        <span class="chapter-line"></span>
+      </div>
+
+      <!-- Smart routing -->
+      <section class="section section-smart" id="smart" aria-labelledby="smart-title">
+        <div class="section-intro center" data-reveal>
+          <p class="eyebrow">Smart routing</p>
+          <h2 id="smart-title">Type a time.<br />Calendar handles the rest.</h2>
+          <p>
+            Klyph spots dates, times, and intent in your text, and offers the right
+            destination without you reaching for the mouse.
+          </p>
+        </div>
+
+        <figure class="product-stage smart-stage" data-reveal data-reveal-delay="1">
+          <div class="glow glow-stage" aria-hidden="true"></div>
+          <div class="product-frame product-frame-mid tilt">
+            <div class="mock-capture mock-capture-smart">
+              <div class="mock-capture-header">
+                <img src="/klyph-sphere.svg" alt="" width="18" height="18" />
+                <span>Klyph</span>
+                <span class="mock-pill"><span class="mock-dot"></span>Capture</span>
+              </div>
+              <div class="mock-prompt mock-prompt-filled">
+                Call mom <mark class="time-mark">Friday at 5pm</mark> — birthday plans
+              </div>
+              <div class="smart-suggest" data-smart-suggest>
+                <span class="brand-logo" data-logo="gcal"></span>
+                <span class="smart-suggest-text">
+                  Detected time — add to <strong>Google Calendar</strong>
+                </span>
+                <button class="smart-suggest-btn" type="button">Accept</button>
+              </div>
+              <div class="mock-footer">
+                <span>Send to</span>
+                <span class="mock-kbd">Enter</span>
+                <span class="mock-kbd">Esc</span>
+              </div>
+            </div>
+          </div>
+          <figcaption class="stage-caption">No menus, no second window — just the right destination, suggested.</figcaption>
+        </figure>
+      </section>
+
+      <!-- Integrations -->
+      <section class="section section-integrations" id="integrations" aria-labelledby="int-title">
+        <div class="split">
+          <div class="section-copy" data-reveal>
+            <p class="eyebrow">Integrations</p>
+            <h2 id="int-title">Configured once.<br />Sent on capture.</h2>
+            <p>
+              Connect Slack, Discord, Notion, and Google during setup. Enable destinations per
+              capture with a tap — timed text automatically routes to Google Calendar.
+            </p>
+            <ul class="int-list">
+              <li>Slack & Discord webhooks</li>
+              <li>Notion pages & databases</li>
+              <li>Google Tasks & Calendar</li>
+              <li>Apple Notes on macOS</li>
+            </ul>
+          </div>
+
+          <figure class="product-frame product-frame-tall tilt" data-reveal data-reveal-delay="1">
+            <div class="mock-onboard">
+              <div class="mock-onboard-orb">
+                <img src="/klyph-sphere.svg" alt="" width="72" height="72" class="float-orb" />
+              </div>
+              <h3>Connect your apps</h3>
+              <p>One-click OAuth for each destination.</p>
+              <div class="mock-connect-rows" data-stagger>
+                <div class="mock-connect-row"><span class="brand-logo" data-logo="slack"></span>Slack <span class="mock-status">Connected</span></div>
+                <div class="mock-connect-row"><span class="brand-logo" data-logo="notion"></span>Notion <span class="mock-status">Connected</span></div>
+                <div class="mock-connect-row"><span class="brand-logo" data-logo="google"></span>Google <span class="mock-status">Connect</span></div>
+                <div class="mock-connect-row"><span class="brand-logo" data-logo="discord"></span>Discord <span class="mock-status">Connect</span></div>
+              </div>
+            </div>
+          </figure>
+        </div>
+      </section>
+
+      <!-- History -->
+      <section class="section section-history" id="history" aria-labelledby="history-title">
+        <div class="section-intro center" data-reveal>
+          <p class="eyebrow">History</p>
+          <h2 id="history-title">Every capture, searchable.<br />Edit and re-sync anytime.</h2>
+        </div>
+
+        <figure class="product-stage" data-reveal data-reveal-delay="1">
+          <div class="product-frame product-frame-wide tilt">
+            <div class="mock-history">
+              <div class="mock-history-head">
+                <span>History</span>
+                <span class="mock-pill"><span data-counter="12">0</span> today</span>
+              </div>
+              <div class="mock-history-search" data-history-search>
+                <span class="mock-history-search-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="7"/>
+                    <path d="m20 20-3.5-3.5"/>
+                  </svg>
+                </span>
+                <span class="mock-history-search-input" data-search-input></span>
+                <span class="mock-history-search-caret"></span>
+                <span class="mock-history-search-count" data-search-count>4 results</span>
+              </div>
+              <div class="mock-history-rows" data-stagger>
+                <div class="mock-history-row" data-row>
+                  <span class="mock-history-text">Remind me to email Sarah <em>Friday</em> 9am</span>
+                  <span class="mock-sync ok">Synced</span>
+                </div>
+                <div class="mock-history-row" data-row>
+                  <span class="mock-history-text">Parking lot: check competitor pricing page</span>
+                  <span class="mock-sync ok">Synced</span>
+                </div>
+                <div class="mock-history-row mock-history-row-active" data-row>
+                  <span class="mock-history-text">Beta feedback doc — onboarding orb + OAuth URL</span>
+                  <span class="mock-sync">Local</span>
+                </div>
+                <div class="mock-history-row" data-row>
+                  <span class="mock-history-text">Standup notes for Klyph launch</span>
+                  <span class="mock-sync ok">Synced</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </figure>
+      </section>
+
+      <!-- Quote moment -->
+      <section class="section section-quote" aria-label="Beta feedback">
+        <div class="quote-inner" data-reveal>
+          <span class="quote-mark" aria-hidden="true">"</span>
+          <blockquote class="quote-text">
+            <span class="accent-serif">I stopped opening Notion to jot one-liners.</span>
+            Klyph became the place a thought lands before I forget it,
+            and the place it gets routed from.
+          </blockquote>
+          <footer class="quote-attribution">
+            <span class="quote-avatar" aria-hidden="true">M</span>
+            <div>
+              <div class="quote-name">Maya R.</div>
+              <div class="quote-role">Beta tester · Designer</div>
+            </div>
+          </footer>
+        </div>
+      </section>
+
+      <!-- Chapter III -->
+      <div class="chapter" aria-hidden="true">
+        <span class="chapter-line"></span>
+        <span class="chapter-num">III</span>
+        <span class="chapter-title">On your device</span>
+        <span class="chapter-line"></span>
+      </div>
+
+      <!-- Privacy / On-Device -->
+      <section class="section section-privacy" id="privacy" aria-labelledby="privacy-title">
+        <div class="privacy-grid">
+          <div class="section-copy" data-reveal>
+            <p class="eyebrow">On device</p>
+            <h2 id="privacy-title">Your thoughts<br />stay yours.</h2>
+            <p>
+              Every capture saves locally first. Connect destinations only if you want — you can
+              run Klyph completely offline with zero accounts.
+            </p>
+            <ul class="int-list privacy-list">
+              <li>Local SQLite history on your machine</li>
+              <li>No telemetry, no analytics</li>
+              <li>OAuth tokens stay on disk, never on a server</li>
+              <li>Sync only what you choose, when you choose</li>
+            </ul>
+          </div>
+
+          <div class="privacy-art" data-reveal data-reveal-delay="1" aria-hidden="true">
+            <div class="privacy-orbit privacy-orbit-1"></div>
+            <div class="privacy-orbit privacy-orbit-2"></div>
+            <div class="privacy-orbit privacy-orbit-3"></div>
+            <div class="privacy-satellite privacy-satellite-1"><span class="brand-logo" data-logo="slack"></span></div>
+            <div class="privacy-satellite privacy-satellite-2"><span class="brand-logo" data-logo="notion"></span></div>
+            <div class="privacy-satellite privacy-satellite-3"><span class="brand-logo" data-logo="gcal"></span></div>
+            <div class="privacy-satellite privacy-satellite-4"><span class="brand-logo" data-logo="discord"></span></div>
+            <div class="privacy-center">
+              <span class="brand-logo" data-logo="local"></span>
+              <span class="privacy-center-label">On device</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section class="section section-cta" id="download" aria-labelledby="cta-title">
+        <div class="cta-inner" data-reveal>
+          <img class="cta-orb float-orb" src="/klyph-sphere.svg" alt="" width="88" height="88" />
+          <h2 id="cta-title">Ready to capture faster?</h2>
+          <p>Join the beta. Install, connect your apps, and press Ctrl+Shift+Space.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary magnetic" href="#"><span>Download for Windows</span></a>
+            <a class="btn btn-ghost magnetic" href="https://github.com"><span>View on GitHub</span></a>
+          </div>
+          <p class="cta-fine">Point both buttons to your GitHub Release or installer URL before sharing.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-grid">
+        <div class="footer-brand">
+          <a class="brand" href="#">
+            <img src="/klyph-sphere.svg" alt="" width="32" height="32" class="brand-orb" />
+            <span>Klyph</span>
+          </a>
+          <p class="footer-tagline">
+            <span class="accent-serif">A small surface</span> for catching the thought before it leaves.
+          </p>
+          <p class="footer-meta">Built with Tauri · React · Rust</p>
+        </div>
+
+        <div class="footer-col">
+          <p class="footer-col-title">Product</p>
+          <a href="#capture">Capture</a>
+          <a href="#smart">Smart routing</a>
+          <a href="#integrations">Integrations</a>
+          <a href="#privacy">On device</a>
+        </div>
+
+        <div class="footer-col">
+          <p class="footer-col-title">Resources</p>
+          <a href="#download">Download</a>
+          <a href="https://github.com">GitHub</a>
+          <a href="https://github.com">Release notes</a>
+          <a href="mailto:hi@klyph.app">Contact</a>
+        </div>
+
+        <div class="footer-col">
+          <p class="footer-col-title">For</p>
+          <a href="#">Developers</a>
+          <a href="#">Writers</a>
+          <a href="#">Founders</a>
+          <a href="#">Students</a>
+        </div>
+      </div>
+
+      <div class="site-footer-base">
+        <span>© 2026 Klyph · Beta v0.1</span>
+        <span class="footer-locale">English · Made for desktops</span>
+      </div>
+    </footer>
+
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>

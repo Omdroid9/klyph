@@ -1,0 +1,65 @@
+{
+    "$schema":  "../node_modules/@tauri-apps/cli/config.schema.json",
+    "productName":  "Klyph",
+    "version":  "0.1.0",
+    "identifier":  "app.klyph",
+    "build":  {
+                  "frontendDist":  "../dist",
+                  "devUrl":  "http://127.0.0.1:1420",
+                  "beforeDevCommand":  "npm run dev",
+                  "beforeBuildCommand":  "npm run build"
+              },
+    "app":  {
+                "macOSPrivateApi":  true,
+                "windows":  [
+                                {
+                                    "label":  "main",
+                                    "title":  "Klyph",
+                                    "width":  640,
+                                    "height":  620,
+                                    "minWidth":  640,
+                                    "minHeight":  620,
+                                    "visible":  false,
+                                    "resizable":  true,
+                                    "fullscreen":  false,
+                                    "decorations":  false,
+                                    "transparent":  true,
+                                    "alwaysOnTop":  true,
+                                    "skipTaskbar":  true,
+                                    "center":  true
+                                },
+                                {
+                                    "label":  "library",
+                                    "title":  "Klyph Library",
+                                    "width":  1080,
+                                    "height":  720,
+                                    "minWidth":  860,
+                                    "minHeight":  560,
+                                    "visible":  false,
+                                    "resizable":  true,
+                                    "fullscreen":  false,
+                                    "decorations":  true,
+                                    "transparent":  false,
+                                    "alwaysOnTop":  false,
+                                    "skipTaskbar":  false,
+                                    "center":  true
+                                }
+                            ],
+                "security":  {
+                                 "csp":  null
+                             }
+            },
+    "bundle":  {
+                   "active":  true,
+                   "targets":  "all",
+                   "icon":  [
+                                "icons/tray-32.png",
+                                "icons/128x128.png",
+                                "icons/128x128@2x.png",
+                                "icons/icon.icns",
+                                "icons/icon.ico"
+                            ]
+               }
+}
+
+

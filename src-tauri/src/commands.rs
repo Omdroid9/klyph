@@ -1,0 +1,210 @@
+use tauri::State;
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
+
+use crate::{default_hotkey, tray_tooltip, window, AppState, TRAY_ID};
+
+#[tauri::command]
+pub fn show_capture_window(app: tauri::AppHandle) -> Result<(), String> {
+  window::show_capture_window(&app)
+}
+
+#[tauri::command]
+pub fn hide_capture_window(app: tauri::AppHandle) -> Result<(), String> {
+  window::hide_capture_window(&app)
+}
+
+#[tauri::command]
+pub fn exit_app(app: tauri::AppHandle) {
+  window::quit_app(&app);
+}
+
+#[tauri::command]
+pub fn open_settings_window(app: tauri::AppHandle) -> Result<(), String> {
+  window::open_settings_window(&app)
+}
+
+#[tauri::command]
+pub fn open_history_window(app: tauri::AppHandle) -> Result<(), String> {
+  window::show_history_window(&app)
+}
+
+#[tauri::command]
+pub fn show_library_window(app: tauri::AppHandle) -> Result<(), String> {
+  window::show_library_window(&app)
+}
+
+#[tauri::command]
+pub fn hide_library_window(app: tauri::AppHandle) -> Result<(), String> {
+  window::hide_library_window(&app)
+}
+
+#[tauri::command]
+pub fn get_default_hotkey() -> String {
+  default_hotkey().to_string()
+}
+
+#[tauri::command]
+pub fn get_active_hotkey(state: State<'_, AppState>) -> Result<String, String> {
+  state
+    .hotkey
+    .lock()
+    .map(|value| value.clone())
+    .map_err(|_| "Unable to read active hotkey".to_string())
+}
+
+#[tauri::command]
+pub fn set_capture_hotkey(
+  app: tauri::AppHandle,
+  state: State<'_, AppState>,
+  hotkey: String,
+) -> Result<(), String> {
+  let normalized = hotkey.trim();
+  if normalized.is_empty() {
+    return Err("Hotkey cannot be empty".to_string());
+  }
+
+  let parsed_shortcut: Shortcut = normalized
+    .parse()
+    .map_err(|_| "Invalid hotkey format. Example: Ctrl+Shift+Space".to_string())?;
+
+  // Only unregister the previous capture shortcut. The library shortcut
+  // is owned by a separate slot in AppState and must survive a rebind.
+  let previous_capture = state
+    .hotkey
+    .lock()
+    .ok()
+    .map(|guard| guard.clone())
+    .and_then(|s| s.parse::<Shortcut>().ok());
+  if let Some(previous) = previous_capture {
+    let _ = app.global_shortcut().unregister(previous);
+  }
+
+  if let Err(error) = app.global_shortcut().register(parsed_shortcut) {
+    // Never leave the app with zero capture shortcuts after a failed update.
+    if let Ok(fallback) = default_hotkey().parse::<Shortcut>() {
+      let _ = app.global_shortcut().register(fallback);
+      if let Ok(mut value) = state.hotkey.lock() {
+        *value = default_hotkey().to_string();
+      }
+    }
+    return Err(error.to_string());
+  }
+
+  let mut value = state
+    .hotkey
+    .lock()
+    .map_err(|_| "Unable to update hotkey".to_string())?;
+  *value = normalized.to_string();
+
+  Ok(())
+}
+
+#[tauri::command]
+pub fn update_tray_tooltip(
+  app: tauri::AppHandle,
+  captures_today: u32,
+  last_sync: String,
+) -> Result<(), String> {
+  let tooltip = tray_tooltip(captures_today, &last_sync);
+  if let Some(tray) = app.tray_by_id(TRAY_ID) {
+    tray
+      .set_tooltip(Some(tooltip))
+      .map_err(|error| error.to_string())?;
+  }
+  Ok(())
+}
+
+#[tauri::command]
+pub fn open_external_url(url: String) -> Result<(), String> {
+  let trimmed = url.trim();
+  if trimmed.is_empty() {
+    return Err("URL cannot be empty".to_string());
+  }
+
+  open::that(trimmed).map_err(|error| error.to_string())?;
+  Ok(())
+}
+
+/// Create a note in the macOS Notes app via AppleScript, with no external
+/// helper process. Values are passed as `osascript` arguments (argv) rather
+/// than interpolated into the script, so note content cannot break out of the
+/// script or inject AppleScript.
+#[tauri::command]
+pub fn create_apple_note(folder: String, title: String, body: String) -> Result<(), String> {
+  #[cfg(target_os = "macos")]
+  {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+
+    let folder = {
+      let trimmed = folder.trim();
+      if trimmed.is_empty() {
+        "Klyph".to_string()
+      } else {
+        trimmed.to_string()
+      }
+    };
+
+    // argv: 1 = folder, 2 = title, 3 = body (HTML). The first line of a note
+    // becomes its title in Notes, so we prepend the title as a heading.
+    let script = r#"on run argv
+  set folderName to item 1 of argv
+  set noteTitle to item 2 of argv
+  set noteBody to item 3 of argv
+  set noteHtml to "<div><b>" & noteTitle & "</b></div>" & noteBody
+  tell application "Notes"
+    set targetAccount to default account
+    tell targetAccount
+      if not (exists folder folderName) then
+        make new folder with properties {name:folderName}
+      end if
+      make new note at folder folderName with properties {body:noteHtml}
+    end tell
+  end tell
+end run"#;
+
+    let mut child = Command::new("osascript")
+      .arg("-")
+      .arg(&folder)
+      .arg(&title)
+      .arg(&body)
+      .stdin(Stdio::piped())
+      .stdout(Stdio::piped())
+      .stderr(Stdio::piped())
+      .spawn()
+      .map_err(|error| format!("Could not launch osascript: {error}"))?;
+
+    {
+      let mut stdin = child
+        .stdin
+        .take()
+        .ok_or_else(|| "Could not write AppleScript to osascript".to_string())?;
+      stdin
+        .write_all(script.as_bytes())
+        .map_err(|error| format!("Could not send AppleScript: {error}"))?;
+    }
+
+    let output = child
+      .wait_with_output()
+      .map_err(|error| format!("osascript did not complete: {error}"))?;
+
+    if !output.status.success() {
+      let stderr = String::from_utf8_lossy(&output.stderr);
+      let message = stderr.trim();
+      let detail = if message.is_empty() {
+        "Apple Notes automation failed. Grant Klyph permission to control Notes in System Settings > Privacy & Security > Automation.".to_string()
+      } else {
+        message.to_string()
+      };
+      return Err(detail);
+    }
+
+    Ok(())
+  }
+
+  #[cfg(not(target_os = "macos"))]
+  {
+    let _ = (folder, title, body);
+    Err("Apple Notes is only available on macOS.".to_string())
+  }
+}

@@ -1,0 +1,284 @@
+use tauri::{
+  Emitter, LogicalSize, Manager, Monitor, PhysicalPosition, Position, Size, WebviewWindow, WindowEvent,
+};
+
+use crate::{AppState, MainView};
+
+const CAPTURE_WINDOW_LABEL: &str = "main";
+const LIBRARY_WINDOW_LABEL: &str = "library";
+const CAPTURE_WIDTH: f64 = 640.0;
+const CAPTURE_HEIGHT: f64 = 620.0;
+const HISTORY_WIDTH: f64 = 760.0;
+const HISTORY_HEIGHT: f64 = 640.0;
+const SETTINGS_WIDTH: f64 = 480.0;
+const SETTINGS_HEIGHT: f64 = 640.0;
+
+pub fn configure_capture_window(app: &tauri::AppHandle) -> Result<(), String> {
+  let window = app
+    .get_webview_window(CAPTURE_WINDOW_LABEL)
+    .ok_or_else(|| "Capture window was not found".to_string())?;
+
+  let clone = window.clone();
+  window.on_window_event(move |event| {
+    match event {
+      // Frameless capture overlay: Alt+F4 / close should dismiss, not kill the tray app.
+      WindowEvent::CloseRequested { api, .. } => {
+        api.prevent_close();
+        let _ = clone.hide();
+      }
+      WindowEvent::Focused(false) => {
+        let app = clone.app_handle();
+        let (should_hide, suppress_hide) = {
+          let state = app.state::<AppState>();
+          let should_hide = state
+            .main_view
+            .lock()
+            .map(|mode| *mode == MainView::Capture)
+            .unwrap_or(true);
+          let suppress_hide = state
+            .capture_raise_guard
+            .lock()
+            .ok()
+            .and_then(|guard| *guard)
+            .is_some_and(|raised_at| raised_at.elapsed() < std::time::Duration::from_millis(600));
+          (should_hide, suppress_hide)
+        };
+
+        if should_hide && !suppress_hide {
+          let _ = clone.hide();
+        }
+      }
+      _ => {}
+    }
+  });
+
+  window.hide().map_err(|error| error.to_string())?;
+  Ok(())
+}
+
+pub fn show_capture_window(app: &tauri::AppHandle) -> Result<(), String> {
+  let window = app
+    .get_webview_window(CAPTURE_WINDOW_LABEL)
+    .ok_or_else(|| "Capture window was not found".to_string())?;
+
+  set_main_view(app, MainView::Capture)?;
+  window
+    .set_title("Klyph")
+    .map_err(|error| error.to_string())?;
+  window
+    .set_resizable(false)
+    .map_err(|error| error.to_string())?;
+  window
+    .set_always_on_top(true)
+    .map_err(|error| error.to_string())?;
+  window
+    .set_skip_taskbar(true)
+    .map_err(|error| error.to_string())?;
+  window
+    .set_size(Size::Logical(LogicalSize::new(CAPTURE_WIDTH, CAPTURE_HEIGHT)))
+    .map_err(|error| error.to_string())?;
+
+  center_on_active_monitor(&window)?;
+  window.unminimize().map_err(|error| error.to_string())?;
+  window.show().map_err(|error| error.to_string())?;
+  window.set_focus().map_err(|error| error.to_string())?;
+
+  {
+    let state = app.state::<AppState>();
+    if let Ok(mut guard) = state.capture_raise_guard.lock() {
+      *guard = Some(std::time::Instant::now());
+    };
+  }
+
+  window
+    .emit("klyph://show-capture", ())
+    .map_err(|error| error.to_string())?;
+
+  Ok(())
+}
+
+pub fn show_history_window(app: &tauri::AppHandle) -> Result<(), String> {
+  let window = app
+    .get_webview_window(CAPTURE_WINDOW_LABEL)
+    .ok_or_else(|| "Capture window was not found".to_string())?;
+
+  set_main_view(app, MainView::History)?;
+  window
+    .set_title("Klyph")
+    .map_err(|error| error.to_string())?;
+  window
+    .set_resizable(true)
+    .map_err(|error| error.to_string())?;
+  window
+    .set_always_on_top(false)
+    .map_err(|error| error.to_string())?;
+  window
+    .set_skip_taskbar(false)
+    .map_err(|error| error.to_string())?;
+  window
+    .set_size(Size::Logical(LogicalSize::new(HISTORY_WIDTH, HISTORY_HEIGHT)))
+    .map_err(|error| error.to_string())?;
+
+  center_on_active_monitor(&window)?;
+  window.unminimize().map_err(|error| error.to_string())?;
+  window.show().map_err(|error| error.to_string())?;
+  window.set_focus().map_err(|error| error.to_string())?;
+  window
+    .emit("klyph://show-history", ())
+    .map_err(|error| error.to_string())?;
+
+  Ok(())
+}
+
+pub fn hide_capture_window(app: &tauri::AppHandle) -> Result<(), String> {
+  let window = app
+    .get_webview_window(CAPTURE_WINDOW_LABEL)
+    .ok_or_else(|| "Capture window was not found".to_string())?;
+
+  window.hide().map_err(|error| error.to_string())
+}
+
+/// Wire the library window's close button to hide instead of destroy.
+/// Closing the library should never kill the tray app.
+pub fn configure_library_window(app: &tauri::AppHandle) -> Result<(), String> {
+  let window = app
+    .get_webview_window(LIBRARY_WINDOW_LABEL)
+    .ok_or_else(|| "Library window was not found".to_string())?;
+
+  let clone = window.clone();
+  window.on_window_event(move |event| {
+    if let WindowEvent::CloseRequested { api, .. } = event {
+      api.prevent_close();
+      let _ = clone.hide();
+    }
+  });
+
+  window.hide().map_err(|error| error.to_string())?;
+  Ok(())
+}
+
+pub fn show_library_window(app: &tauri::AppHandle) -> Result<(), String> {
+  let window = app
+    .get_webview_window(LIBRARY_WINDOW_LABEL)
+    .ok_or_else(|| "Library window was not found".to_string())?;
+
+  window.unminimize().map_err(|error| error.to_string())?;
+  window.show().map_err(|error| error.to_string())?;
+  window.set_focus().map_err(|error| error.to_string())?;
+  window
+    .emit("klyph://show-library", ())
+    .map_err(|error| error.to_string())?;
+
+  Ok(())
+}
+
+pub fn hide_library_window(app: &tauri::AppHandle) -> Result<(), String> {
+  let window = app
+    .get_webview_window(LIBRARY_WINDOW_LABEL)
+    .ok_or_else(|| "Library window was not found".to_string())?;
+
+  window.hide().map_err(|error| error.to_string())
+}
+
+pub fn show_settings_window(app: &tauri::AppHandle) -> Result<(), String> {
+  let window = app
+    .get_webview_window(CAPTURE_WINDOW_LABEL)
+    .ok_or_else(|| "Capture window was not found".to_string())?;
+
+  set_main_view(app, MainView::Settings)?;
+  window
+    .set_title("Klyph Settings")
+    .map_err(|error| error.to_string())?;
+  window
+    .set_resizable(true)
+    .map_err(|error| error.to_string())?;
+  window
+    .set_always_on_top(false)
+    .map_err(|error| error.to_string())?;
+  window
+    .set_skip_taskbar(false)
+    .map_err(|error| error.to_string())?;
+  window
+    .set_size(Size::Logical(LogicalSize::new(SETTINGS_WIDTH, SETTINGS_HEIGHT)))
+    .map_err(|error| error.to_string())?;
+
+  center_on_active_monitor(&window)?;
+  window.unminimize().map_err(|error| error.to_string())?;
+  window.show().map_err(|error| error.to_string())?;
+  window.set_focus().map_err(|error| error.to_string())?;
+  window
+    .emit("klyph://show-settings", ())
+    .map_err(|error| error.to_string())?;
+
+  Ok(())
+}
+
+pub fn open_settings_window(app: &tauri::AppHandle) -> Result<(), String> {
+  show_settings_window(app)
+}
+
+/// Older builds opened settings as a second webview. Destroy any leftover instance.
+pub fn close_legacy_settings_window(app: &tauri::AppHandle) {
+  if let Some(window) = app.get_webview_window("settings") {
+    let _ = window.destroy();
+  }
+}
+
+/// Close every webview, then terminate the process (tray + hotkeys included).
+pub fn quit_app(app: &tauri::AppHandle) {
+  for (_, window) in app.webview_windows() {
+    let _ = window.destroy();
+  }
+  app.exit(0);
+}
+
+fn set_main_view(app: &tauri::AppHandle, next: MainView) -> Result<(), String> {
+  let state = app.state::<AppState>();
+  let mut value = state
+    .main_view
+    .lock()
+    .map_err(|_| "Unable to update main view".to_string())?;
+  *value = next;
+  Ok(())
+}
+
+fn center_on_active_monitor(window: &WebviewWindow) -> Result<(), String> {
+  let fallback = window.primary_monitor().map_err(|error| error.to_string())?;
+  let monitor = active_monitor_for_cursor(window).or(fallback);
+
+  let Some(monitor) = monitor else {
+    return Ok(());
+  };
+
+  let monitor_size = monitor.size();
+  let monitor_position = monitor.position();
+  let window_size = window.outer_size().map_err(|error| error.to_string())?;
+
+  let x = monitor_position.x + ((monitor_size.width as i32 - window_size.width as i32) / 2).max(0);
+  let y = monitor_position.y + ((monitor_size.height as i32 - window_size.height as i32) / 2).max(0);
+
+  window
+    .set_position(Position::Physical(PhysicalPosition::new(x, y)))
+    .map_err(|error| error.to_string())?;
+
+  Ok(())
+}
+
+fn active_monitor_for_cursor(window: &WebviewWindow) -> Option<Monitor> {
+  let cursor_position = window.cursor_position().ok()?;
+  let all_monitors = window.available_monitors().ok()?;
+
+  let cursor_x = cursor_position.x as i32;
+  let cursor_y = cursor_position.y as i32;
+
+  all_monitors.into_iter().find(|monitor| {
+    let origin = monitor.position();
+    let size = monitor.size();
+
+    let x_in_bounds = cursor_x >= origin.x && cursor_x < origin.x + size.width as i32;
+    let y_in_bounds = cursor_y >= origin.y && cursor_y < origin.y + size.height as i32;
+
+    x_in_bounds && y_in_bounds
+  })
+}
+

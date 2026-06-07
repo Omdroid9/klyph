@@ -1,0 +1,1146 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { emit, listen } from "@tauri-apps/api/event";
+import { parseReminderSyntax } from "../lib/parser";
+import {
+  createManagedList,
+  getCapturesTodayCount,
+  getSetting,
+  insertCapture,
+  listCaptures,
+  listManagedLists,
+  setSetting,
+} from "../lib/db";
+import { loadConnectedDestinations, loadIntegrationSettings, providerConfigured } from "../lib/integrations/connectionStatus";
+import {
+  applySmartCaptureDestinations,
+  availableDestinations,
+  hasActiveDestination,
+  hasAnyProviderConfigured,
+  suggestedCaptureDestinations,
+} from "../lib/integrations/captureRouting";
+import { isMacOS } from "../lib/platform";
+import { useAppStore } from "../store/useAppStore";
+import TagChip from "./TagChip";
+import ListPicker from "./ListPicker";
+import CaptureProductTour from "./CaptureProductTour";
+import CaptureDestinationPrompt from "./CaptureDestinationPrompt";
+import KlyphLogo from "./KlyphLogo";
+import type { Capture, CaptureDestinations, CaptureLane, CaptureTag } from "../types";
+
+const MAX_CHARS = 280;
+const RECENT_LIMIT = 20;
+const DEFAULT_LIST = "Inbox";
+const DISTRACTION_LIST = "Parking Lot";
+const DRAFT_SETTING_KEY = "capture_draft";
+
+interface CaptureDraft {
+  text: string;
+  captureLane: CaptureLane;
+  listName: string;
+  destinations: CaptureDestinations;
+  tag: CaptureTag;
+  manualReminderTime: string | null;
+}
+const IS_MACOS = isMacOS();
+const DEFAULT_DESTINATIONS: CaptureDestinations = {
+  slack: false,
+  discord: false,
+  notion: false,
+  googleTasks: false,
+  googleCalendar: false,
+  appleReminders: false,
+};
+
+type DestinationKey = keyof CaptureDestinations;
+
+const TARGET_META: Array<{
+  key: DestinationKey;
+  label: string;
+  available: boolean;
+}> = [
+  { key: "slack", label: "Slack", available: true },
+  { key: "discord", label: "Discord", available: true },
+  { key: "notion", label: "Notion", available: true },
+  { key: "googleTasks", label: "GTasks", available: true },
+  { key: "googleCalendar", label: "GCal", available: true },
+  { key: "appleReminders", label: "Apple Notes", available: IS_MACOS },
+];
+
+function normalizeListName(value: string): string {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : DEFAULT_LIST;
+}
+
+function toLocalIso(input: Date): string {
+  const timezoneOffset = input.getTimezoneOffset() * 60_000;
+  return new Date(input.getTime() - timezoneOffset).toISOString().slice(0, 19);
+}
+
+function formatReminderDisplay(value: string): string {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+  return parsed.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function currentLineBounds(value: string, cursor: number): { start: number; end: number; line: string } {
+  const start = value.lastIndexOf("\n", Math.max(0, cursor - 1)) + 1;
+  const endCandidate = value.indexOf("\n", cursor);
+  const end = endCandidate === -1 ? value.length : endCandidate;
+  return {
+    start,
+    end,
+    line: value.slice(start, end),
+  };
+}
+
+type IconProps = { size?: number };
+
+function svgProps(size: number) {
+  return {
+    viewBox: "0 0 24 24",
+    width: size,
+    height: size,
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.8,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  };
+}
+
+const IconSun = ({ size = 16 }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+  </svg>
+);
+
+const IconMoon = ({ size = 16 }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+);
+
+const IconHistory = ({ size = 16 }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <path d="M3 3v5h5" />
+    <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
+    <path d="M12 7v5l4 2" />
+  </svg>
+);
+
+const IconBullet = ({ size = 16 }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <path d="M8 6h13M8 12h13M8 18h13" />
+    <circle cx="3.5" cy="6" r="1" fill="currentColor" stroke="none" />
+    <circle cx="3.5" cy="12" r="1" fill="currentColor" stroke="none" />
+    <circle cx="3.5" cy="18" r="1" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+const IconCheckbox = ({ size = 16 }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <rect x="3" y="3" width="18" height="18" rx="3" />
+    <path d="M8 12l3 3 5-6" />
+  </svg>
+);
+
+const IconNumbered = ({ size = 16 }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <path d="M10 6h11M10 12h11M10 18h11" />
+    <path d="M4 4v4M3.5 8h1.5M3 4.2c.4-.3 1.4-.3 1.4.5 0 .6-.9.9-1.4 1.5h1.6" />
+  </svg>
+);
+
+const IconClose = ({ size = 16 }: IconProps) => (
+  <svg {...svgProps(size)} strokeWidth={2}>
+    <path d="M18 6 6 18M6 6l12 12" />
+  </svg>
+);
+
+const IconSend = ({ size = 17 }: IconProps) => (
+  <svg {...svgProps(size)} strokeWidth={2}>
+    <path d="m22 2-7 20-4-9-9-4z" />
+    <path d="M22 2 11 13" />
+  </svg>
+);
+
+const CAPTURE_HINTS = [
+  "Call mom tomorrow at 5pm",
+  "Buy groceries after work",
+  "Standup notes",
+] as const;
+
+const IconFolder = ({ size = 14 }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <path d="M3 7a2 2 0 0 1 2-2h3l2 2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+  </svg>
+);
+
+const IconBookmark = ({ size = 14 }: IconProps) => (
+  <svg {...svgProps(size)}>
+    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
+export default function CaptureWindow() {
+  const [text, setText] = useState("");
+  const [captureLane, setCaptureLane] = useState<CaptureLane>("focus");
+  const [listName, setListName] = useState(DEFAULT_LIST);
+  const [destinations, setDestinations] = useState<CaptureDestinations>(DEFAULT_DESTINATIONS);
+  const [savedFlash, setSavedFlash] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [managedLists, setManagedLists] = useState<string[]>([DEFAULT_LIST, DISTRACTION_LIST]);
+  const [recentCaptures, setRecentCaptures] = useState<Capture[]>([]);
+  const [recentIndex, setRecentIndex] = useState<number | null>(null);
+  const [manualReminderTime, setManualReminderTime] = useState<string | null>(null);
+  const [pulse, setPulse] = useState(0);
+  const [showProductTour, setShowProductTour] = useState(false);
+  const [destinationPrompt, setDestinationPrompt] = useState<{
+    keepOpen: boolean;
+    destinations: CaptureDestinations;
+  } | null>(null);
+  const [googleConfigured, setGoogleConfigured] = useState(false);
+  const [integrationSettings, setIntegrationSettings] = useState<Awaited<
+    ReturnType<typeof loadIntegrationSettings>
+  > | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const hydratedRef = useRef(false);
+
+  const { selectedTag, setSelectedTag, setCapturesToday, lastSyncLabel, theme, setTheme } =
+    useAppStore();
+
+  const parsed = useMemo(() => parseReminderSyntax(text), [text]);
+  const effectiveReminderTime = manualReminderTime ?? parsed.reminderTime;
+  const effectivePreviewLabel = useMemo(() => {
+    if (!effectiveReminderTime) {
+      return null;
+    }
+    const formatted = formatReminderDisplay(effectiveReminderTime);
+    return manualReminderTime
+      ? `${formatted} (manual)`
+      : formatted;
+  }, [effectiveReminderTime, manualReminderTime]);
+
+  const quickReminderOptions = useMemo(() => {
+    if (!parsed.reminderTime) {
+      return [] as Array<{ label: string; value: string }>;
+    }
+
+    const base = new Date(parsed.reminderTime);
+    const make = (label: string, hour: number, minute = 0) => {
+      const next = new Date(base);
+      next.setHours(hour, minute, 0, 0);
+      return { label, value: toLocalIso(next) };
+    };
+
+    return [make("9 AM", 9), make("3 PM", 15), make("6 PM", 18)];
+  }, [parsed.reminderTime]);
+  const remaining = MAX_CHARS - text.length;
+
+  const resetDraft = useCallback(
+    (clearTag = false) => {
+      setText("");
+      setCaptureLane("focus");
+      setListName(DEFAULT_LIST);
+      setRecentIndex(null);
+      setManualReminderTime(null);
+      void loadConnectedDestinations().then(setDestinations).catch(() => {
+        setDestinations(DEFAULT_DESTINATIONS);
+      });
+      if (clearTag) {
+        setSelectedTag("untagged");
+      }
+      void setSetting(DRAFT_SETTING_KEY, "");
+    },
+    [setSelectedTag],
+  );
+
+  function toDestinations(capture: Capture): CaptureDestinations {
+    return {
+      slack: capture.target_slack === 1,
+      discord: capture.target_discord === 1,
+      notion: capture.target_notion === 1,
+      googleTasks: capture.target_google_tasks === 1,
+      googleCalendar: capture.target_google_calendar === 1,
+      appleReminders: capture.target_apple_reminders === 1,
+    };
+  }
+
+  async function loadRecentCaptures() {
+    try {
+      const captures = await listCaptures(RECENT_LIMIT);
+      setRecentCaptures(captures.filter((capture) => capture.content.trim().length > 0));
+      setRecentIndex(null);
+    } catch (error) {
+      console.error("Failed to load recent captures", error);
+      setRecentCaptures([]);
+      setRecentIndex(null);
+    }
+  }
+
+  function insertAtCursor(textToInsert: string) {
+    const field = inputRef.current;
+    if (!field) {
+      setText((prev) => `${prev}${textToInsert}`.slice(0, MAX_CHARS));
+      return;
+    }
+
+    const selectionStart = field.selectionStart ?? text.length;
+    const selectionEnd = field.selectionEnd ?? text.length;
+    const next = `${text.slice(0, selectionStart)}${textToInsert}${text.slice(selectionEnd)}`.slice(
+      0,
+      MAX_CHARS,
+    );
+    setText(next);
+
+    requestAnimationFrame(() => {
+      const cursor = Math.min(selectionStart + textToInsert.length, next.length);
+      field.setSelectionRange(cursor, cursor);
+      field.focus();
+    });
+  }
+
+  function replaceRange(start: number, end: number, replacement: string) {
+    const field = inputRef.current;
+    const next = `${text.slice(0, start)}${replacement}${text.slice(end)}`.slice(0, MAX_CHARS);
+    setText(next);
+
+    requestAnimationFrame(() => {
+      if (!field) {
+        return;
+      }
+      const cursor = Math.min(start + replacement.length, next.length);
+      field.setSelectionRange(cursor, cursor);
+      field.focus();
+    });
+  }
+
+  function currentLinePrefix(value: string, cursor: number): string {
+    const uptoCursor = value.slice(0, cursor);
+    const line = uptoCursor.split("\n").pop() ?? "";
+
+    if (/^\s*[-*]\s+/.test(line)) {
+      return line.match(/^\s*[-*]\s+/)?.[0] ?? "";
+    }
+    if (/^\s*\d+\.\s+/.test(line)) {
+      const match = line.match(/^(\s*)(\d+)(\.\s+)/);
+      if (!match) return "";
+      const nextNum = Number(match[2]) + 1;
+      return `${match[1]}${nextNum}${match[3]}`;
+    }
+    return "";
+  }
+
+  function insertListPrefix(prefix: string) {
+    const field = inputRef.current;
+    if (!field) {
+      setText((prev) => `${prev}${prefix}`.slice(0, MAX_CHARS));
+      return;
+    }
+
+    const cursor = field.selectionStart ?? text.length;
+    const bounds = currentLineBounds(text, cursor);
+    const leadingWhitespace = bounds.line.match(/^\s*/)?.[0] ?? "";
+    const trimmed = bounds.line.trim();
+
+    if (trimmed.length === 0) {
+      replaceRange(bounds.start, bounds.end, `${leadingWhitespace}${prefix}`);
+      return;
+    }
+
+    if (/^\s*(?:[-*]\s+|- \[[ xX]\]\s+|\d+\.\s+)/.test(bounds.line)) {
+      return;
+    }
+
+    replaceRange(bounds.start, bounds.start, `${leadingWhitespace}${prefix}`);
+  }
+
+  function hydrateFromRecent(capture: Capture) {
+    setText(capture.content);
+    setCaptureLane(capture.capture_lane ?? "focus");
+    setSelectedTag(capture.tag);
+    setListName(capture.list_name?.trim() || DEFAULT_LIST);
+    setDestinations(toDestinations(capture));
+    setManualReminderTime(capture.reminder_time);
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+  }
+
+  async function loadManagedLists() {
+    try {
+      const names = await listManagedLists();
+      const nextNames = names.length > 0 ? names : [DEFAULT_LIST];
+      if (!nextNames.includes(DISTRACTION_LIST)) {
+        nextNames.push(DISTRACTION_LIST);
+      }
+      setManagedLists(nextNames);
+    } catch (error) {
+      console.error("Failed to load managed lists", error);
+      setManagedLists([DEFAULT_LIST, DISTRACTION_LIST]);
+    }
+  }
+
+  async function saveCurrentListAsManaged() {
+    const normalized = normalizeListName(listName);
+    try {
+      await createManagedList(normalized);
+      setListName(normalized);
+      await loadManagedLists();
+    } catch (error) {
+      console.error("Failed to save list", error);
+    }
+  }
+
+  function setLane(nextLane: CaptureLane) {
+    setCaptureLane(nextLane);
+    setListName((prev) => {
+      const normalized = normalizeListName(prev);
+      if (nextLane === "distraction" && normalized.toLowerCase() === DEFAULT_LIST.toLowerCase()) {
+        return DISTRACTION_LIST;
+      }
+      if (nextLane === "focus" && normalized.toLowerCase() === DISTRACTION_LIST.toLowerCase()) {
+        return DEFAULT_LIST;
+      }
+      return prev;
+    });
+  }
+
+  useEffect(() => {
+    let active = true;
+
+    void (async () => {
+      const settings = await loadIntegrationSettings();
+      if (!active) {
+        return;
+      }
+      setGoogleConfigured(providerConfigured("google", settings));
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!effectiveReminderTime || !googleConfigured) {
+      return;
+    }
+
+    setDestinations((prev) => (prev.googleCalendar ? prev : { ...prev, googleCalendar: true }));
+  }, [effectiveReminderTime, googleConfigured]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function restoreDraft() {
+      try {
+        const connected = await loadConnectedDestinations();
+        const raw = await getSetting(DRAFT_SETTING_KEY);
+        if (!active) {
+          return;
+        }
+
+        if (!raw) {
+          setDestinations(connected);
+          return;
+        }
+
+        const draft = JSON.parse(raw) as Partial<CaptureDraft>;
+        if (typeof draft.text === "string" && draft.text.trim().length > 0) {
+          setText(draft.text.slice(0, MAX_CHARS));
+          setCaptureLane(draft.captureLane === "distraction" ? "distraction" : "focus");
+          setListName(draft.listName?.trim() || DEFAULT_LIST);
+          if (draft.destinations) {
+            setDestinations(draft.destinations);
+          } else {
+            setDestinations(connected);
+          }
+          if (draft.tag) {
+            setSelectedTag(draft.tag);
+          }
+          setManualReminderTime(draft.manualReminderTime ?? null);
+        } else {
+          setDestinations(connected);
+        }
+      } catch (error) {
+        console.error("Failed to restore draft", error);
+      } finally {
+        if (active) {
+          hydratedRef.current = true;
+        }
+      }
+    }
+
+    void restoreDraft();
+
+    return () => {
+      active = false;
+    };
+  }, [setSelectedTag]);
+
+  // Autosave the in-progress draft so a capture survives the window hiding on
+  // focus loss (e.g. clicking the OAuth browser tab) or an app restart.
+  useEffect(() => {
+    if (!hydratedRef.current) {
+      return;
+    }
+
+    const handle = window.setTimeout(() => {
+      if (text.trim().length === 0) {
+        void setSetting(DRAFT_SETTING_KEY, "");
+        return;
+      }
+      const draft: CaptureDraft = {
+        text,
+        captureLane,
+        listName,
+        destinations,
+        tag: selectedTag,
+        manualReminderTime,
+      };
+      void setSetting(DRAFT_SETTING_KEY, JSON.stringify(draft));
+    }, 300);
+
+    return () => {
+      window.clearTimeout(handle);
+    };
+  }, [text, captureLane, listName, destinations, selectedTag, manualReminderTime]);
+
+  useEffect(() => {
+    let active = true;
+
+    void (async () => {
+      const [onboardingDone, tourDone] = await Promise.all([
+        getSetting("onboarding_complete"),
+        getSetting("capture_tour_complete"),
+      ]);
+      if (!active) {
+        return;
+      }
+      if (onboardingDone === "true" && tourDone !== "true") {
+        setShowProductTour(true);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function completeProductTour() {
+    setShowProductTour(false);
+    try {
+      await setSetting("capture_tour_complete", "true");
+    } catch (error) {
+      console.error("Failed to save capture tour state", error);
+    }
+  }
+
+  useEffect(() => {
+    const unlistenPromise = listen("klyph://show-capture", () => {
+      setPulse((value) => value + 1);
+      void loadRecentCaptures();
+      void loadManagedLists();
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
+    });
+
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+
+    return () => {
+      unlistenPromise.then((dispose) => dispose()).catch(() => {});
+    };
+  }, []);
+
+  async function closeCaptureWindow() {
+    // Keep the draft (autosaved) so dismissing never loses an unsaved thought.
+    try {
+      await invoke("hide_capture_window");
+    } catch (error) {
+      console.error("hide_capture_window failed", error);
+    }
+  }
+
+  async function quitApp() {
+    try {
+      await invoke("exit_app");
+    } catch {
+      // If the bridge is dead, still try to dismiss the overlay.
+      await closeCaptureWindow();
+    }
+  }
+
+  async function openHistoryWindow() {
+    await invoke("open_history_window");
+  }
+
+  async function toggleTheme() {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    await setSetting("theme", nextTheme);
+  }
+
+  function toggleDestination(key: DestinationKey) {
+    setDestinations((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  }
+
+  function enableAllDestinations() {
+    setDestinations((prev) => ({
+      ...prev,
+      slack: true,
+      discord: true,
+      notion: true,
+      googleTasks: true,
+      googleCalendar: true,
+    }));
+  }
+
+  useEffect(() => {
+    if (!destinationPrompt) {
+      return;
+    }
+    void loadIntegrationSettings().then(setIntegrationSettings).catch(console.error);
+  }, [destinationPrompt]);
+
+  async function persistCapture(keepOpen: boolean, overrideDestinations?: CaptureDestinations) {
+    const trimmed = (parsed.cleanedContent.trim() || text.trim()).slice(0, MAX_CHARS);
+    if (!trimmed) {
+      setSaveError("Type something to capture first.");
+      return;
+    }
+
+    if (saving) {
+      return;
+    }
+
+    setSaving(true);
+    setSaveError(null);
+
+    try {
+      const settings = await loadIntegrationSettings();
+      let finalDestinations = overrideDestinations ?? destinations;
+
+      if (overrideDestinations === undefined && !hasActiveDestination(finalDestinations)) {
+        finalDestinations = applySmartCaptureDestinations(
+          finalDestinations,
+          effectiveReminderTime,
+          settings,
+        );
+      }
+
+      if (!hasActiveDestination(finalDestinations) && hasAnyProviderConfigured(settings)) {
+        finalDestinations = suggestedCaptureDestinations(effectiveReminderTime, settings);
+        setSaving(false);
+        setDestinationPrompt({ keepOpen, destinations: finalDestinations });
+        return;
+      }
+
+      const captureId = crypto.randomUUID();
+      await insertCapture({
+        id: captureId,
+        content: trimmed,
+        tag: selectedTag,
+        lane: captureLane,
+        listName,
+        destinations: finalDestinations,
+        reminderTime: effectiveReminderTime,
+      });
+
+      setDestinationPrompt(null);
+
+      const today = await getCapturesTodayCount();
+      setCapturesToday(today);
+
+      await invoke("update_tray_tooltip", {
+        capturesToday: today,
+        lastSync: lastSyncLabel,
+      });
+      void emit("klyph://request-sync");
+      void emit("klyph://request-agent");
+      void loadRecentCaptures();
+      void loadManagedLists();
+
+      setSavedFlash(true);
+      window.setTimeout(() => setSavedFlash(false), 1100);
+
+      if (keepOpen) {
+        resetDraft();
+        requestAnimationFrame(() => {
+          inputRef.current?.focus();
+        });
+        return;
+      }
+
+      resetDraft();
+      await invoke("hide_capture_window");
+    } catch (error) {
+      console.error("Capture save failed", error);
+      setSaveError(error instanceof Error ? error.message : "Could not save capture. Try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const canSend = (parsed.cleanedContent.trim() || text.trim()).length > 0;
+  const isEmpty = text.trim().length === 0;
+
+  return (
+    <div className="app-page h-full w-full overflow-hidden p-3">
+      <div
+        key={pulse}
+        className="capture-shell capture-pop relative h-full w-full shadow-floating"
+      >
+        {savedFlash ? (
+          <div className="save-badge pointer-events-none absolute left-1/2 top-4 z-20">
+            <div className="flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-500 shadow-lg">
+              <svg
+                viewBox="0 0 24 24"
+                width="15"
+                height="15"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path className="check-draw" d="M5 13l4 4L19 7" />
+              </svg>
+              Captured
+            </div>
+          </div>
+        ) : null}
+        <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden px-4 py-3">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <KlyphLogo size={22} className="klyph-logo-header" />
+              <span className="codex-panel-title text-base font-medium tracking-tight">
+                Flow<span className="font-serif-italic">Capture</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--btn-soft)] px-2 py-0.5 text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--muted)]">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                Capture
+              </span>
+            </div>
+            <div className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => void toggleTheme()}
+                className="icon-btn"
+                title={theme === "dark" ? "Switch to light" : "Switch to dark"}
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? <IconSun /> : <IconMoon />}
+              </button>
+              <button
+                type="button"
+                onClick={() => void openHistoryWindow()}
+                className="icon-btn"
+                title="Open history"
+                aria-label="Open history"
+                data-tour="history"
+              >
+                <IconHistory />
+              </button>
+              <button
+                type="button"
+                onClick={() => void closeCaptureWindow()}
+                className="icon-btn"
+                title="Dismiss (Esc)"
+                aria-label="Dismiss capture"
+              >
+                <IconClose />
+              </button>
+            </div>
+          </div>
+
+          {/* Lane + tags */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div
+              className="inline-flex rounded-xl border border-[var(--border)] bg-[var(--btn-soft)] p-0.5"
+              data-tour="lanes"
+            >
+              {([
+                ["focus", "Focus"],
+                ["distraction", "Distraction"],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setLane(value)}
+                  className={[
+                    "rounded-lg px-3 py-1 text-xs font-medium transition",
+                    captureLane === value
+                      ? "codex-btn"
+                      : "codex-muted hover:bg-[var(--btn-soft-hover)] hover:text-[var(--text)]",
+                  ].join(" ")}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-1.5" data-tour="tags">
+              <TagChip tag="work" active={selectedTag === "work"} onSelect={setSelectedTag} />
+              <TagChip tag="personal" active={selectedTag === "personal"} onSelect={setSelectedTag} />
+              <TagChip tag="idea" active={selectedTag === "idea"} onSelect={setSelectedTag} />
+            </div>
+          </div>
+
+          {/* Prompt box, scrolls inside the fixed capture window height */}
+          <div className="prompt-box flex min-h-0 flex-1 flex-col overflow-hidden px-3.5 pt-3 pb-2.5">
+            <div className="flex min-h-0 flex-1 flex-col" data-tour="prompt-field">
+            {isEmpty ? (
+              <div className="capture-stage">
+                <p className="capture-stage-title">
+                  {captureLane === "distraction" ? "Park it and move on" : "Capture anything"}
+                </p>
+                <p className="capture-stage-sub">
+                  {captureLane === "distraction"
+                    ? "Jot the distraction — we'll route it to Parking Lot"
+                    : "Type a thought or reminder — times parse automatically"}
+                </p>
+              </div>
+            ) : null}
+            <textarea
+              ref={inputRef}
+              value={text}
+              maxLength={MAX_CHARS}
+              placeholder={
+                captureLane === "distraction"
+                  ? "Drop the distraction..."
+                  : "Ask, note, or remind..."
+              }
+              onChange={(event) => {
+                setText(event.currentTarget.value);
+                setRecentIndex(null);
+                setManualReminderTime(null);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  void closeCaptureWindow();
+                  return;
+                }
+
+                if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "q") {
+                  event.preventDefault();
+                  void quitApp();
+                  return;
+                }
+
+                if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+                  event.preventDefault();
+                  void persistCapture(true);
+                  return;
+                }
+
+                if (event.shiftKey && event.key === "Enter") {
+                  event.preventDefault();
+                  const cursor = inputRef.current?.selectionStart ?? text.length;
+                  const prefix = currentLinePrefix(text, cursor);
+                  if (prefix.length > 0) {
+                    insertAtCursor(`\n${prefix}`);
+                  } else {
+                    insertAtCursor("\n- ");
+                  }
+                  return;
+                }
+
+                if (event.altKey && event.key === "Enter") {
+                  event.preventDefault();
+                  const cursor = inputRef.current?.selectionStart ?? text.length;
+                  const prefix = currentLinePrefix(text, cursor);
+                  insertAtCursor(`\n${prefix}`);
+                  return;
+                }
+
+                if (event.altKey && event.key.toLowerCase() === "b") {
+                  event.preventDefault();
+                  insertListPrefix("- ");
+                  return;
+                }
+
+                if (event.altKey && event.key.toLowerCase() === "x") {
+                  event.preventDefault();
+                  insertListPrefix("- [ ] ");
+                  return;
+                }
+
+                if (event.altKey && event.key.toLowerCase() === "n") {
+                  event.preventDefault();
+                  insertListPrefix("1. ");
+                  return;
+                }
+
+                if ((event.ctrlKey || event.metaKey) && event.key === "ArrowUp") {
+                  if (recentCaptures.length === 0) {
+                    return;
+                  }
+                  event.preventDefault();
+                  const nextIndex =
+                    recentIndex === null ? 0 : Math.min(recentIndex + 1, recentCaptures.length - 1);
+                  setRecentIndex(nextIndex);
+                  hydrateFromRecent(recentCaptures[nextIndex]);
+                  return;
+                }
+
+                if ((event.ctrlKey || event.metaKey) && event.key === "ArrowDown") {
+                  if (recentIndex === null) {
+                    return;
+                  }
+                  event.preventDefault();
+                  const nextIndex = recentIndex - 1;
+                  if (nextIndex < 0) {
+                    resetDraft();
+                    return;
+                  }
+                  setRecentIndex(nextIndex);
+                  hydrateFromRecent(recentCaptures[nextIndex]);
+                  return;
+                }
+
+                if (event.key === "Enter") {
+                  if (event.nativeEvent.isComposing) {
+                    return;
+                  }
+                  event.preventDefault();
+                  void persistCapture(false);
+                }
+              }}
+              rows={3}
+              className="prompt-input min-h-[72px] w-full flex-1 text-base leading-7"
+              autoComplete="off"
+              spellCheck={false}
+            />
+
+            {isEmpty ? (
+              <div className="hint-chips">
+                {CAPTURE_HINTS.map((hint) => (
+                  <button
+                    key={hint}
+                    type="button"
+                    className="hint-chip"
+                    onClick={() => {
+                      setText(hint.slice(0, MAX_CHARS));
+                      requestAnimationFrame(() => inputRef.current?.focus());
+                    }}
+                  >
+                    {hint}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            {/* Inline status chips (reminder / ambiguity) */}
+            {effectivePreviewLabel || (parsed.isAmbiguous && parsed.reminderTime && !manualReminderTime) ? (
+              <div className="flex flex-wrap items-center gap-1.5 pb-2 text-[11px]">
+                {effectivePreviewLabel ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--btn-soft)] px-2.5 py-1">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                    {effectivePreviewLabel}
+                    {manualReminderTime ? (
+                      <button
+                        type="button"
+                        onClick={() => setManualReminderTime(null)}
+                        className="ml-0.5 text-[var(--muted)] hover:text-[var(--text)]"
+                        aria-label="Clear manual time"
+                      >
+                        ×
+                      </button>
+                    ) : null}
+                  </span>
+                ) : null}
+                {parsed.isAmbiguous && parsed.reminderTime && !manualReminderTime ? (
+                  <>
+                    <span className="rounded-full border border-amber-400/55 bg-amber-500/15 px-2.5 py-1 text-amber-500">
+                      {parsed.ambiguityReason ?? "Ambiguous time:"}
+                    </span>
+                    {quickReminderOptions.map((option) => (
+                      <button
+                        key={option.label}
+                        type="button"
+                        onClick={() => setManualReminderTime(option.value)}
+                        className="codex-btn-soft rounded-full px-2.5 py-1"
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </>
+                ) : null}
+              </div>
+            ) : null}
+
+            </div>
+
+            {/* Integrated toolbar */}
+            <div className="prompt-toolbar mt-auto flex items-center justify-between gap-2 pt-2">
+              <div className="flex items-center gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => insertListPrefix("- ")}
+                  className="icon-btn"
+                  title="Bullet list (Alt+B)"
+                  aria-label="Bullet list"
+                >
+                  <IconBullet />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertListPrefix("- [ ] ")}
+                  className="icon-btn"
+                  title="Checklist (Alt+X)"
+                  aria-label="Checklist"
+                >
+                  <IconCheckbox />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertListPrefix("1. ")}
+                  className="icon-btn"
+                  title="Numbered list (Alt+N)"
+                  aria-label="Numbered list"
+                >
+                  <IconNumbered />
+                </button>
+
+                <span className="mx-1 h-5 w-px bg-[var(--border)]" />
+
+                <span data-tour="list">
+                  <ListPicker
+                  value={listName}
+                  options={managedLists}
+                  onChange={setListName}
+                  onSave={() => void saveCurrentListAsManaged()}
+                  folderIcon={<IconFolder />}
+                  bookmarkIcon={<IconBookmark size={13} />}
+                  />
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <span
+                  className={[
+                    "tabular-nums text-[11px]",
+                    remaining < 30 ? "text-amber-500" : "text-[var(--muted)]",
+                  ].join(" ")}
+                >
+                  {remaining}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void persistCapture(false)}
+                  disabled={!canSend || saving}
+                  className="send-btn"
+                  title="Capture (Enter)"
+                  aria-label="Capture"
+                >
+                  <IconSend />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Destinations row, stays visible below the prompt box */}
+          <div className="flex shrink-0 flex-wrap items-center gap-1.5" data-tour="destinations">
+            <span className="codex-muted mr-0.5 text-[11px] font-medium uppercase tracking-[0.1em]">
+              Send to
+            </span>
+            {TARGET_META.map((target) => {
+              const active = destinations[target.key];
+              return (
+                <button
+                  key={target.key}
+                  type="button"
+                  disabled={!target.available}
+                  title={target.available ? target.label : "Apple Notes sync is available on macOS."}
+                  onClick={() => toggleDestination(target.key)}
+                  className={[
+                    "rounded-full border px-2.5 py-1 text-[11px] transition",
+                    active ? "codex-chip-active" : "codex-chip",
+                    !target.available ? "cursor-not-allowed opacity-45" : "",
+                  ].join(" ")}
+                >
+                  {target.label}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={enableAllDestinations}
+              className="codex-muted ml-auto text-[11px] underline-offset-2 hover:text-[var(--text)] hover:underline"
+            >
+              All
+            </button>
+          </div>
+
+          {/* Keyboard hints */}
+          <div className="codex-muted flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-[10px]" data-tour="shortcuts">
+            {saveError ? (
+              <span className="w-full text-xs text-red-400">{saveError}</span>
+            ) : null}
+            <span className="flex items-center gap-1.5">
+              <span className="kbd">Enter</span> capture
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="kbd">{IS_MACOS ? "⌘" : "Ctrl"}</span>
+              <span className="kbd">Enter</span> keep open
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="kbd">⇧</span>
+              <span className="kbd">Enter</span> newline
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="kbd">Esc</span> dismiss
+            </span>
+          </div>
+        </div>
+      </div>
+      {showProductTour ? <CaptureProductTour onComplete={() => void completeProductTour()} /> : null}
+      {destinationPrompt && integrationSettings ? (
+        <CaptureDestinationPrompt
+          reminderLabel={effectivePreviewLabel}
+          destinations={destinationPrompt.destinations}
+          available={availableDestinations(integrationSettings)}
+          onConfirm={(next) => {
+            setDestinations(next);
+            void persistCapture(destinationPrompt.keepOpen, next);
+          }}
+          onLocalOnly={() => {
+            const localOnly: CaptureDestinations = {
+              slack: false,
+              discord: false,
+              notion: false,
+              googleTasks: false,
+              googleCalendar: false,
+              appleReminders: false,
+            };
+            void persistCapture(destinationPrompt.keepOpen, localOnly);
+          }}
+          onCancel={() => {
+            setDestinationPrompt(null);
+            requestAnimationFrame(() => inputRef.current?.focus());
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}

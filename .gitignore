@@ -1,0 +1,51 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+src-tauri/target/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+secure-settings.json
+
+# auth-server is maintained in its own repository
+auth-server/
+
+# Local runtime artifacts
+*.db
+*.db-shm
+*.db-wal
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local tooling / workspace config that shouldn't ship
+.cursor/
+.cursorrules
+.cursorignore
+.claude/
+CLAUDE.md
+AGENTS.md
+.aider*
+agent-transcripts/
+canvases/
+.design-revert/

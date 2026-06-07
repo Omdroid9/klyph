@@ -1,0 +1,52 @@
+{
+    "$schema":  "../gen/schemas/desktop-schema.json",
+    "identifier":  "default",
+    "description":  "Klyph desktop permissions",
+    "windows":  [
+                    "main",
+                    "library",
+                    "settings"
+                ],
+    "permissions":  [
+                        "core:default",
+                        "global-shortcut:allow-is-registered",
+                        "global-shortcut:allow-register",
+                        "global-shortcut:allow-unregister",
+                        "global-shortcut:allow-unregister-all",
+                        "sql:default",
+                        "sql:allow-load",
+                        "sql:allow-execute",
+                        "sql:allow-select",
+                        "sql:allow-close",
+                        "store:default",
+                        {
+                            "identifier":  "http:default",
+                            "allow":  [
+                                          {
+                                              "url":  "https://hooks.slack.com/*"
+                                          },
+                                          {
+                                              "url":  "https://discord.com/*"
+                                          },
+                                          {
+                                              "url":  "https://api.notion.com/*"
+                                          },
+                                          {
+                                              "url":  "https://tasks.googleapis.com/*"
+                                          },
+                                          {
+                                              "url":  "https://www.googleapis.com/*"
+                                          },
+                                          {
+                                              "url":  "https://api.openai.com/*"
+                                          },
+                                          {
+                                              "url":  "http://127.0.0.1:*"
+                                          },
+                                          {
+                                              "url":  "http://localhost:*"
+                                          }
+                                      ]
+                        }
+                    ]
+}

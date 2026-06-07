@@ -1,0 +1,207 @@
+import {
+  getCaptureById,
+  getSetting,
+  getSettings,
+  listCaptures,
+  setCaptureSyncError,
+  setSetting,
+  updateCaptureSyncStatus,
+} from "../db";
+import type { Capture } from "../../types";
+import { isMacOS } from "../platform";
+import { requiresSync, syncCapture, type SyncConfig } from "./syncEngine";
+
+const SYNC_SETTING_KEYS = [
+  "integration_backend_url",
+  "slack_webhook_url",
+  "discord_webhook_url",
+  "notion_token",
+  "notion_page_id",
+  "google_tasks_access_token",
+  "google_tasks_refresh_token",
+  "google_tasks_list_id",
+  "google_calendar_id",
+  "apple_notes_folder",
+] as const;
+
+export interface SyncRunStats {
+  capturesConsidered: number;
+  capturesSynced: number;
+  syncAttempts: number;
+  syncSucceeded: number;
+  syncFailed: number;
+}
+
+function normalizeSetting(value: string | null): string | undefined {
+  const next = value?.trim() ?? "";
+  return next.length > 0 ? next : undefined;
+}
+
+export async function loadSyncConfig(): Promise<SyncConfig> {
+  const settings = await getSettings([...SYNC_SETTING_KEYS]);
+  return {
+    integrationBackendUrl: normalizeSetting(settings.integration_backend_url),
+    slackWebhookUrl: normalizeSetting(settings.slack_webhook_url),
+    discordWebhookUrl: normalizeSetting(settings.discord_webhook_url),
+    notionToken: normalizeSetting(settings.notion_token),
+    notionPageId: normalizeSetting(settings.notion_page_id),
+    googleTasksAccessToken: normalizeSetting(settings.google_tasks_access_token),
+    googleTasksRefreshToken: normalizeSetting(settings.google_tasks_refresh_token),
+    googleTasksListId: normalizeSetting(settings.google_tasks_list_id),
+    googleCalendarId: normalizeSetting(settings.google_calendar_id),
+    appleNotesEnabled: isMacOS(),
+    appleNotesFolder: normalizeSetting(settings.apple_notes_folder) ?? "Klyph",
+  };
+}
+
+function countExpectedSyncTargets(capture: Capture, config: SyncConfig): number {
+  let expected = 0;
+
+  if (config.slackWebhookUrl && capture.target_slack === 1 && capture.synced_slack === 0) {
+    expected += 1;
+  }
+  if (config.discordWebhookUrl && capture.target_discord === 1 && capture.synced_discord === 0) {
+    expected += 1;
+  }
+  if (config.notionToken && config.notionPageId && capture.target_notion === 1 && capture.synced_notion === 0) {
+    expected += 1;
+  }
+  if (
+    config.googleTasksAccessToken &&
+    config.googleTasksListId &&
+    capture.target_google_tasks === 1 &&
+    capture.synced_google_tasks === 0
+  ) {
+    expected += 1;
+  }
+  if (
+    config.googleTasksAccessToken &&
+    config.googleCalendarId &&
+    capture.target_google_calendar === 1 &&
+    capture.synced_google_calendar === 0 &&
+    capture.reminder_time
+  ) {
+    expected += 1;
+  }
+  if (
+    config.appleNotesEnabled &&
+    capture.target_apple_reminders === 1 &&
+    capture.synced_apple_reminders === 0
+  ) {
+    expected += 1;
+  }
+
+  return expected;
+}
+
+function toDisplayTime(input: Date): string {
+  return input.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export async function getLastSyncLabel(): Promise<string> {
+  const raw = await getSetting("last_sync_at");
+  if (!raw) {
+    return "Never";
+  }
+
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) {
+    return "Never";
+  }
+
+  return toDisplayTime(parsed);
+}
+
+export async function runSyncPass(options?: {
+  captureId?: string;
+  limit?: number;
+}): Promise<{
+  stats: SyncRunStats;
+  lastSyncLabel: string;
+}> {
+  const config = await loadSyncConfig();
+  const candidates = options?.captureId
+    ? [await getCaptureById(options.captureId)].filter((capture): capture is Capture => Boolean(capture))
+    : await listCaptures(options?.limit ?? 400);
+
+  const pending = candidates.filter((capture) => requiresSync(capture, config));
+
+  const stats: SyncRunStats = {
+    capturesConsidered: pending.length,
+    capturesSynced: 0,
+    syncAttempts: 0,
+    syncSucceeded: 0,
+    syncFailed: 0,
+  };
+
+  for (const capture of pending) {
+    const expectedTargets = countExpectedSyncTargets(capture, config);
+    if (expectedTargets === 0) {
+      continue;
+    }
+
+    stats.syncAttempts += expectedTargets;
+
+    const result = await syncCapture(capture, config);
+
+    const updatePayload: Parameters<typeof updateCaptureSyncStatus>[1] = {};
+    if (result.slackSynced) {
+      updatePayload.synced_slack = 1;
+      stats.syncSucceeded += 1;
+    }
+    if (result.discordSynced) {
+      updatePayload.synced_discord = 1;
+      stats.syncSucceeded += 1;
+    }
+    if (result.notionSynced) {
+      updatePayload.synced_notion = 1;
+      stats.syncSucceeded += 1;
+    }
+    if (result.googleSynced) {
+      updatePayload.synced_google_tasks = 1;
+      stats.syncSucceeded += 1;
+    }
+    if (result.googleCalendarSynced) {
+      updatePayload.synced_google_calendar = 1;
+      stats.syncSucceeded += 1;
+    }
+    if (result.appleRemindersSynced) {
+      updatePayload.synced_apple_reminders = 1;
+      stats.syncSucceeded += 1;
+    }
+
+    const failedTargets =
+      expectedTargets -
+      Number(result.slackSynced) -
+      Number(result.discordSynced) -
+      Number(result.notionSynced) -
+      Number(result.googleSynced) -
+      Number(result.googleCalendarSynced) -
+      Number(result.appleRemindersSynced);
+    stats.syncFailed += Math.max(failedTargets, 0);
+
+    if (Object.keys(updatePayload).length > 0) {
+      await updateCaptureSyncStatus(capture.id, updatePayload);
+      stats.capturesSynced += 1;
+    }
+
+    if (result.errors.length > 0) {
+      await setCaptureSyncError(capture.id, result.errors.join(" | ").slice(0, 500));
+    } else if (capture.last_sync_error) {
+      // Everything that was attempted this pass succeeded; clear the stale error.
+      await setCaptureSyncError(capture.id, null);
+    }
+  }
+
+  let lastSyncLabel = await getLastSyncLabel();
+  if (stats.syncSucceeded > 0) {
+    const now = new Date();
+    await setSetting("last_sync_at", now.toISOString());
+    lastSyncLabel = toDisplayTime(now);
+  }
+
+  return { stats, lastSyncLabel };
+}

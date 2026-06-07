@@ -1,0 +1,119 @@
+// Brand logo SVGs, kept compact and centered on a 24x24 viewBox.
+// Use via <span class="brand-logo" data-logo="slack"></span>
+
+export const logos = {
+  slack: `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M5.04 15.16a2.52 2.52 0 1 1-2.52-2.52h2.52v2.52z" fill="#E01E5A"/>
+      <path d="M6.31 15.16a2.52 2.52 0 1 1 5.04 0v6.32a2.52 2.52 0 1 1-5.04 0v-6.32z" fill="#E01E5A"/>
+      <path d="M8.84 5.04a2.52 2.52 0 1 1 2.52-2.52v2.52H8.84z" fill="#36C5F0"/>
+      <path d="M8.84 6.31a2.52 2.52 0 1 1 0 5.04H2.52a2.52 2.52 0 1 1 0-5.04h6.32z" fill="#36C5F0"/>
+      <path d="M18.96 8.84a2.52 2.52 0 1 1 2.52 2.52h-2.52V8.84z" fill="#2EB67D"/>
+      <path d="M17.69 8.84a2.52 2.52 0 1 1-5.04 0V2.52a2.52 2.52 0 1 1 5.04 0v6.32z" fill="#2EB67D"/>
+      <path d="M15.16 18.96a2.52 2.52 0 1 1-2.52 2.52v-2.52h2.52z" fill="#ECB22E"/>
+      <path d="M15.16 17.69a2.52 2.52 0 1 1 0-5.04h6.32a2.52 2.52 0 1 1 0 5.04h-6.32z" fill="#ECB22E"/>
+    </svg>
+  `,
+
+  // Notion macOS-style icon: 3D rounded-corner box with a serif "N".
+  // Fills the wrapper completely so its rounded corners become the box.
+  notion: `
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="ntn-face" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="60%" stop-color="#f1f1f1"/>
+          <stop offset="100%" stop-color="#d4d4d4"/>
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" fill="url(#ntn-face)"/>
+      <rect width="100" height="2.5" fill="#ffffff" opacity="0.9"/>
+      <rect y="90" width="100" height="10" fill="#000" opacity="0.16"/>
+      <rect x="92" width="8" height="100" fill="#000" opacity="0.08"/>
+      <text
+        x="50"
+        y="70"
+        text-anchor="middle"
+        font-family="'Times New Roman', Times, Georgia, 'Liberation Serif', serif"
+        font-size="68"
+        font-weight="700"
+        fill="#0a0a0a"
+      >N</text>
+    </svg>
+  `,
+
+  gcal: `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="16" rx="2.2" fill="#ffffff"/>
+      <rect x="3" y="5" width="18" height="3.6" rx="2.2" fill="#4285F4"/>
+      <rect x="6" y="3.4" width="1.8" height="3.4" rx="0.6" fill="#3367D6"/>
+      <rect x="16.2" y="3.4" width="1.8" height="3.4" rx="0.6" fill="#3367D6"/>
+      <text x="12" y="17.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="7.5" font-weight="700" fill="#4285F4">31</text>
+    </svg>
+  `,
+
+  discord: `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="24" height="24" rx="5.5" fill="#5865F2"/>
+      <path d="M17.6 7.6a12 12 0 0 0-3-1l-.2.3a11 11 0 0 0-4.8 0l-.2-.3a12 12 0 0 0-3 1c-1.9 2.9-2.4 5.7-2.2 8.5 1.2.9 2.4 1.5 3.6 1.8.3-.4.5-.8.7-1.2-.4-.2-.8-.3-1.2-.6l.3-.2a8.7 8.7 0 0 0 7.4 0l.3.2c-.4.2-.8.4-1.2.6.2.4.4.8.7 1.2 1.2-.3 2.4-.9 3.6-1.8.2-3.3-.6-6.1-1.8-8.5zM9.6 14.6c-.7 0-1.3-.7-1.3-1.5s.6-1.5 1.3-1.5 1.3.7 1.3 1.5c0 .8-.6 1.5-1.3 1.5zm4.8 0c-.7 0-1.3-.7-1.3-1.5s.6-1.5 1.3-1.5 1.3.7 1.3 1.5c0 .8-.6 1.5-1.3 1.5z" fill="#ffffff"/>
+    </svg>
+  `,
+
+  gtasks: `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="#1A73E8"/>
+      <path d="M6.8 12.4l3.2 3.2 7.2-7.2" stroke="#ffffff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `,
+
+  notes: `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="3.5" fill="#ffffff"/>
+      <path d="M3 6.5C3 4.6 4.6 3 6.5 3h11C19.4 3 21 4.6 21 6.5V8H3V6.5z" fill="#FBC02D"/>
+      <path d="M7 12h10M7 14.8h10M7 17.6h6.5" stroke="#9aa0a6" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+  `,
+
+  google: `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M22 12.2c0-.8-.1-1.4-.2-2H12v3.8h5.6c-.2 1.3-1 2.4-2.1 3.1v2.6h3.4c2-1.9 3.1-4.6 3.1-7.5z" fill="#4285F4"/>
+      <path d="M12 22c2.8 0 5.2-.9 6.9-2.5l-3.4-2.6c-.9.6-2.1 1-3.5 1-2.7 0-5-1.8-5.8-4.2H2.7v2.6A10 10 0 0 0 12 22z" fill="#34A853"/>
+      <path d="M6.2 13.7A6 6 0 0 1 5.9 12c0-.6.1-1.2.3-1.7V7.7H2.7A10 10 0 0 0 2 12c0 1.6.4 3.1 1 4.3l3.2-2.6z" fill="#FBBC05"/>
+      <path d="M12 5.8c1.5 0 2.9.5 4 1.5l3-3A10 10 0 0 0 12 2 10 10 0 0 0 2.7 7.7l3.5 2.6C7 7.6 9.3 5.8 12 5.8z" fill="#EA4335"/>
+    </svg>
+  `,
+
+  // Klyph's own "On Device" mark, kept in the same rounded-square family
+  // as the other brand tiles so it sits naturally beside them.
+  local: `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="fc-local-bg" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#8FB8FF"/>
+          <stop offset="55%" stop-color="#3D6FB8"/>
+          <stop offset="100%" stop-color="#15294A"/>
+        </linearGradient>
+        <radialGradient id="fc-local-spec" cx="30%" cy="22%" r="40%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect width="24" height="24" rx="5.5" fill="url(#fc-local-bg)"/>
+      <rect width="24" height="24" rx="5.5" fill="url(#fc-local-spec)"/>
+      <rect x="5.5" y="7" width="13" height="9" rx="1.4" fill="none" stroke="#ffffff" stroke-width="1.4"/>
+      <path d="M3.8 16.5h16.4l-.8 1.6a.8.8 0 0 1-.7.4H5.3a.8.8 0 0 1-.7-.4l-.8-1.6z" fill="#ffffff"/>
+      <path d="M9 11.2l2 2 4-4" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `,
+};
+
+export function injectLogos(root = document) {
+  root.querySelectorAll("[data-logo]").forEach((el) => {
+    const name = el.dataset.logo;
+    const svg = logos[name];
+    if (svg && !el.dataset.logoInjected) {
+      el.innerHTML = svg;
+      el.dataset.logoInjected = "true";
+    }
+  });
+}
