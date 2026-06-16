@@ -83,6 +83,20 @@ export const logos = {
     </svg>
   `,
 
+  reminders: `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="3.5" fill="#ffffff"/>
+      <path d="M3 6.5C3 4.6 4.6 3 6.5 3h11C19.4 3 21 4.6 21 6.5V8H3V6.5z" fill="#FF9500"/>
+      <circle cx="7.5" cy="11.8" r="1.35" fill="none" stroke="#FF3B30" stroke-width="1.3"/>
+      <path d="M6.9 11.8l.95.9 1.7-1.8" stroke="#FF3B30" stroke-width="1.05" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="10.5" y="11.3" width="7" height="1" rx="0.5" fill="#9aa0a6"/>
+      <circle cx="7.5" cy="15.5" r="1.35" fill="none" stroke="#c7c7cc" stroke-width="1.3"/>
+      <rect x="10.5" y="15" width="5.5" height="1" rx="0.5" fill="#c7c7cc"/>
+      <circle cx="7.5" cy="19" r="1.35" fill="none" stroke="#c7c7cc" stroke-width="1.3"/>
+      <rect x="10.5" y="18.5" width="6.5" height="1" rx="0.5" fill="#c7c7cc"/>
+    </svg>
+  `,
+
   // Klyph's own "On Device" mark, kept in the same rounded-square family
   // as the other brand tiles so it sits naturally beside them.
   local: `

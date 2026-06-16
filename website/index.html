@@ -148,7 +148,7 @@
           <div class="stat-label">keystroke, anywhere</div>
         </div>
         <div class="stat" data-reveal data-reveal-delay="2">
-          <div class="stat-num"><span data-counter="7">0</span></div>
+          <div class="stat-num"><span data-counter="8">0</span></div>
           <div class="stat-label">destinations, your call</div>
         </div>
         <div class="stat" data-reveal data-reveal-delay="3">
@@ -211,7 +211,12 @@
             <span class="brand-logo brand-logo-lg" data-logo="notes"></span>
             <span class="logo-name">Apple Notes</span>
           </button>
-          <button type="button" class="logo-card" role="tab" aria-selected="false" data-slide="6" data-label="Keep it offline — searchable history stays on your device.">
+          <button type="button" class="logo-card" role="tab" aria-selected="false" data-slide="6" data-label="Create timed reminders in Apple Reminders on macOS.">
+            <span class="logo-card-glow" aria-hidden="true"></span>
+            <span class="brand-logo brand-logo-lg" data-logo="reminders"></span>
+            <span class="logo-name">Reminders</span>
+          </button>
+          <button type="button" class="logo-card" role="tab" aria-selected="false" data-slide="7" data-label="Keep it offline — searchable history stays on your device.">
             <span class="logo-card-glow" aria-hidden="true"></span>
             <span class="brand-logo brand-logo-lg" data-logo="local"></span>
             <span class="logo-name">On Device</span>
@@ -362,7 +367,7 @@
           </div>
         </div>
 
-        <p class="hotkey-caption">Windows · <kbd class="inline-kbd">Cmd</kbd>+<kbd class="inline-kbd">Shift</kbd>+<kbd class="inline-kbd">Space</kbd> on macOS</p>
+        <p class="hotkey-caption"><kbd class="inline-kbd">Ctrl</kbd>+<kbd class="inline-kbd">Shift</kbd>+<kbd class="inline-kbd">Space</kbd> on Windows · <kbd class="inline-kbd">Cmd</kbd>+<kbd class="inline-kbd">Shift</kbd>+<kbd class="inline-kbd">Space</kbd> on macOS</p>
       </section>
 
       <!-- Capture -->
@@ -474,7 +479,7 @@
               <li>Slack & Discord webhooks</li>
               <li>Notion pages & databases</li>
               <li>Google Tasks & Calendar</li>
-              <li>Apple Notes on macOS</li>
+              <li>Apple Notes &amp; Reminders on macOS</li>
             </ul>
           </div>
 
@@ -610,12 +615,18 @@
         <div class="cta-inner" data-reveal>
           <img class="cta-orb float-orb" src="/klyph-sphere.svg" alt="" width="88" height="88" />
           <h2 id="cta-title">Ready to capture faster?</h2>
-          <p>Klyph is in a closed beta while the rough edges get polished. Drop a note and you'll get an installer for macOS or Windows.</p>
-          <div class="hero-actions">
-            <a class="btn btn-primary magnetic" href="mailto:hi@klyph.app?subject=Klyph%20beta%20access&amp;body=Hi%20%E2%80%94%20I%27d%20like%20to%20try%20Klyph.%0A%0AOS%3A%20Mac%20or%20Windows%3F%0AHow%20I%27d%20use%20it%3A"><span>Request beta access</span></a>
-            <a class="btn btn-ghost magnetic" href="#capture"><span>Tour the capture flow</span></a>
+          <p>Klyph is in a closed beta while the rough edges get polished. Leave your email and we'll send an installer for macOS or Windows.</p>
+          <form class="cta-form" id="cta-form" novalidate>
+            <div class="cta-form-row">
+              <input type="email" class="cta-email-input" placeholder="your@email.com" required aria-label="Your email address" />
+              <button type="submit" class="btn btn-primary magnetic"><span>Request access</span></button>
+            </div>
+            <p class="cta-fine">Mac (.dmg) and Windows (.exe) installers sent by hand.</p>
+          </form>
+          <div class="cta-success" id="cta-success" hidden>
+            <span class="cta-success-icon" aria-hidden="true">✓</span>
+            <p>Got it — we'll reach out at <strong id="cta-success-email"></strong></p>
           </div>
-          <p class="cta-fine">Mac (.dmg) and Windows (.exe) installers sent by hand.</p>
         </div>
       </section>
     </main>
@@ -649,11 +660,11 @@
         </div>
 
         <div class="footer-col">
-          <p class="footer-col-title">For</p>
-          <a href="#">Developers</a>
-          <a href="#">Writers</a>
-          <a href="#">Founders</a>
-          <a href="#">Students</a>
+          <p class="footer-col-title">Learn more</p>
+          <a href="#capture">Capture flow</a>
+          <a href="#smart">Smart routing</a>
+          <a href="#privacy">Privacy</a>
+          <a href="#download">Get access</a>
         </div>
       </div>
 

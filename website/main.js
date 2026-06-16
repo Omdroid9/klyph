@@ -722,6 +722,32 @@ if (privacyArt && !prefersReduced) {
   obs.observe(privacyArt);
 }
 
+/* ---------- CTA email form ---------- */
+const ctaForm = document.getElementById("cta-form");
+const ctaSuccess = document.getElementById("cta-success");
+const ctaSuccessEmail = document.getElementById("cta-success-email");
+if (ctaForm) {
+  ctaForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = ctaForm.querySelector('input[type="email"]');
+    const email = (input ? input.value : "").trim();
+    if (!email) return;
+    ctaForm.hidden = true;
+    if (ctaSuccess) {
+      ctaSuccess.hidden = false;
+      if (ctaSuccessEmail) ctaSuccessEmail.textContent = email;
+    }
+    // Fallback: open mailto with email pre-filled
+    try {
+      const sub = encodeURIComponent("Klyph beta access");
+      const body = encodeURIComponent(
+        `Hi — I'd like to try Klyph.\n\nEmail: ${email}\nOS: Mac or Windows?\nHow I'd use it: `,
+      );
+      window.location.href = `mailto:hi@klyph.app?subject=${sub}&body=${body}`;
+    } catch {}
+  });
+}
+
 /* ---------- Bento card mouse spotlight ---------- */
 if (!prefersReduced) {
   document.querySelectorAll(".bento-card").forEach((card) => {
