@@ -227,7 +227,8 @@ fn main() {
       commands::get_active_hotkey,
       commands::update_tray_tooltip,
       commands::open_external_url,
-      commands::create_apple_note
+      commands::create_apple_note,
+      commands::create_apple_reminder
     ])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")

@@ -44,13 +44,15 @@ export function providerConfigured(
 }
 
 export function destinationsFromSettings(settings: IntegrationSettings): CaptureDestinations {
+  const onMac = isMacOS();
   return {
     slack: providerConfigured("slack", settings),
     discord: providerConfigured("discord", settings),
     notion: providerConfigured("notion", settings),
     googleTasks: providerConfigured("google", settings),
     googleCalendar: providerConfigured("google", settings),
-    appleReminders: isMacOS(),
+    appleReminders: onMac,
+    reminders: onMac,
   };
 }
 

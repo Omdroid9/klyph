@@ -8,6 +8,7 @@ export interface CaptureDestinations {
   googleTasks: boolean;
   googleCalendar: boolean;
   appleReminders: boolean;
+  reminders: boolean;
 }
 
 export interface Capture {
@@ -23,12 +24,14 @@ export interface Capture {
   synced_google_calendar: number;
   synced_notion: number;
   synced_apple_reminders: number;
+  synced_reminders: number;
   target_slack: number;
   target_discord: number;
   target_notion: number;
   target_google_tasks: number;
   target_google_calendar: number;
   target_apple_reminders: number;
+  target_reminders: number;
   reminder_time: string | null;
   last_sync_error?: string | null;
   agent_status?: string | null;

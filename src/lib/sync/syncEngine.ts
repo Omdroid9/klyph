@@ -1,5 +1,6 @@
 import { setSetting } from "../db";
 import { createAppleNote } from "./appleNotes";
+import { createAppleReminder } from "./appleRemindersSync";
 import type { Capture } from "../../types";
 import { calendarEventId, createGoogleCalendarEvent } from "./googleCalendar";
 import { sendDiscordCapture } from "./discord";
@@ -20,6 +21,9 @@ export interface SyncConfig {
   // Apple Notes writes happen natively (AppleScript) on macOS only. No bridge.
   appleNotesEnabled?: boolean;
   appleNotesFolder?: string;
+  // Apple Reminders — same native path, separate destination.
+  appleRemindersEnabled?: boolean;
+  appleRemindersList?: string;
 }
 
 export interface SyncResult {
@@ -29,6 +33,7 @@ export interface SyncResult {
   googleSynced: boolean;
   googleCalendarSynced: boolean;
   appleRemindersSynced: boolean;
+  remindersSynced: boolean;
   errors: string[];
 }
 
@@ -136,6 +141,14 @@ function shouldSyncAppleReminders(capture: Capture, config: SyncConfig): boolean
   );
 }
 
+function shouldSyncReminders(capture: Capture, config: SyncConfig): boolean {
+  return Boolean(
+    config.appleRemindersEnabled &&
+      capture.target_reminders === 1 &&
+      capture.synced_reminders === 0,
+  );
+}
+
 export function requiresSync(capture: Capture, config: SyncConfig): boolean {
   return (
     shouldSyncSlack(capture, config) ||
@@ -143,7 +156,8 @@ export function requiresSync(capture: Capture, config: SyncConfig): boolean {
     shouldSyncNotion(capture, config) ||
     shouldSyncGoogle(capture, config) ||
     shouldSyncGoogleCalendar(capture, config) ||
-    shouldSyncAppleReminders(capture, config)
+    shouldSyncAppleReminders(capture, config) ||
+    shouldSyncReminders(capture, config)
   );
 }
 
@@ -278,6 +292,17 @@ export async function syncCapture(capture: Capture, config: SyncConfig): Promise
       )
     : false;
 
+  const remindersSynced = shouldSyncReminders(capture, config)
+    ? await attempt("Reminders", () =>
+        createAppleReminder({
+          list: config.appleRemindersList,
+          title: appleNoteTitle(capture.content),
+          body: `${capture.content}\n\n${capture.list_name} • ${capture.tag}`,
+          dueDate: capture.reminder_time ?? null,
+        }),
+      )
+    : false;
+
   return {
     slackSynced,
     discordSynced,
@@ -285,6 +310,7 @@ export async function syncCapture(capture: Capture, config: SyncConfig): Promise
     googleSynced,
     googleCalendarSynced,
     appleRemindersSynced,
+    remindersSynced,
     errors,
   };
 }

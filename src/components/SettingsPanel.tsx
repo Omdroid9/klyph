@@ -20,6 +20,7 @@ import { testGoogleCalendarConnection } from "../lib/sync/googleCalendar";
 import { testGoogleTasksConnection } from "../lib/sync/googleTasks";
 import { testNotionConnection } from "../lib/sync/notion";
 import { testAppleNotes } from "../lib/sync/appleNotes";
+import { testAppleReminders } from "../lib/sync/appleRemindersSync";
 import { testSlackWebhook } from "../lib/sync/slack";
 import { runSyncPass } from "../lib/sync/syncManager";
 import { isMacOS } from "../lib/platform";
@@ -27,7 +28,7 @@ import { useAppStore } from "../store/useAppStore";
 import KlyphLogo from "./KlyphLogo";
 import type { ThemeMode } from "../types";
 
-const DEFAULT_BACKEND_URL = "http://127.0.0.1:8787";
+const DEFAULT_BACKEND_URL = "https://klyph-auth.onrender.com";
 
 type SettingsTab = "general" | "agent" | "integrations" | "tools";
 
@@ -56,6 +57,7 @@ const SETTING_KEYS = [
   "google_tasks_list_id",
   "google_calendar_id",
   "apple_notes_folder",
+  "apple_reminders_list",
 ] as const;
 
 const IS_MACOS = isMacOS();
@@ -123,6 +125,7 @@ export default function SettingsPanel() {
   const [googleListId, setGoogleListId] = useState("");
   const [googleCalendarId, setGoogleCalendarId] = useState("primary");
   const [appleNotesFolder, setAppleNotesFolder] = useState("Klyph");
+  const [appleRemindersList, setAppleRemindersList] = useState("Klyph");
 
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -202,6 +205,7 @@ export default function SettingsPanel() {
     setGoogleListId(saved.google_tasks_list_id ?? "");
     setGoogleCalendarId(saved.google_calendar_id ?? "primary");
     setAppleNotesFolder(saved.apple_notes_folder?.trim() || "Klyph");
+    setAppleRemindersList(saved.apple_reminders_list?.trim() || "Klyph");
   }, [refreshProviderConfig]);
 
   useEffect(() => {
@@ -319,6 +323,21 @@ export default function SettingsPanel() {
     } catch (error) {
       console.error(error);
       setStatus("Failed to save Apple Notes folder.");
+    } finally {
+      setBusyAction("");
+    }
+  }
+
+  async function saveAppleReminders() {
+    setBusyAction("save-apple-reminders");
+    setStatus("");
+    try {
+      await setSetting("apple_reminders_list", appleRemindersList.trim() || "Klyph");
+      setStatus("Reminders list saved.");
+      await emit("klyph://request-sync");
+    } catch (error) {
+      console.error(error);
+      setStatus("Failed to save Reminders list.");
     } finally {
       setBusyAction("");
     }
@@ -734,6 +753,50 @@ export default function SettingsPanel() {
           </div>
         ) : null}
 
+        {IS_MACOS ? (
+          <div className="mt-3 rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-3">
+            <div className="mb-1 text-xs font-medium">Reminders</div>
+            <p className="codex-muted mb-3 text-[11px]">
+              Built in — no setup. Reminders are created right on this Mac and sync via iCloud.
+              Timed captures automatically get a due date. The first save asks macOS for Automation
+              permission; just click OK.
+            </p>
+            <label className="mb-2 block">
+              <span className="codex-muted mb-1 block text-xs">Reminders list</span>
+              <input
+                value={appleRemindersList}
+                onChange={(event) => setAppleRemindersList(event.currentTarget.value)}
+                placeholder="Klyph"
+                className="codex-input w-full rounded-lg px-3 py-2 text-xs outline-none"
+              />
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={busyAction.length > 0}
+                onClick={() => void saveAppleReminders()}
+                className="codex-btn rounded-lg px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Save List
+              </button>
+              <button
+                type="button"
+                disabled={busyAction.length > 0}
+                onClick={() =>
+                  void runTest(
+                    "test-apple-reminders",
+                    () => testAppleReminders(appleRemindersList.trim()),
+                    "Test reminder created in Reminders.",
+                  )
+                }
+                className="codex-btn-soft rounded-lg px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Send Test Reminder
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         <button
           type="button"
           onClick={() => setAdvancedOpen((value) => !value)}
@@ -918,7 +981,7 @@ export default function SettingsPanel() {
 
       <section className="codex-surface rounded-xl p-4 text-xs">
         <p className="mb-2">Slack, Discord, Notion, and Google connect with one click via OAuth.</p>
-        <p>Apple Notes works natively on macOS — no setup or helper app required.</p>
+        <p>Apple Notes and Reminders work natively on macOS — no setup or helper app required.</p>
       </section>
       </>
       ) : null}

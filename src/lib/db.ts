@@ -36,12 +36,14 @@ const CAPTURE_SELECT_FIELDS = `
   captures.synced_google_calendar,
   captures.synced_notion,
   captures.synced_apple_reminders,
+  captures.synced_reminders,
   captures.target_slack,
   captures.target_discord,
   captures.target_notion,
   captures.target_google_tasks,
   captures.target_google_calendar,
   captures.target_apple_reminders,
+  captures.target_reminders,
   captures.reminder_time,
   captures.last_sync_error,
   agent_jobs.status AS agent_status,
@@ -238,12 +240,14 @@ async function runBootstrap(): Promise<void> {
       synced_google_calendar INTEGER DEFAULT 0,
       synced_notion INTEGER DEFAULT 0,
       synced_apple_reminders INTEGER DEFAULT 0,
+      synced_reminders INTEGER DEFAULT 0,
       target_slack INTEGER DEFAULT 1,
       target_discord INTEGER DEFAULT 1,
       target_notion INTEGER DEFAULT 1,
       target_google_tasks INTEGER DEFAULT 1,
       target_google_calendar INTEGER DEFAULT 0,
       target_apple_reminders INTEGER DEFAULT 0,
+      target_reminders INTEGER DEFAULT 0,
       reminder_time DATETIME NULL
     );
   `);
@@ -288,6 +292,8 @@ async function runBootstrap(): Promise<void> {
   await ensureCaptureColumn(db, "target_google_calendar", "INTEGER DEFAULT 0");
   await ensureCaptureColumn(db, "synced_apple_reminders", "INTEGER DEFAULT 0");
   await ensureCaptureColumn(db, "target_apple_reminders", "INTEGER DEFAULT 0");
+  await ensureCaptureColumn(db, "synced_reminders", "INTEGER DEFAULT 0");
+  await ensureCaptureColumn(db, "target_reminders", "INTEGER DEFAULT 0");
   await ensureCaptureColumn(db, "last_sync_error", "TEXT NULL");
 
   await db.execute(
@@ -342,6 +348,7 @@ export async function insertCapture(params: {
     googleTasks: false,
     googleCalendar: false,
     appleReminders: false,
+    reminders: false,
   };
   await db.execute(
     `
@@ -357,9 +364,10 @@ export async function insertCapture(params: {
         target_google_tasks,
         target_google_calendar,
         target_apple_reminders,
+        target_reminders,
         reminder_time
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);
     `,
     [
       params.id,
@@ -373,6 +381,7 @@ export async function insertCapture(params: {
       Number(destinations.googleTasks),
       Number(destinations.googleCalendar),
       Number(destinations.appleReminders),
+      Number(destinations.reminders),
       params.reminderTime ?? null,
     ],
   );
@@ -486,6 +495,7 @@ export async function updateCaptureSyncStatus(
     synced_google_calendar: number;
     synced_notion: number;
     synced_apple_reminders: number;
+    synced_reminders: number;
   }>,
 ): Promise<void> {
   const entries = Object.entries(updates).filter(([, value]) => typeof value === "number");
@@ -544,7 +554,8 @@ export async function updateCapture(params: {
         target_google_tasks = $8,
         target_google_calendar = $9,
         target_apple_reminders = $10,
-        reminder_time = $11,
+        target_reminders = $11,
+        reminder_time = $12,
         -- Preserve already-synced destinations on edit so fixing a typo does not
         -- re-post everywhere. A still-targeted destination keeps its prior synced
         -- state (unsent stays unsent and will sync; already-sent stays sent).
@@ -554,8 +565,9 @@ export async function updateCapture(params: {
         synced_notion = CASE WHEN $7 = 1 THEN synced_notion ELSE 1 END,
         synced_google_tasks = CASE WHEN $8 = 1 THEN synced_google_tasks ELSE 1 END,
         synced_google_calendar = CASE WHEN $9 = 1 THEN synced_google_calendar ELSE 1 END,
-        synced_apple_reminders = CASE WHEN $10 = 1 THEN synced_apple_reminders ELSE 1 END
-      WHERE id = $12;
+        synced_apple_reminders = CASE WHEN $10 = 1 THEN synced_apple_reminders ELSE 1 END,
+        synced_reminders = CASE WHEN $11 = 1 THEN synced_reminders ELSE 1 END
+      WHERE id = $13;
     `,
     [
       params.content,
@@ -568,6 +580,7 @@ export async function updateCapture(params: {
       Number(params.destinations.googleTasks),
       Number(params.destinations.googleCalendar),
       Number(params.destinations.appleReminders),
+      Number(params.destinations.reminders),
       params.reminderTime,
       params.id,
     ],

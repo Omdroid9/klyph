@@ -50,6 +50,7 @@ const DEFAULT_DESTINATIONS: CaptureDestinations = {
   googleTasks: false,
   googleCalendar: false,
   appleReminders: false,
+  reminders: false,
 };
 
 type DestinationKey = keyof CaptureDestinations;
@@ -65,6 +66,7 @@ const TARGET_META: Array<{
   { key: "googleTasks", label: "GTasks", available: true },
   { key: "googleCalendar", label: "GCal", available: true },
   { key: "appleReminders", label: "Apple Notes", available: IS_MACOS },
+  { key: "reminders", label: "Reminders", available: IS_MACOS },
 ];
 
 function normalizeListName(value: string): string {
@@ -274,6 +276,7 @@ export default function CaptureWindow() {
       googleTasks: capture.target_google_tasks === 1,
       googleCalendar: capture.target_google_calendar === 1,
       appleReminders: capture.target_apple_reminders === 1,
+      reminders: capture.target_reminders === 1,
     };
   }
 
@@ -610,6 +613,8 @@ export default function CaptureWindow() {
       notion: true,
       googleTasks: true,
       googleCalendar: true,
+      appleReminders: IS_MACOS ? true : prev.appleReminders,
+      reminders: IS_MACOS ? true : prev.reminders,
     }));
   }
 
@@ -1071,7 +1076,7 @@ export default function CaptureWindow() {
                   key={target.key}
                   type="button"
                   disabled={!target.available}
-                  title={target.available ? target.label : "Apple Notes sync is available on macOS."}
+                  title={target.available ? target.label : `${target.label} is only available on macOS.`}
                   onClick={() => toggleDestination(target.key)}
                   className={[
                     "rounded-full border px-2.5 py-1 text-[11px] transition",
@@ -1132,6 +1137,7 @@ export default function CaptureWindow() {
               googleTasks: false,
               googleCalendar: false,
               appleReminders: false,
+              reminders: false,
             };
             void persistCapture(destinationPrompt.keepOpen, localOnly);
           }}

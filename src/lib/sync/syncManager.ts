@@ -22,6 +22,7 @@ const SYNC_SETTING_KEYS = [
   "google_tasks_list_id",
   "google_calendar_id",
   "apple_notes_folder",
+  "apple_reminders_list",
 ] as const;
 
 export interface SyncRunStats {
@@ -51,6 +52,8 @@ export async function loadSyncConfig(): Promise<SyncConfig> {
     googleCalendarId: normalizeSetting(settings.google_calendar_id),
     appleNotesEnabled: isMacOS(),
     appleNotesFolder: normalizeSetting(settings.apple_notes_folder) ?? "Klyph",
+    appleRemindersEnabled: isMacOS(),
+    appleRemindersList: normalizeSetting(settings.apple_reminders_list) ?? "Klyph",
   };
 }
 
@@ -87,6 +90,13 @@ function countExpectedSyncTargets(capture: Capture, config: SyncConfig): number 
     config.appleNotesEnabled &&
     capture.target_apple_reminders === 1 &&
     capture.synced_apple_reminders === 0
+  ) {
+    expected += 1;
+  }
+  if (
+    config.appleRemindersEnabled &&
+    capture.target_reminders === 1 &&
+    capture.synced_reminders === 0
   ) {
     expected += 1;
   }
@@ -172,6 +182,10 @@ export async function runSyncPass(options?: {
       updatePayload.synced_apple_reminders = 1;
       stats.syncSucceeded += 1;
     }
+    if (result.remindersSynced) {
+      updatePayload.synced_reminders = 1;
+      stats.syncSucceeded += 1;
+    }
 
     const failedTargets =
       expectedTargets -
@@ -180,7 +194,8 @@ export async function runSyncPass(options?: {
       Number(result.notionSynced) -
       Number(result.googleSynced) -
       Number(result.googleCalendarSynced) -
-      Number(result.appleRemindersSynced);
+      Number(result.appleRemindersSynced) -
+      Number(result.remindersSynced);
     stats.syncFailed += Math.max(failedTargets, 0);
 
     if (Object.keys(updatePayload).length > 0) {

@@ -17,7 +17,7 @@ import ProviderLogo, { type ProviderLogoId } from "./ProviderLogo";
 import KlyphLogo from "./KlyphLogo";
 import { providerConfigured, loadIntegrationSettings } from "../lib/integrations/connectionStatus";
 
-const DEFAULT_BACKEND_URL = "http://127.0.0.1:8787";
+const DEFAULT_BACKEND_URL = "https://klyph-auth.onrender.com";
 const IS_MACOS = isMacOS();
 const TOTAL_STEPS = 4;
 

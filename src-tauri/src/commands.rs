@@ -125,6 +125,136 @@ pub fn open_external_url(url: String) -> Result<(), String> {
   Ok(())
 }
 
+/// Parse a local ISO datetime string ("2026-06-15T14:00:00") into components.
+/// Returns None if the string is malformed; the caller falls back to no due date.
+#[cfg(target_os = "macos")]
+fn parse_local_iso(s: &str) -> Option<(i32, u32, u32, u32, u32)> {
+  let (date_part, time_part) = s.split_once('T')?;
+  let mut d = date_part.split('-');
+  let year: i32 = d.next()?.parse().ok()?;
+  let month: u32 = d.next()?.parse().ok()?;
+  let day: u32 = d.next()?.parse().ok()?;
+  let mut t = time_part.split(':');
+  let hour: u32 = t.next()?.parse().ok()?;
+  let minute: u32 = t.next()?.parse().ok()?;
+  Some((year, month, day, hour, minute))
+}
+
+/// Create a reminder in macOS Reminders.app via AppleScript.
+/// Values are passed as argv, never interpolated into the script.
+/// When `due_date` is a local ISO string ("2026-06-15T14:00:00") the reminder
+/// gets a due date; otherwise it is created without one.
+#[tauri::command]
+pub fn create_apple_reminder(
+  list: String,
+  title: String,
+  body: String,
+  due_date: Option<String>,
+) -> Result<(), String> {
+  #[cfg(target_os = "macos")]
+  {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+
+    let list = {
+      let trimmed = list.trim();
+      if trimmed.is_empty() { "Klyph".to_string() } else { trimmed.to_string() }
+    };
+
+    let parsed_due = due_date
+      .as_deref()
+      .and_then(|s| parse_local_iso(s));
+
+    let script = r#"on run argv
+  set listName to item 1 of argv
+  set reminderTitle to item 2 of argv
+  set reminderBody to item 3 of argv
+  set hasDue to item 4 of argv
+  tell application "Reminders"
+    if not (exists list listName) then
+      make new list with properties {name:listName}
+    end if
+    if hasDue is "true" then
+      set yr to (item 5 of argv) as integer
+      set mo to (item 6 of argv) as integer
+      set dy to (item 7 of argv) as integer
+      set hr to (item 8 of argv) as integer
+      set mn to (item 9 of argv) as integer
+      set dueDate to current date
+      set year of dueDate to yr
+      set month of dueDate to mo
+      set day of dueDate to dy
+      set hours of dueDate to hr
+      set minutes of dueDate to mn
+      set seconds of dueDate to 0
+      make new reminder at list listName with properties {name:reminderTitle, body:reminderBody, due date:dueDate}
+    else
+      make new reminder at list listName with properties {name:reminderTitle, body:reminderBody}
+    end if
+  end tell
+end run"#;
+
+    let mut cmd = Command::new("osascript");
+    cmd
+      .arg("-")
+      .arg(&list)
+      .arg(&title)
+      .arg(&body)
+      .stdin(Stdio::piped())
+      .stdout(Stdio::piped())
+      .stderr(Stdio::piped());
+
+    if let Some((year, month, day, hour, minute)) = parsed_due {
+      cmd
+        .arg("true")
+        .arg(year.to_string())
+        .arg(month.to_string())
+        .arg(day.to_string())
+        .arg(hour.to_string())
+        .arg(minute.to_string());
+    } else {
+      cmd.arg("false");
+    }
+
+    let mut child = cmd
+      .spawn()
+      .map_err(|e| format!("Could not launch osascript: {e}"))?;
+
+    {
+      let mut stdin = child
+        .stdin
+        .take()
+        .ok_or_else(|| "Could not write AppleScript to osascript".to_string())?;
+      stdin
+        .write_all(script.as_bytes())
+        .map_err(|e| format!("Could not send AppleScript: {e}"))?;
+    }
+
+    let output = child
+      .wait_with_output()
+      .map_err(|e| format!("osascript did not complete: {e}"))?;
+
+    if !output.status.success() {
+      let stderr = String::from_utf8_lossy(&output.stderr);
+      let message = stderr.trim();
+      let detail = if message.is_empty() {
+        "Apple Reminders automation failed. Grant Klyph permission to control Reminders in System Settings > Privacy & Security > Automation.".to_string()
+      } else {
+        message.to_string()
+      };
+      return Err(detail);
+    }
+
+    Ok(())
+  }
+
+  #[cfg(not(target_os = "macos"))]
+  {
+    let _ = (list, title, body, due_date);
+    Err("Apple Reminders is only available on macOS.".to_string())
+  }
+}
+
 /// Create a note in the macOS Notes app via AppleScript, with no external
 /// helper process. Values are passed as `osascript` arguments (argv) rather
 /// than interpolated into the script, so note content cannot break out of the
