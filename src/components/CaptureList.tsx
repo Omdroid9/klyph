@@ -63,6 +63,7 @@ function captureDestinations(capture: Capture): CaptureDestinations {
     googleTasks: capture.target_google_tasks === 1,
     googleCalendar: capture.target_google_calendar === 1,
     appleReminders: capture.target_apple_reminders === 1,
+    reminders: capture.target_reminders === 1,
   };
 }
 
@@ -158,6 +159,7 @@ export default function CaptureList({ onBack }: CaptureListProps) {
     googleTasks: false,
     googleCalendar: false,
     appleReminders: false,
+    reminders: false,
   });
   const [listFilter, setListFilter] = useState("all");
   const [laneFilter, setLaneFilter] = useState<LaneFilter>("all");

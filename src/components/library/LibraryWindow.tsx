@@ -196,6 +196,7 @@ export default function LibraryWindow() {
           googleTasks: Boolean(capture.target_google_tasks),
           googleCalendar: Boolean(capture.target_google_calendar),
           appleReminders: Boolean(capture.target_apple_reminders),
+          reminders: Boolean(capture.target_reminders),
         },
         reminderTime: capture.reminder_time,
       });
