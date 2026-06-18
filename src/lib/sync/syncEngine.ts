@@ -50,7 +50,10 @@ function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-async function runWithRetry(task: () => Promise<void>): Promise<RetryOutcome> {
+async function runWithRetry(
+  task: () => Promise<void>,
+  noRetry?: (error: unknown) => boolean,
+): Promise<RetryOutcome> {
   let lastError: unknown = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
@@ -58,8 +61,8 @@ async function runWithRetry(task: () => Promise<void>): Promise<RetryOutcome> {
       return { ok: true, error: null };
     } catch (error) {
       lastError = error;
-      if (attempt === 2) {
-        console.error("Sync task failed after max retries", error);
+      if (attempt === 2 || noRetry?.(error)) {
+        console.error("Sync task failed", error);
         return { ok: false, error: toErrorMessage(error) };
       }
       await new Promise((resolve) => {
@@ -168,6 +171,17 @@ function isUnauthorizedError(error: unknown): boolean {
   return error.message.includes("HTTP 401");
 }
 
+function isPermissionError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const msg = error.message.toLowerCase();
+  return (
+    msg.includes("not allowed to send apple events") ||
+    msg.includes("-1743") ||
+    msg.includes("erraeventnotpermitted") ||
+    msg.includes("automation")
+  );
+}
+
 async function syncGoogleCapture(capture: Capture, config: SyncConfig): Promise<void> {
   const createTask = async (accessToken: string) => {
     await createGoogleTask({
@@ -242,8 +256,12 @@ async function syncGoogleCalendarCapture(capture: Capture, config: SyncConfig): 
 export async function syncCapture(capture: Capture, config: SyncConfig): Promise<SyncResult> {
   const errors: string[] = [];
 
-  async function attempt(label: string, task: () => Promise<void>): Promise<boolean> {
-    const outcome = await runWithRetry(task);
+  async function attempt(
+    label: string,
+    task: () => Promise<void>,
+    noRetry?: (error: unknown) => boolean,
+  ): Promise<boolean> {
+    const outcome = await runWithRetry(task, noRetry);
     if (!outcome.ok && outcome.error) {
       errors.push(`${label}: ${outcome.error}`);
     }
@@ -293,13 +311,16 @@ export async function syncCapture(capture: Capture, config: SyncConfig): Promise
     : false;
 
   const remindersSynced = shouldSyncReminders(capture, config)
-    ? await attempt("Reminders", () =>
-        createAppleReminder({
-          list: config.appleRemindersList,
-          title: appleNoteTitle(capture.content),
-          body: `${capture.content}\n\n${capture.list_name} • ${capture.tag}`,
-          dueDate: capture.reminder_time ?? null,
-        }),
+    ? await attempt(
+        "Reminders",
+        () =>
+          createAppleReminder({
+            list: config.appleRemindersList,
+            title: appleNoteTitle(capture.content),
+            body: `${capture.content}\n\n${capture.list_name} • ${capture.tag}`,
+            dueDate: capture.reminder_time ?? null,
+          }),
+        isPermissionError,
       )
     : false;
 
