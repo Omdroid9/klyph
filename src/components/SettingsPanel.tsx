@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { emit } from "@tauri-apps/api/event";
-import { getSettings, setSetting } from "../lib/db";
+import { deleteRoutingRule, getSettings, listRoutingRules, setSetting } from "../lib/db";
 import { getLlmUsageToday } from "../lib/agent/agentEngine";
 import {
   providerConfigured,
 } from "../lib/integrations/connectionStatus";
+import { describeRule } from "../lib/integrations/captureRouting";
 import {
   assertConnectBackendReachable,
   getConnectProvidersConfig,
@@ -26,7 +27,7 @@ import { runSyncPass } from "../lib/sync/syncManager";
 import { isMacOS } from "../lib/platform";
 import { useAppStore } from "../store/useAppStore";
 import KlyphLogo from "./KlyphLogo";
-import type { ThemeMode } from "../types";
+import type { RoutingRule, ThemeMode } from "../types";
 
 const DEFAULT_BACKEND_URL = "https://klyph-auth.onrender.com";
 
@@ -134,6 +135,8 @@ export default function SettingsPanel() {
   const [syncStatus, setSyncStatus] = useState("");
   const [busyAction, setBusyAction] = useState("");
   const [parserDebugInput, setParserDebugInput] = useState("testing for tomorrow");
+  const [routingRules, setRoutingRules] = useState<RoutingRule[]>([]);
+  const [deletingRuleId, setDeletingRuleId] = useState<string | null>(null);
 
   const connectionState = useMemo(() => {
     const settings = integrationSettingsFromState({
@@ -206,7 +209,26 @@ export default function SettingsPanel() {
     setGoogleCalendarId(saved.google_calendar_id ?? "primary");
     setAppleNotesFolder(saved.apple_notes_folder?.trim() || "Klyph");
     setAppleRemindersList(saved.apple_reminders_list?.trim() || "Klyph");
+
+    try {
+      setRoutingRules(await listRoutingRules());
+    } catch (error) {
+      console.error("Failed to load routing rules", error);
+    }
   }, [refreshProviderConfig]);
+
+  async function removeRoutingRule(id: string) {
+    setDeletingRuleId(id);
+    try {
+      await deleteRoutingRule(id);
+      setRoutingRules(await listRoutingRules());
+    } catch (error) {
+      console.error("Failed to delete routing rule", error);
+      setStatus("Could not delete the routing rule.");
+    } finally {
+      setDeletingRuleId(null);
+    }
+  }
 
   useEffect(() => {
     void loadSettings().catch(console.error);
@@ -571,6 +593,47 @@ export default function SettingsPanel() {
         >
           Save AI Agent Settings
         </button>
+      </section>
+      ) : null}
+
+      {activeTab === "agent" ? (
+      <section className="codex-surface mb-4 rounded-xl p-4">
+        <h2 className="label-micro mb-2">Smart Routing Rules</h2>
+        <p className="codex-muted mb-3 text-[11px] leading-5">
+          Klyph learns these when you correct a suggested destination and press{" "}
+          <strong className="font-medium text-[var(--text)]">Always</strong> in the capture window.
+          A rule sends every matching capture (by tag, list, lane, or keyword) to your chosen apps
+          and always beats the built-in heuristics.
+        </p>
+
+        {routingRules.length === 0 ? (
+          <p className="codex-muted text-xs">
+            No rules yet. Change the destination of a tagged capture and Klyph will offer to
+            remember it.
+          </p>
+        ) : (
+          <ul className="space-y-1.5">
+            {routingRules.map((rule) => (
+              <li
+                key={rule.id}
+                className="flex items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2 text-xs"
+              >
+                <span className="min-w-0 truncate">
+                  {describeRule(rule)}
+                  <span className="codex-muted"> · used {rule.hit_count ?? 0}×</span>
+                </span>
+                <button
+                  type="button"
+                  disabled={deletingRuleId === rule.id}
+                  onClick={() => void removeRoutingRule(rule.id)}
+                  className="shrink-0 rounded-full border border-red-400/40 px-2 py-0.5 text-[11px] font-medium text-red-500 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {deletingRuleId === rule.id ? "Deleting..." : "Delete"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
       ) : null}
 

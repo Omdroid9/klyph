@@ -1,7 +1,14 @@
 import Database from "@tauri-apps/plugin-sql";
 import { LazyStore } from "@tauri-apps/plugin-store";
 import { nextRecurrenceAfter, toLocalIso } from "./recurrence";
-import type { Capture, CaptureDestinations, CaptureLane, CaptureTag } from "../types";
+import type {
+  Capture,
+  CaptureDestinations,
+  CaptureLane,
+  CaptureTag,
+  RoutingRule,
+  RoutingRuleField,
+} from "../types";
 
 const DB_URL = "sqlite:klyph.db";
 const SECURE_STORE_PATH = "secure-settings.json";
@@ -48,6 +55,8 @@ const CAPTURE_SELECT_FIELDS = `
   captures.reminder_time,
   captures.recurrence_rule,
   captures.recurrence_next_at,
+  captures.routing_source,
+  captures.routing_reason,
   captures.last_sync_error,
   agent_jobs.status AS agent_status,
   agent_jobs.attempts AS agent_attempts,
@@ -289,6 +298,17 @@ async function runBootstrap(): Promise<void> {
   `);
 
   await db.execute(`
+    CREATE TABLE IF NOT EXISTS routing_rules (
+      id TEXT PRIMARY KEY,
+      field TEXT NOT NULL,
+      match_value TEXT NOT NULL,
+      destinations TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      hit_count INTEGER NOT NULL DEFAULT 0
+    );
+  `);
+
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS agent_jobs (
       capture_id TEXT PRIMARY KEY,
       status TEXT NOT NULL DEFAULT 'pending',
@@ -319,6 +339,8 @@ async function runBootstrap(): Promise<void> {
   await ensureCaptureColumn(db, "last_sync_error", "TEXT NULL");
   await ensureCaptureColumn(db, "recurrence_rule", "TEXT NULL");
   await ensureCaptureColumn(db, "recurrence_next_at", "DATETIME NULL");
+  await ensureCaptureColumn(db, "routing_source", "TEXT NULL");
+  await ensureCaptureColumn(db, "routing_reason", "TEXT NULL");
 
   await db.execute(
     `
@@ -359,6 +381,8 @@ export async function insertCapture(params: {
   destinations?: CaptureDestinations;
   reminderTime?: string | null;
   recurrenceRule?: string | null;
+  routingSource?: string | null;
+  routingReason?: string | null;
 }): Promise<void> {
   const db = await getDatabase();
   const lane = normalizeLane(params.lane);
@@ -392,9 +416,11 @@ export async function insertCapture(params: {
         target_reminders,
         reminder_time,
         recurrence_rule,
-        recurrence_next_at
+        recurrence_next_at,
+        routing_source,
+        routing_reason
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);
     `,
     [
       params.id,
@@ -412,6 +438,8 @@ export async function insertCapture(params: {
       params.reminderTime ?? null,
       params.recurrenceRule ?? null,
       computeRecurrenceNextAt(params.reminderTime, params.recurrenceRule),
+      params.routingSource ?? null,
+      params.routingReason ?? null,
     ],
   );
 
@@ -554,6 +582,102 @@ export async function setCaptureSyncError(id: string, error: string | null): Pro
       WHERE id = $2;
     `,
     [error, id],
+  );
+}
+
+interface RoutingRuleRow {
+  id: string;
+  field: string;
+  match_value: string;
+  destinations: string;
+  created_at: string;
+  hit_count: number;
+}
+
+const EMPTY_RULE_DESTINATIONS: CaptureDestinations = {
+  slack: false,
+  discord: false,
+  notion: false,
+  googleTasks: false,
+  googleCalendar: false,
+  appleReminders: false,
+  reminders: false,
+};
+
+function parseRuleDestinations(raw: string): CaptureDestinations {
+  try {
+    const parsed = JSON.parse(raw) as Partial<CaptureDestinations>;
+    return { ...EMPTY_RULE_DESTINATIONS, ...parsed };
+  } catch {
+    return { ...EMPTY_RULE_DESTINATIONS };
+  }
+}
+
+export async function listRoutingRules(): Promise<RoutingRule[]> {
+  const db = await getDatabase();
+  const rows = await db.select<RoutingRuleRow[]>(
+    `
+      SELECT id, field, match_value, destinations, created_at, hit_count
+      FROM routing_rules
+      ORDER BY created_at DESC;
+    `,
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    field: row.field as RoutingRuleField,
+    match_value: row.match_value,
+    destinations: parseRuleDestinations(row.destinations),
+    created_at: row.created_at,
+    hit_count: row.hit_count,
+  }));
+}
+
+export async function createRoutingRule(params: {
+  field: RoutingRuleField;
+  matchValue: string;
+  destinations: CaptureDestinations;
+}): Promise<string> {
+  const db = await getDatabase();
+  const id = crypto.randomUUID();
+  // One rule per condition: re-teaching the same tag/list/keyword replaces the
+  // old answer instead of stacking a stale rule above the new one.
+  await db.execute(
+    `
+      DELETE FROM routing_rules
+      WHERE field = $1 AND match_value = $2 COLLATE NOCASE;
+    `,
+    [params.field, params.matchValue.trim()],
+  );
+  await db.execute(
+    `
+      INSERT INTO routing_rules (id, field, match_value, destinations)
+      VALUES ($1, $2, $3, $4);
+    `,
+    [id, params.field, params.matchValue.trim(), JSON.stringify(params.destinations)],
+  );
+  return id;
+}
+
+export async function deleteRoutingRule(id: string): Promise<void> {
+  const db = await getDatabase();
+  await db.execute(
+    `
+      DELETE FROM routing_rules
+      WHERE id = $1;
+    `,
+    [id],
+  );
+}
+
+export async function recordRoutingRuleHit(id: string): Promise<void> {
+  const db = await getDatabase();
+  await db.execute(
+    `
+      UPDATE routing_rules
+      SET hit_count = hit_count + 1
+      WHERE id = $1;
+    `,
+    [id],
   );
 }
 

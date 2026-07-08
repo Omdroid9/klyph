@@ -4,20 +4,25 @@ import { emit, listen } from "@tauri-apps/api/event";
 import { parseReminderSyntax } from "../lib/parser";
 import {
   createManagedList,
+  createRoutingRule,
   getCapturesTodayCount,
   getSetting,
   insertCapture,
   listCaptures,
   listManagedLists,
+  listRoutingRules,
+  recordRoutingRuleHit,
   setSetting,
 } from "../lib/db";
-import { loadConnectedDestinations, loadIntegrationSettings, providerConfigured } from "../lib/integrations/connectionStatus";
+import { loadIntegrationSettings } from "../lib/integrations/connectionStatus";
 import {
-  applySmartCaptureDestinations,
   availableDestinations,
+  describeRuleCondition,
+  destinationNames,
+  evaluateRouting,
   hasActiveDestination,
   hasAnyProviderConfigured,
-  suggestedCaptureDestinations,
+  sameDestinations,
 } from "../lib/integrations/captureRouting";
 import { isMacOS } from "../lib/platform";
 import { recurrenceLabelFromRule } from "../lib/recurrence";
@@ -27,7 +32,14 @@ import ListPicker from "./ListPicker";
 import CaptureProductTour from "./CaptureProductTour";
 import CaptureDestinationPrompt from "./CaptureDestinationPrompt";
 import KlyphLogo from "./KlyphLogo";
-import type { Capture, CaptureDestinations, CaptureLane, CaptureTag } from "../types";
+import type {
+  Capture,
+  CaptureDestinations,
+  CaptureLane,
+  CaptureTag,
+  RoutingRule,
+  RoutingRuleField,
+} from "../types";
 
 const MAX_CHARS = 280;
 const RECENT_LIMIT = 20;
@@ -40,6 +52,7 @@ interface CaptureDraft {
   captureLane: CaptureLane;
   listName: string;
   destinations: CaptureDestinations;
+  destinationsTouched?: boolean;
   tag: CaptureTag;
   manualReminderTime: string | null;
 }
@@ -117,28 +130,8 @@ function destinationLabels(value: CaptureDestinations): string[] {
     .map((key) => DESTINATION_LABELS[key]);
 }
 
-function activeDestinationCount(value: CaptureDestinations): number {
-  return Object.values(value).filter(Boolean).length;
-}
-
 function hasReminderCommand(value: string): boolean {
   return REMINDER_COMMAND_REGEX.test(value);
-}
-
-function preferRemindersForCommand(
-  value: CaptureDestinations,
-  canUseReminders: boolean,
-): CaptureDestinations {
-  if (!canUseReminders) {
-    return value;
-  }
-
-  const onlyAppleNotes = value.appleReminders && activeDestinationCount(value) === 1;
-  return {
-    ...value,
-    appleReminders: onlyAppleNotes ? false : value.appleReminders,
-    reminders: true,
-  };
 }
 
 function currentLineBounds(value: string, cursor: number): { start: number; end: number; line: string } {
@@ -248,6 +241,9 @@ export default function CaptureWindow() {
   const [captureLane, setCaptureLane] = useState<CaptureLane>("focus");
   const [listName, setListName] = useState(DEFAULT_LIST);
   const [destinations, setDestinations] = useState<CaptureDestinations>(DEFAULT_DESTINATIONS);
+  const [destinationsTouched, setDestinationsTouched] = useState(false);
+  const [routingRules, setRoutingRules] = useState<RoutingRule[]>([]);
+  const [teachDismissed, setTeachDismissed] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -261,7 +257,6 @@ export default function CaptureWindow() {
     keepOpen: boolean;
     destinations: CaptureDestinations;
   } | null>(null);
-  const [googleConfigured, setGoogleConfigured] = useState(false);
   const [integrationSettings, setIntegrationSettings] = useState<Awaited<
     ReturnType<typeof loadIntegrationSettings>
   > | null>(null);
@@ -303,58 +298,84 @@ export default function CaptureWindow() {
   const remaining = MAX_CHARS - text.length;
   const reminderCommand = hasReminderCommand(text);
   const previewContent = (parsed.cleanedContent.trim() || text.trim()).slice(0, MAX_CHARS);
-  const previewDestinations = useMemo(() => {
-    if (hasActiveDestination(destinations)) {
-      return preferRemindersForCommand(destinations, reminderCommand && Boolean(effectiveReminderTime) && IS_MACOS);
-    }
+
+  // Where Klyph *would* route this capture right now, and why. This is the
+  // single decision the preview, the save path, and the teach prompt all share.
+  const routingDecision = useMemo(() => {
     if (!integrationSettings) {
+      return null;
+    }
+    return evaluateRouting({
+      text,
+      tag: selectedTag,
+      lane: captureLane,
+      listName: normalizeListName(listName),
+      reminderTime: effectiveReminderTime,
+      isReminderCommand: reminderCommand,
+      settings: integrationSettings,
+      rules: routingRules,
+    });
+  }, [
+    captureLane,
+    effectiveReminderTime,
+    integrationSettings,
+    listName,
+    reminderCommand,
+    routingRules,
+    selectedTag,
+    text,
+  ]);
+
+  const previewDestinations = useMemo(() => {
+    if (destinationsTouched) {
       return destinations;
     }
-    return preferRemindersForCommand(
-      suggestedCaptureDestinations(effectiveReminderTime, integrationSettings),
-      reminderCommand && Boolean(effectiveReminderTime) && availableDestinations(integrationSettings).reminders,
-    );
-  }, [destinations, effectiveReminderTime, integrationSettings, reminderCommand]);
+    return routingDecision?.destinations ?? destinations;
+  }, [destinations, destinationsTouched, routingDecision]);
   const previewDestinationLabels = useMemo(
     () => destinationLabels(previewDestinations),
     [previewDestinations],
   );
   const previewPrimaryDestination = previewDestinationLabels[0] ?? "Local only";
   const previewTitle = firstLineTitle(previewContent);
-  const previewReason = useMemo(() => {
-    if (effectiveRecurrenceRule) {
-      return "Repeat request";
+  const previewReason = destinationsTouched
+    ? "You chose these"
+    : routingDecision?.reason ?? "Ready to capture";
+
+  // Teach prompt: the user has corrected the suggestion, and the capture has a
+  // signal (tag, list, lane) we could turn into a permanent rule.
+  const teachSignal = useMemo((): { field: RoutingRuleField; value: string } | null => {
+    if (selectedTag !== "untagged") {
+      return { field: "tag", value: selectedTag };
     }
-    if (reminderCommand && previewDestinations.reminders) {
-      return "Reminder command";
+    const normalizedList = normalizeListName(listName);
+    if (normalizedList.toLowerCase() !== DEFAULT_LIST.toLowerCase()) {
+      return { field: "list", value: normalizedList };
     }
-    if (hasActiveDestination(destinations)) {
-      return "Selected manually";
+    if (captureLane === "distraction") {
+      return { field: "lane", value: "distraction" };
     }
-    if (!integrationSettings) {
-      return "Ready to capture";
+    return null;
+  }, [captureLane, listName, selectedTag]);
+
+  const teachOffer = useMemo(() => {
+    if (
+      !destinationsTouched ||
+      teachDismissed ||
+      !teachSignal ||
+      !routingDecision ||
+      text.trim().length === 0 ||
+      !hasActiveDestination(destinations) ||
+      sameDestinations(destinations, routingDecision.destinations)
+    ) {
+      return null;
     }
-    if (effectiveReminderTime && previewDestinations.googleCalendar) {
-      return "Time detected";
-    }
-    if (effectiveReminderTime && previewDestinations.reminders) {
-      return "Reminder time detected";
-    }
-    if (previewDestinations.appleReminders) {
-      return "Default notes destination";
-    }
-    return previewDestinationLabels.length > 0 ? "Suggested destination" : "No destination selected";
-  }, [
-    destinations,
-    effectiveReminderTime,
-    effectiveRecurrenceRule,
-    integrationSettings,
-    previewDestinationLabels.length,
-    previewDestinations.appleReminders,
-    previewDestinations.googleCalendar,
-    previewDestinations.reminders,
-    reminderCommand,
-  ]);
+    return {
+      ...teachSignal,
+      label: describeRuleCondition({ field: teachSignal.field, match_value: teachSignal.value }),
+      destinationLabels: destinationNames(destinations),
+    };
+  }, [destinations, destinationsTouched, routingDecision, teachDismissed, teachSignal, text]);
 
   const resetDraft = useCallback(
     (clearTag = false) => {
@@ -363,9 +384,9 @@ export default function CaptureWindow() {
       setListName(DEFAULT_LIST);
       setRecentIndex(null);
       setManualReminderTime(null);
-      void loadConnectedDestinations().then(setDestinations).catch(() => {
-        setDestinations(DEFAULT_DESTINATIONS);
-      });
+      setDestinations(DEFAULT_DESTINATIONS);
+      setDestinationsTouched(false);
+      setTeachDismissed(false);
       if (clearTag) {
         setSelectedTag("untagged");
       }
@@ -481,6 +502,7 @@ export default function CaptureWindow() {
     setSelectedTag(capture.tag);
     setListName(capture.list_name?.trim() || DEFAULT_LIST);
     setDestinations(toDestinations(capture));
+    setDestinationsTouched(true);
     setManualReminderTime(capture.reminder_time);
     requestAnimationFrame(() => {
       inputRef.current?.focus();
@@ -526,51 +548,22 @@ export default function CaptureWindow() {
     });
   }
 
-  useEffect(() => {
-    let active = true;
-
-    void (async () => {
-      const settings = await loadIntegrationSettings();
-      if (!active) {
-        return;
-      }
-      setIntegrationSettings(settings);
-      setGoogleConfigured(providerConfigured("google", settings));
-    })();
-
-    return () => {
-      active = false;
-    };
+  const refreshRoutingInputs = useCallback(() => {
+    void loadIntegrationSettings().then(setIntegrationSettings).catch(console.error);
+    void listRoutingRules().then(setRoutingRules).catch(console.error);
   }, []);
 
   useEffect(() => {
-    if (!effectiveReminderTime) {
-      return;
-    }
-
-    if (reminderCommand && IS_MACOS) {
-      setDestinations((prev) => preferRemindersForCommand(prev, true));
-      return;
-    }
-
-    if (googleConfigured) {
-      setDestinations((prev) => (prev.googleCalendar ? prev : { ...prev, googleCalendar: true }));
-    }
-  }, [effectiveReminderTime, googleConfigured, reminderCommand]);
+    refreshRoutingInputs();
+  }, [refreshRoutingInputs]);
 
   useEffect(() => {
     let active = true;
 
     async function restoreDraft() {
       try {
-        const connected = await loadConnectedDestinations();
         const raw = await getSetting(DRAFT_SETTING_KEY);
-        if (!active) {
-          return;
-        }
-
-        if (!raw) {
-          setDestinations(connected);
+        if (!active || !raw) {
           return;
         }
 
@@ -579,17 +572,14 @@ export default function CaptureWindow() {
           setText(draft.text.slice(0, MAX_CHARS));
           setCaptureLane(draft.captureLane === "distraction" ? "distraction" : "focus");
           setListName(draft.listName?.trim() || DEFAULT_LIST);
-          if (draft.destinations) {
+          if (draft.destinations && draft.destinationsTouched) {
             setDestinations(draft.destinations);
-          } else {
-            setDestinations(connected);
+            setDestinationsTouched(true);
           }
           if (draft.tag) {
             setSelectedTag(draft.tag);
           }
           setManualReminderTime(draft.manualReminderTime ?? null);
-        } else {
-          setDestinations(connected);
         }
       } catch (error) {
         console.error("Failed to restore draft", error);
@@ -624,6 +614,7 @@ export default function CaptureWindow() {
         captureLane,
         listName,
         destinations,
+        destinationsTouched,
         tag: selectedTag,
         manualReminderTime,
       };
@@ -633,7 +624,7 @@ export default function CaptureWindow() {
     return () => {
       window.clearTimeout(handle);
     };
-  }, [text, captureLane, listName, destinations, selectedTag, manualReminderTime]);
+  }, [text, captureLane, listName, destinations, destinationsTouched, selectedTag, manualReminderTime]);
 
   useEffect(() => {
     let active = true;
@@ -670,6 +661,7 @@ export default function CaptureWindow() {
       setPulse((value) => value + 1);
       void loadRecentCaptures();
       void loadManagedLists();
+      refreshRoutingInputs();
       requestAnimationFrame(() => {
         inputRef.current?.focus();
       });
@@ -682,7 +674,7 @@ export default function CaptureWindow() {
     return () => {
       unlistenPromise.then((dispose) => dispose()).catch(() => {});
     };
-  }, []);
+  }, [refreshRoutingInputs]);
 
   async function closeCaptureWindow() {
     // Keep the draft (autosaved) so dismissing never loses an unsaved thought.
@@ -713,23 +705,26 @@ export default function CaptureWindow() {
   }
 
   function toggleDestination(key: DestinationKey) {
-    setDestinations((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+    // First touch seeds the manual state from the live suggestion so the user
+    // edits what they see, then their choices win until the draft resets.
+    const base = destinationsTouched ? destinations : previewDestinations;
+    setDestinations({ ...base, [key]: !base[key] });
+    setDestinationsTouched(true);
   }
 
   function enableAllDestinations() {
-    setDestinations((prev) => ({
-      ...prev,
+    const base = destinationsTouched ? destinations : previewDestinations;
+    setDestinations({
+      ...base,
       slack: true,
       discord: true,
       notion: true,
       googleTasks: true,
       googleCalendar: true,
-      appleReminders: IS_MACOS ? true : prev.appleReminders,
-      reminders: IS_MACOS ? true : prev.reminders,
-    }));
+      appleReminders: IS_MACOS ? true : base.appleReminders,
+      reminders: IS_MACOS ? true : base.reminders,
+    });
+    setDestinationsTouched(true);
   }
 
   useEffect(() => {
@@ -738,6 +733,26 @@ export default function CaptureWindow() {
     }
     void loadIntegrationSettings().then(setIntegrationSettings).catch(console.error);
   }, [destinationPrompt]);
+
+  async function acceptTeachOffer() {
+    if (!teachOffer) {
+      return;
+    }
+    try {
+      await createRoutingRule({
+        field: teachOffer.field,
+        matchValue: teachOffer.value,
+        destinations,
+      });
+      setRoutingRules(await listRoutingRules());
+      setTeachDismissed(true);
+      setSavedMessage(`Rule saved: ${teachOffer.label} → ${teachOffer.destinationLabels.join(", ")}`);
+      window.setTimeout(() => setSavedMessage(""), 2200);
+    } catch (error) {
+      console.error("Failed to save routing rule", error);
+      setSaveError("Could not save the routing rule. Try again.");
+    }
+  }
 
   async function persistCapture(keepOpen: boolean, overrideDestinations?: CaptureDestinations) {
     const trimmed = (parsed.cleanedContent.trim() || text.trim()).slice(0, MAX_CHARS);
@@ -754,28 +769,28 @@ export default function CaptureWindow() {
     setSaveError(null);
 
     try {
-      const settings = await loadIntegrationSettings();
-      let finalDestinations = overrideDestinations ?? destinations;
-
-      if (overrideDestinations === undefined) {
-        finalDestinations = preferRemindersForCommand(
-          finalDestinations,
-          reminderCommand && Boolean(effectiveReminderTime) && availableDestinations(settings).reminders,
-        );
-      }
-
-      if (overrideDestinations === undefined && !hasActiveDestination(finalDestinations)) {
-        finalDestinations = applySmartCaptureDestinations(
-          finalDestinations,
-          effectiveReminderTime,
+      const settings = integrationSettings ?? (await loadIntegrationSettings());
+      const decision =
+        routingDecision ??
+        evaluateRouting({
+          text,
+          tag: selectedTag,
+          lane: captureLane,
+          listName: normalizeListName(listName),
+          reminderTime: effectiveReminderTime,
+          isReminderCommand: reminderCommand,
           settings,
-        );
-      }
+          rules: routingRules,
+        });
+
+      const usedSuggestion = overrideDestinations === undefined && !destinationsTouched;
+      const finalDestinations = overrideDestinations ?? (destinationsTouched ? destinations : decision.destinations);
+      const routingSource = usedSuggestion ? decision.source : "manual";
+      const routingReason = usedSuggestion ? decision.reason : "You chose these destinations";
 
       if (!hasActiveDestination(finalDestinations) && hasAnyProviderConfigured(settings)) {
-        finalDestinations = suggestedCaptureDestinations(effectiveReminderTime, settings);
         setSaving(false);
-        setDestinationPrompt({ keepOpen, destinations: finalDestinations });
+        setDestinationPrompt({ keepOpen, destinations: decision.destinations });
         return;
       }
 
@@ -789,7 +804,13 @@ export default function CaptureWindow() {
         destinations: finalDestinations,
         reminderTime: effectiveReminderTime,
         recurrenceRule: effectiveRecurrenceRule,
+        routingSource,
+        routingReason,
       });
+
+      if (usedSuggestion && decision.ruleId) {
+        void recordRoutingRuleHit(decision.ruleId).catch(console.error);
+      }
 
       setDestinationPrompt(null);
 
@@ -1023,6 +1044,12 @@ export default function CaptureWindow() {
                   return;
                 }
 
+                if (event.altKey && event.key.toLowerCase() === "a" && teachOffer) {
+                  event.preventDefault();
+                  void acceptTeachOffer();
+                  return;
+                }
+
                 if ((event.ctrlKey || event.metaKey) && event.key === "ArrowUp") {
                   if (recentCaptures.length === 0) {
                     return;
@@ -1219,7 +1246,7 @@ export default function CaptureWindow() {
               Send to
             </span>
             {TARGET_META.map((target) => {
-              const active = destinations[target.key];
+              const active = previewDestinations[target.key];
               return (
                 <button
                   key={target.key}
@@ -1245,6 +1272,34 @@ export default function CaptureWindow() {
               All
             </button>
           </div>
+
+          {teachOffer ? (
+            <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-lg border border-[var(--accent)]/40 bg-[var(--btn-soft)] px-2.5 py-1.5 text-[11px]">
+              <span className="codex-muted min-w-0">
+                Always send{" "}
+                <span className="font-medium text-[var(--text)]">{teachOffer.label}</span>
+                {" → "}
+                {teachOffer.destinationLabels.join(", ")}?
+              </span>
+              <button
+                type="button"
+                onClick={() => void acceptTeachOffer()}
+                className="codex-btn inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px]"
+              >
+                Always
+                <span className="kbd">{IS_MACOS ? "⌥A" : "Alt+A"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTeachDismissed(true)}
+                className="codex-muted hover:text-[var(--text)]"
+                aria-label="Dismiss rule suggestion"
+                title="Just this once"
+              >
+                <IconClose size={13} />
+              </button>
+            </div>
+          ) : null}
 
           {/* Keyboard hints */}
           <div className="codex-muted flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-[10px]" data-tour="shortcuts">
@@ -1276,6 +1331,7 @@ export default function CaptureWindow() {
           available={availableDestinations(integrationSettings)}
           onConfirm={(next) => {
             setDestinations(next);
+            setDestinationsTouched(true);
             void persistCapture(destinationPrompt.keepOpen, next);
           }}
           onLocalOnly={() => {

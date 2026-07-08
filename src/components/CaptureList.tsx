@@ -709,6 +709,11 @@ export default function CaptureList({ onBack }: CaptureListProps) {
                     </div>
                     <div className="mb-2 text-[11px] codex-muted">
                       Destinations: {enabledDestinationLabels(destinations)}
+                      {capture.routing_reason ? (
+                        <span title={`Routing: ${capture.routing_source ?? "unknown"}`}>
+                          {" "}· Why: {capture.routing_reason}
+                        </span>
+                      ) : null}
                     </div>
                     <div className="mb-2 flex flex-wrap items-center gap-1.5">
                       <span className="meta-chip">Agent: {toTitleCase(capture.agent_status)}</span>

@@ -11,6 +11,34 @@ export interface CaptureDestinations {
   reminders: boolean;
 }
 
+export type RoutingRuleField = "tag" | "list" | "lane" | "keyword";
+
+export interface RoutingRule {
+  id: string;
+  field: RoutingRuleField;
+  match_value: string;
+  destinations: CaptureDestinations;
+  created_at?: string;
+  hit_count?: number;
+}
+
+export type RoutingSource =
+  | "rule"
+  | "reminder-command"
+  | "time-calendar"
+  | "time-reminders"
+  | "connected-default"
+  | "notes-fallback"
+  | "manual"
+  | "none";
+
+export interface RoutingDecision {
+  destinations: CaptureDestinations;
+  source: RoutingSource;
+  reason: string;
+  ruleId: string | null;
+}
+
 export interface Capture {
   id: string;
   content: string;
@@ -35,6 +63,8 @@ export interface Capture {
   reminder_time: string | null;
   recurrence_rule: string | null;
   recurrence_next_at: string | null;
+  routing_source: string | null;
+  routing_reason: string | null;
   last_sync_error?: string | null;
   agent_status?: string | null;
   agent_attempts?: number | null;
