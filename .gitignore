@@ -38,6 +38,10 @@ auth-server/
 *.sln
 *.sw?
 
+# Personal files that live in this folder but are not part of the project
+resume.*
+.cursor-shots/
+
 # Local tooling / workspace config that shouldn't ship
 .cursor/
 .cursorrules
