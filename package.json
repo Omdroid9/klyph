@@ -18,6 +18,7 @@
         "auth:dev": "npm run dev --prefix auth-server",
         "tauri": "tauri",
         "dev": "vite",
+        "dev:onboarding": "VITE_KLYPH_FORCE_ONBOARDING=true npm run tauri -- dev",
         "dev:reset": "node scripts/dev-reset.mjs"
     },
     "dependencies": {
