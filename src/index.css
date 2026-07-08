@@ -177,6 +177,14 @@ html[data-window="library"] #root {
   color: var(--text);
 }
 
+/* Capture overlay root: fully transparent so only the rounded capture-shell
+   is visible — painting a background here draws a hard-cornered rectangle
+   around the shell on the transparent Tauri window. */
+.capture-overlay {
+  background: transparent;
+  color: var(--text);
+}
+
 .capture-shell {
   border-radius: var(--radius-shell);
   background: linear-gradient(160deg, color-mix(in srgb, var(--panel), #fff 8%), var(--panel));

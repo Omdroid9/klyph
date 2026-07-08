@@ -951,11 +951,13 @@ export default function CaptureWindow() {
   const showHints = totalCaptures !== null && totalCaptures < HINT_GRADUATION_CAPTURES;
 
   // Spotlight-scale when idle, expanded once typing reveals the controls.
+  // Re-applied on every summon (pulse): the Rust side opens at compact size,
+  // and a restored draft needs the expanded height immediately.
   useEffect(() => {
     void invoke("resize_capture_window", {
       height: isEmpty ? WINDOW_HEIGHT_COMPACT : WINDOW_HEIGHT_EXPANDED,
     }).catch(() => {});
-  }, [isEmpty]);
+  }, [isEmpty, pulse]);
 
   const placeholder = useMemo(() => {
     if (captureLane === "distraction") {
@@ -993,7 +995,7 @@ export default function CaptureWindow() {
   }
 
   return (
-    <div className="app-page h-full w-full overflow-hidden p-3">
+    <div className="capture-overlay h-full w-full overflow-hidden p-3">
       <div
         key={pulse}
         className="capture-shell capture-pop relative h-full w-full shadow-floating"
