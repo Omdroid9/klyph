@@ -266,106 +266,6 @@ const rippleObserver = new IntersectionObserver(
 );
 rippleContainers.forEach((el) => rippleObserver.observe(el));
 
-/* ---------- Integrations slider ---------- */
-const slider = document.querySelector("[data-slider]");
-const sliderCaption = document.querySelector("[data-slider-caption]");
-const sliderProgress = document.querySelector("[data-slider-progress]");
-
-if (slider && sliderCaption) {
-  const cards = Array.from(slider.querySelectorAll(".logo-card"));
-  const ROTATE_MS = 3800;
-  let active = 0;
-  let timer = null;
-
-  const centerActive = () => {
-    if (slider.scrollWidth <= slider.clientWidth) return;
-    const card = cards[active];
-    const cardRect = card.getBoundingClientRect();
-    const sliderRect = slider.getBoundingClientRect();
-    const delta =
-      cardRect.left + cardRect.width / 2 - (sliderRect.left + sliderRect.width / 2);
-    slider.scrollBy({ left: delta, behavior: "smooth" });
-  };
-
-  const restartProgress = () => {
-    if (!sliderProgress || prefersReduced) return;
-    sliderProgress.classList.remove("is-running");
-    // force reflow so the animation restarts cleanly
-    void sliderProgress.offsetWidth;
-    sliderProgress.classList.add("is-running");
-  };
-
-  const setActive = (idx, { force = false } = {}) => {
-    const next = ((idx % cards.length) + cards.length) % cards.length;
-    if (next === active && !force) return;
-    active = next;
-    cards.forEach((c, i) => {
-      const on = i === active;
-      c.classList.toggle("is-active", on);
-      c.setAttribute("aria-selected", on ? "true" : "false");
-      c.tabIndex = on ? 0 : -1;
-    });
-    const nextLabel = cards[active].dataset.label || "";
-    sliderCaption.classList.add("is-changing");
-    setTimeout(() => {
-      sliderCaption.textContent = nextLabel;
-      sliderCaption.classList.remove("is-changing");
-    }, 220);
-    centerActive();
-    restartProgress();
-  };
-
-  const stopAuto = () => {
-    if (timer) clearInterval(timer);
-    timer = null;
-  };
-  const startAuto = () => {
-    stopAuto();
-    if (prefersReduced) return;
-    restartProgress();
-    timer = setInterval(() => setActive(active + 1), ROTATE_MS);
-  };
-
-  cards.forEach((card, i) => {
-    card.addEventListener("click", () => {
-      setActive(i);
-      startAuto();
-    });
-    card.addEventListener("focus", () => setActive(i));
-  });
-
-  slider.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowRight") {
-      e.preventDefault();
-      setActive(active + 1);
-      cards[active].focus();
-      startAuto();
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      setActive(active - 1);
-      cards[active].focus();
-      startAuto();
-    }
-  });
-
-  slider.addEventListener("mouseenter", stopAuto);
-  slider.addEventListener("mouseleave", startAuto);
-
-  setActive(0, { force: true });
-
-  // only auto-play once the slider is visible
-  const sliderObs = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) startAuto();
-        else stopAuto();
-      }
-    },
-    { threshold: 0.3 },
-  );
-  sliderObs.observe(slider);
-}
-
 /* ---------- Hero "Sent to ___" toast cycle ---------- */
 const heroToast = document.querySelector("[data-hero-toast]");
 if (heroToast) {
@@ -605,7 +505,7 @@ if (spyTargets.length) {
 document.addEventListener("click", (e) => {
   if (prefersReduced) return;
   const target = e.target.closest(
-    ".btn, .nav-cta, .smart-suggest-btn, .logo-card",
+    ".btn, .nav-cta, .smart-suggest-btn",
   );
   if (!target) return;
   const rect = target.getBoundingClientRect();
