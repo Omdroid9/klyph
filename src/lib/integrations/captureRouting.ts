@@ -212,7 +212,14 @@ export function evaluateRouting(input: RoutingInput): RoutingDecision {
     };
   }
 
-  const connected = intersectAvailable(destinationsFromSettings(input.settings), available);
+  // Reminders is deliberately excluded from the default spray: a task app is
+  // only the right home when a signal says so (a time, a "remind me…", task
+  // intent, a rule, or the user's own toggle). Random thoughts must not pile
+  // up as dateless reminders. Branches below re-enable it explicitly.
+  const connected = {
+    ...intersectAvailable(destinationsFromSettings(input.settings), available),
+    reminders: false,
+  };
 
   if (input.isReminderCommand && input.reminderTime && available.reminders) {
     const onlyAppleNotes = connected.appleReminders && !hasAnyRemote(connected);

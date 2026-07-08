@@ -173,12 +173,22 @@ describe("evaluateRouting", () => {
     expect(decision.destinations.appleReminders).toBe(true);
   });
 
-  it("falls back to the local macOS apps when nothing is connected", () => {
+  it("falls back to Apple Notes only when nothing is connected — never dateless Reminders", () => {
     const decision = evaluateRouting(input());
 
     expect(decision.source).toBe("notes-fallback");
-    expect(decision.destinations).toEqual(destinations({ appleReminders: true, reminders: true }));
+    expect(decision.destinations).toEqual(destinations({ appleReminders: true }));
+    expect(decision.destinations.reminders).toBe(false);
     expect(decision.reason).toContain("Apple Notes");
+  });
+
+  it("keeps Reminders out of the connected-apps default spray", () => {
+    const decision = evaluateRouting(
+      input({ settings: settings({ slack_webhook_url: "https://hook" }) }),
+    );
+
+    expect(decision.source).toBe("connected-default");
+    expect(decision.destinations.reminders).toBe(false);
   });
 
   it("routes nowhere off-Mac with no providers, and says so", () => {
