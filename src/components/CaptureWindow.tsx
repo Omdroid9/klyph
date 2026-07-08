@@ -383,6 +383,42 @@ export default function CaptureWindow() {
     ? "You chose these"
     : routingDecision?.reason ?? "Ready to capture";
 
+  // One-tap correction for the intent guess. Flipping counts as a manual
+  // choice, so the teach prompt can offer to make the correction permanent.
+  const intentFlip = useMemo(() => {
+    if (destinationsTouched || !routingDecision) {
+      return null;
+    }
+    if (routingDecision.source === "intent-task") {
+      return {
+        label: "Not a to-do?",
+        apply: () => {
+          setDestinations({
+            ...routingDecision.destinations,
+            reminders: false,
+            googleTasks: false,
+            appleReminders: IS_MACOS,
+          });
+          setDestinationsTouched(true);
+        },
+      };
+    }
+    if (routingDecision.source === "intent-note") {
+      return {
+        label: "Make it a to-do",
+        apply: () => {
+          setDestinations({
+            ...routingDecision.destinations,
+            appleReminders: false,
+            reminders: true,
+          });
+          setDestinationsTouched(true);
+        },
+      };
+    }
+    return null;
+  }, [destinationsTouched, routingDecision]);
+
   // Teach prompt: the user has corrected the suggestion, and the capture has a
   // signal (tag, list, lane) we could turn into a permanent rule.
   const teachSignal = useMemo((): { field: RoutingRuleField; value: string } | null => {
@@ -1121,9 +1157,15 @@ export default function CaptureWindow() {
               ))}
             </div>
             <div className="flex items-center gap-1.5" data-tour="tags">
-              <TagChip tag="work" active={selectedTag === "work"} onSelect={setSelectedTag} />
-              <TagChip tag="personal" active={selectedTag === "personal"} onSelect={setSelectedTag} />
-              <TagChip tag="idea" active={selectedTag === "idea"} onSelect={setSelectedTag} />
+              <span title={IS_MACOS ? "⌘1" : "Ctrl+1"}>
+                <TagChip tag="work" active={selectedTag === "work"} onSelect={setSelectedTag} />
+              </span>
+              <span title={IS_MACOS ? "⌘2" : "Ctrl+2"}>
+                <TagChip tag="personal" active={selectedTag === "personal"} onSelect={setSelectedTag} />
+              </span>
+              <span title={IS_MACOS ? "⌘3" : "Ctrl+3"}>
+                <TagChip tag="idea" active={selectedTag === "idea"} onSelect={setSelectedTag} />
+              </span>
             </div>
           </div>
           ) : null}
@@ -1163,6 +1205,16 @@ export default function CaptureWindow() {
                 ) {
                   event.preventDefault();
                   void undoLastCapture();
+                  return;
+                }
+
+                // Cmd/Ctrl+1/2/3 tag the capture without leaving the keyboard;
+                // pressing the active tag's key again untags.
+                if ((event.ctrlKey || event.metaKey) && ["1", "2", "3"].includes(event.key)) {
+                  event.preventDefault();
+                  const tagByKey = { "1": "work", "2": "personal", "3": "idea" } as const;
+                  const nextTag = tagByKey[event.key as "1" | "2" | "3"];
+                  setSelectedTag(selectedTag === nextTag ? "untagged" : nextTag);
                   return;
                 }
 
@@ -1314,7 +1366,19 @@ export default function CaptureWindow() {
                     </div>
                   </div>
                 </div>
-                <span className="smart-preview-reason">{previewReason}</span>
+                <span className="flex shrink-0 items-center gap-1.5">
+                  <span className="smart-preview-reason">{previewReason}</span>
+                  {intentFlip ? (
+                    <button
+                      type="button"
+                      onClick={intentFlip.apply}
+                      className="codex-btn-soft rounded-full px-2 py-0.5 text-[10px]"
+                      title="Wrong guess? Flip it — Klyph offers to remember your correction"
+                    >
+                      {intentFlip.label}
+                    </button>
+                  ) : null}
+                </span>
               </div>
             ) : null}
 

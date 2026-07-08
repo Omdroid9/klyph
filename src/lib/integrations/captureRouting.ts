@@ -5,6 +5,7 @@ import type {
   RoutingDecision,
   RoutingRule,
 } from "../../types";
+import { classifyIntent } from "../intent";
 import { isMacOS } from "../platform";
 import { destinationsFromSettings, providerConfigured, type IntegrationSettings } from "./connectionStatus";
 
@@ -242,6 +243,38 @@ export function evaluateRouting(input: RoutingInput): RoutingDecision {
       destinations: { ...connected, reminders: true },
       source: "time-reminders",
       reason: "Has a time → Reminders",
+      ruleId: null,
+    };
+  }
+
+  // Untimed captures: task-shaped content belongs in a task app, not the
+  // Apple Notes graveyard — and vice versa. "unsure" falls through untouched.
+  const intent = classifyIntent(input.text);
+
+  if (intent.intent === "task") {
+    if (available.reminders) {
+      return {
+        destinations: { ...connected, appleReminders: false, reminders: true },
+        source: "intent-task",
+        reason: `Looks like a to-do (${intent.signal}) → Reminders`,
+        ruleId: null,
+      };
+    }
+    if (available.googleTasks) {
+      return {
+        destinations: { ...connected, googleTasks: true },
+        source: "intent-task",
+        reason: `Looks like a to-do (${intent.signal}) → Google Tasks`,
+        ruleId: null,
+      };
+    }
+  }
+
+  if (intent.intent === "note" && available.appleReminders) {
+    return {
+      destinations: { ...connected, appleReminders: true, reminders: false },
+      source: "intent-note",
+      reason: `Looks like a note (${intent.signal}) → Apple Notes`,
       ruleId: null,
     };
   }

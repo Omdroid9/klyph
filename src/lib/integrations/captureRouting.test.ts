@@ -61,7 +61,8 @@ function rule(overrides: Partial<RoutingRule> = {}): RoutingRule {
 
 function input(overrides: Partial<RoutingInput> = {}): RoutingInput {
   return {
-    text: "buy milk",
+    // Deliberately intent-neutral so tests exercise the branch they name.
+    text: "project phoenix",
     tag: "untagged",
     lane: "focus",
     listName: "Inbox",
@@ -187,6 +188,49 @@ describe("evaluateRouting", () => {
     expect(decision.source).toBe("none");
     expect(Object.values(decision.destinations).every((value) => !value)).toBe(true);
     expect(decision.reason).toContain("locally");
+  });
+
+  it("routes untimed to-dos to Reminders instead of the Notes graveyard", () => {
+    const decision = evaluateRouting(input({ text: "buy milk" }));
+
+    expect(decision.source).toBe("intent-task");
+    expect(decision.destinations.reminders).toBe(true);
+    expect(decision.destinations.appleReminders).toBe(false);
+    expect(decision.reason).toContain("to-do");
+    expect(decision.reason).toContain('"buy"');
+  });
+
+  it("routes untimed to-dos to Google Tasks off-Mac when Google is connected", () => {
+    platformState.mac = false;
+    const decision = evaluateRouting(
+      input({ text: "buy milk", settings: settings(GOOGLE_CONNECTED) }),
+    );
+
+    expect(decision.source).toBe("intent-task");
+    expect(decision.destinations.googleTasks).toBe(true);
+  });
+
+  it("routes note-shaped captures to Apple Notes, not Reminders", () => {
+    const decision = evaluateRouting(input({ text: "ideas for the marketing site" }));
+
+    expect(decision.source).toBe("intent-note");
+    expect(decision.destinations.appleReminders).toBe(true);
+    expect(decision.destinations.reminders).toBe(false);
+    expect(decision.reason).toContain("note");
+  });
+
+  it("lets rules and time heuristics outrank intent", () => {
+    const ruled = evaluateRouting(
+      input({
+        text: "buy milk",
+        settings: settings({ notion_token: "t", notion_page_id: "p" }),
+        rules: [rule({ field: "keyword", match_value: "milk", destinations: destinations({ notion: true }) })],
+      }),
+    );
+    expect(ruled.source).toBe("rule");
+
+    const timed = evaluateRouting(input({ text: "buy milk tomorrow at 5pm", reminderTime: "2026-07-09T17:00:00" }));
+    expect(timed.source).toBe("time-reminders");
   });
 });
 

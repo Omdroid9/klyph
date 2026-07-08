@@ -27,6 +27,8 @@ export type RoutingSource =
   | "reminder-command"
   | "time-calendar"
   | "time-reminders"
+  | "intent-task"
+  | "intent-note"
   | "connected-default"
   | "notes-fallback"
   | "manual"
