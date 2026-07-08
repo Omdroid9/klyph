@@ -6,6 +6,7 @@ import {
   createManagedList,
   createRoutingRule,
   getCapturesTodayCount,
+  getDailyRecapStats,
   getSetting,
   insertCapture,
   listCaptures,
@@ -13,6 +14,7 @@ import {
   listRoutingRules,
   recordRoutingRuleHit,
   setSetting,
+  type DailyRecapStats,
 } from "../lib/db";
 import { loadIntegrationSettings } from "../lib/integrations/connectionStatus";
 import {
@@ -57,6 +59,20 @@ interface CaptureDraft {
   manualReminderTime: string | null;
 }
 const IS_MACOS = isMacOS();
+const RECAP_SETTING_KEY = "daily_recap_shown";
+
+function localDateKey(input = new Date()): string {
+  const timezoneOffset = input.getTimezoneOffset() * 60_000;
+  return new Date(input.getTime() - timezoneOffset).toISOString().slice(0, 10);
+}
+
+function recapGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 const DEFAULT_DESTINATIONS: CaptureDestinations = {
   slack: false,
   discord: false,
@@ -244,6 +260,7 @@ export default function CaptureWindow() {
   const [destinationsTouched, setDestinationsTouched] = useState(false);
   const [routingRules, setRoutingRules] = useState<RoutingRule[]>([]);
   const [teachDismissed, setTeachDismissed] = useState(false);
+  const [recap, setRecap] = useState<DailyRecapStats | null>(null);
   const [savedMessage, setSavedMessage] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -557,6 +574,32 @@ export default function CaptureWindow() {
     refreshRoutingInputs();
   }, [refreshRoutingInputs]);
 
+  // Once-a-day recap: the first time the capture window appears each day,
+  // greet the user with what yesterday produced and what is due today.
+  const maybeShowRecap = useCallback(() => {
+    void (async () => {
+      try {
+        const todayKey = localDateKey();
+        const lastShown = await getSetting(RECAP_SETTING_KEY);
+        if (lastShown === todayKey) {
+          return;
+        }
+        const stats = await getDailyRecapStats();
+        if (stats.yesterdayCount === 0 && stats.dueTodayCount === 0) {
+          return;
+        }
+        setRecap(stats);
+        await setSetting(RECAP_SETTING_KEY, todayKey);
+      } catch (error) {
+        console.error("Failed to load daily recap", error);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    maybeShowRecap();
+  }, [maybeShowRecap]);
+
   useEffect(() => {
     let active = true;
 
@@ -662,6 +705,7 @@ export default function CaptureWindow() {
       void loadRecentCaptures();
       void loadManagedLists();
       refreshRoutingInputs();
+      maybeShowRecap();
       requestAnimationFrame(() => {
         inputRef.current?.focus();
       });
@@ -674,7 +718,7 @@ export default function CaptureWindow() {
     return () => {
       unlistenPromise.then((dispose) => dispose()).catch(() => {});
     };
-  }, [refreshRoutingInputs]);
+  }, [maybeShowRecap, refreshRoutingInputs]);
 
   async function closeCaptureWindow() {
     // Keep the draft (autosaved) so dismissing never loses an unsaved thought.
@@ -925,6 +969,39 @@ export default function CaptureWindow() {
               </button>
             </div>
           </div>
+
+          {recap && isEmpty ? (
+            <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-lg border border-[var(--accent)]/35 bg-[var(--btn-soft)] px-3 py-1.5 text-[11px]">
+              <span className="codex-muted min-w-0">
+                <span className="font-medium text-[var(--text)]">{recapGreeting()}.</span>{" "}
+                {recap.yesterdayCount > 0
+                  ? `You captured ${recap.yesterdayCount} thought${recap.yesterdayCount === 1 ? "" : "s"} yesterday`
+                  : null}
+                {recap.yesterdayCount > 0 && recap.dueTodayCount > 0 ? " · " : null}
+                {recap.dueTodayCount > 0
+                  ? `${recap.dueTodayCount} due today`
+                  : null}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setRecap(null);
+                  void openHistoryWindow();
+                }}
+                className="codex-btn rounded-full px-2.5 py-0.5 text-[11px]"
+              >
+                Review
+              </button>
+              <button
+                type="button"
+                onClick={() => setRecap(null)}
+                className="codex-muted hover:text-[var(--text)]"
+                aria-label="Dismiss recap"
+              >
+                <IconClose size={13} />
+              </button>
+            </div>
+          ) : null}
 
           {/* Lane + tags */}
           <div className="flex flex-wrap items-center justify-between gap-2">

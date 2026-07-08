@@ -585,6 +585,39 @@ export async function setCaptureSyncError(id: string, error: string | null): Pro
   );
 }
 
+export interface DailyRecapStats {
+  yesterdayCount: number;
+  dueTodayCount: number;
+}
+
+/**
+ * Stats for the once-a-day recap strip in the capture window.
+ * created_at is stored in UTC (CURRENT_TIMESTAMP); reminder_time is stored
+ * as a local ISO string, so only created_at needs the localtime conversion.
+ */
+export async function getDailyRecapStats(): Promise<DailyRecapStats> {
+  const db = await getDatabase();
+  const rows = await db.select<Array<{ yesterday_count: number; due_today_count: number }>>(
+    `
+      SELECT
+        (
+          SELECT COUNT(*) FROM captures
+          WHERE date(created_at, 'localtime') = date('now', 'localtime', '-1 day')
+        ) AS yesterday_count,
+        (
+          SELECT COUNT(*) FROM captures
+          WHERE reminder_time IS NOT NULL
+            AND date(reminder_time) = date('now', 'localtime')
+        ) AS due_today_count;
+    `,
+  );
+  const row = rows[0];
+  return {
+    yesterdayCount: row?.yesterday_count ?? 0,
+    dueTodayCount: row?.due_today_count ?? 0,
+  };
+}
+
 interface RoutingRuleRow {
   id: string;
   field: string;
