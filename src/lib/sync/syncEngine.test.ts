@@ -23,6 +23,8 @@ function makeCapture(overrides: Partial<Capture> = {}): Capture {
     target_google_calendar: 0,
     target_apple_reminders: 0,
     reminder_time: null,
+    recurrence_rule: null,
+    recurrence_next_at: null,
     ...overrides,
   };
 }

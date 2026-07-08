@@ -199,6 +199,7 @@ export default function LibraryWindow() {
           reminders: Boolean(capture.target_reminders),
         },
         reminderTime: capture.reminder_time,
+        recurrenceRule: capture.recurrence_rule,
       });
       await emit("klyph://request-sync");
       setStatusMessage("Retrying sync.");

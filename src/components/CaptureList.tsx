@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { emit } from "@tauri-apps/api/event";
 import {
+  clearCaptureRecurrence,
   createManagedList,
   deleteManagedList,
   listManagedLists,
@@ -11,6 +12,7 @@ import {
 import { approveAgentSuggestion, dismissAgentSuggestion } from "../lib/agent/agentEngine";
 import { useCaptures } from "../hooks/useCaptures";
 import { parseReminderSyntax } from "../lib/parser";
+import { recurrenceLabelFromRule } from "../lib/recurrence";
 import { useAppStore } from "../store/useAppStore";
 import type { Capture, CaptureDestinations, CaptureLane, CaptureTag } from "../types";
 
@@ -75,6 +77,7 @@ function enabledDestinationLabels(destinations: CaptureDestinations): string {
   if (destinations.googleTasks) labels.push("Google Tasks");
   if (destinations.googleCalendar) labels.push("Google Calendar");
   if (destinations.appleReminders) labels.push("Apple Notes");
+  if (destinations.reminders) labels.push("Reminders");
   return labels.length > 0 ? labels.join(", ") : "None";
 }
 
@@ -146,6 +149,7 @@ export default function CaptureList({ onBack }: CaptureListProps) {
   const { theme, setTheme } = useAppStore();
   const [status, setStatus] = useState("");
   const [agentBusyId, setAgentBusyId] = useState<string | null>(null);
+  const [stoppingRecurrenceId, setStoppingRecurrenceId] = useState<string | null>(null);
   const [managedLists, setManagedLists] = useState<string[]>([DEFAULT_LIST, DISTRACTION_LIST]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftContent, setDraftContent] = useState("");
@@ -161,6 +165,8 @@ export default function CaptureList({ onBack }: CaptureListProps) {
     appleReminders: false,
     reminders: false,
   });
+  const [draftReminderTime, setDraftReminderTime] = useState<string | null>(null);
+  const [draftRecurrenceRule, setDraftRecurrenceRule] = useState<string | null>(null);
   const [listFilter, setListFilter] = useState("all");
   const [laneFilter, setLaneFilter] = useState<LaneFilter>("all");
   const [reviewOnly, setReviewOnly] = useState(false);
@@ -248,11 +254,15 @@ export default function CaptureList({ onBack }: CaptureListProps) {
     setDraftLane(normalizeLane(capture.capture_lane));
     setDraftList(normalizeListName(capture.list_name));
     setDraftDestinations(captureDestinations(capture));
+    setDraftReminderTime(capture.reminder_time);
+    setDraftRecurrenceRule(capture.recurrence_rule);
     setStatus("");
   }
 
   function stopEditing() {
     setEditingId(null);
+    setDraftReminderTime(null);
+    setDraftRecurrenceRule(null);
   }
 
   function toggleDestination(key: keyof CaptureDestinations) {
@@ -293,18 +303,41 @@ export default function CaptureList({ onBack }: CaptureListProps) {
         lane: draftLane,
         listName: normalizeListName(draftList),
         destinations: draftDestinations,
-        reminderTime: parsed.reminderTime,
+        reminderTime: parsed.reminderTime ?? draftReminderTime,
+        recurrenceRule: parsed.recurrenceRule ?? draftRecurrenceRule,
       });
 
       await refresh();
       await refreshManagedLists();
       setEditingId(null);
+      setDraftReminderTime(null);
+      setDraftRecurrenceRule(null);
       setStatus("Note updated.");
       await emit("klyph://request-sync");
       await emit("klyph://request-agent");
     } catch (error) {
       console.error(error);
       setStatus(`Update failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  async function stopRepeating(capture: Capture) {
+    if (!capture.recurrence_rule) {
+      return;
+    }
+
+    setStoppingRecurrenceId(capture.id);
+    setStatus("");
+    try {
+      await clearCaptureRecurrence(capture.id);
+      await refresh();
+      setStatus("Repeat stopped. Klyph will not create more reminders for that item.");
+      await emit("klyph://captures-changed");
+    } catch (error) {
+      console.error(error);
+      setStatus(`Could not stop repeat: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setStoppingRecurrenceId(null);
     }
   }
 
@@ -642,6 +675,7 @@ export default function CaptureList({ onBack }: CaptureListProps) {
             const editing = editingId === capture.id;
             const destinations = captureDestinations(capture);
             const lane = normalizeLane(capture.capture_lane);
+            const recurrenceLabel = recurrenceLabelFromRule(capture.recurrence_rule);
 
             return (
               <article
@@ -655,6 +689,17 @@ export default function CaptureList({ onBack }: CaptureListProps) {
                       <span className="meta-chip">{normalizeListName(capture.list_name)}</span>
                       <span className="meta-chip uppercase">{capture.tag}</span>
                       <span className="meta-chip uppercase">{lane}</span>
+                      {recurrenceLabel ? <span className="meta-chip">{recurrenceLabel}</span> : null}
+                      {recurrenceLabel ? (
+                        <button
+                          type="button"
+                          disabled={stoppingRecurrenceId === capture.id}
+                          onClick={() => void stopRepeating(capture)}
+                          className="rounded-full border border-red-400/40 px-2 py-0.5 text-[11px] font-medium text-red-500 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {stoppingRecurrenceId === capture.id ? "Stopping..." : "Stop repeating"}
+                        </button>
+                      ) : null}
                       <time
                         dateTime={new Date(capture.created_at).toISOString()}
                         className="text-[11px] codex-muted font-mono"
@@ -772,16 +817,17 @@ export default function CaptureList({ onBack }: CaptureListProps) {
                           ["googleTasks", "GTasks"],
                           ["googleCalendar", "GCal"],
                           ["appleReminders", "Apple Notes"],
+                          ["reminders", "Reminders"],
                         ] as const
                       ).map(([key, label]) => {
-                        const isDisabled = key === "appleReminders" && !IS_MACOS;
+                        const isDisabled = (key === "appleReminders" || key === "reminders") && !IS_MACOS;
                         const active = draftDestinations[key];
                         return (
                           <button
                             key={key}
                             type="button"
                             disabled={isDisabled}
-                            title={isDisabled ? "Apple Notes sync is available on macOS." : label}
+                            title={isDisabled ? `${label} sync is available on macOS.` : label}
                             onClick={() => toggleDestination(key)}
                             className={[
                               "rounded-full border px-2 py-0.5",

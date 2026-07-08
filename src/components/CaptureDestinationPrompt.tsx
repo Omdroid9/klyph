@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { CaptureDestinations } from "../types";
 
 const DESTINATION_META: Array<{
@@ -11,6 +11,7 @@ const DESTINATION_META: Array<{
   { key: "notion", label: "Notion" },
   { key: "discord", label: "Discord" },
   { key: "appleReminders", label: "Apple Notes" },
+  { key: "reminders", label: "Reminders" },
 ];
 
 interface CaptureDestinationPromptProps {
@@ -31,10 +32,6 @@ export default function CaptureDestinationPrompt({
   onCancel,
 }: CaptureDestinationPromptProps) {
   const [draft, setDraft] = useState(destinations);
-
-  useEffect(() => {
-    setDraft(destinations);
-  }, [destinations]);
 
   const visibleOptions = DESTINATION_META.filter((item) => available[item.key]);
 

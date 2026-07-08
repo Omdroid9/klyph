@@ -33,6 +33,8 @@ export interface Capture {
   target_apple_reminders: number;
   target_reminders: number;
   reminder_time: string | null;
+  recurrence_rule: string | null;
+  recurrence_next_at: string | null;
   last_sync_error?: string | null;
   agent_status?: string | null;
   agent_attempts?: number | null;

@@ -128,7 +128,7 @@ pub fn open_external_url(url: String) -> Result<(), String> {
 /// Parse a local ISO datetime string ("2026-06-15T14:00:00") into components.
 /// Returns None if the string is malformed; the caller falls back to no due date.
 #[cfg(target_os = "macos")]
-fn parse_local_iso(s: &str) -> Option<(i32, u32, u32, u32, u32)> {
+fn parse_local_iso(s: &str) -> Option<(i32, u32, u32, u32, u32, u32)> {
   let (date_part, time_part) = s.split_once('T')?;
   let mut d = date_part.split('-');
   let year: i32 = d.next()?.parse().ok()?;
@@ -137,7 +137,8 @@ fn parse_local_iso(s: &str) -> Option<(i32, u32, u32, u32, u32)> {
   let mut t = time_part.split(':');
   let hour: u32 = t.next()?.parse().ok()?;
   let minute: u32 = t.next()?.parse().ok()?;
-  Some((year, month, day, hour, minute))
+  let second: u32 = t.next().and_then(|value| value.parse().ok()).unwrap_or(0);
+  Some((year, month, day, hour, minute, second))
 }
 
 /// Create a reminder in macOS Reminders.app via AppleScript.
@@ -180,13 +181,14 @@ pub fn create_apple_reminder(
       set dy to (item 7 of argv) as integer
       set hr to (item 8 of argv) as integer
       set mn to (item 9 of argv) as integer
+      set sc to (item 10 of argv) as integer
       set dueDate to current date
       set year of dueDate to yr
       set month of dueDate to mo
       set day of dueDate to dy
       set hours of dueDate to hr
       set minutes of dueDate to mn
-      set seconds of dueDate to 0
+      set seconds of dueDate to sc
       make new reminder at list listName with properties {name:reminderTitle, body:reminderBody, due date:dueDate}
     else
       make new reminder at list listName with properties {name:reminderTitle, body:reminderBody}
@@ -204,14 +206,15 @@ end run"#;
       .stdout(Stdio::piped())
       .stderr(Stdio::piped());
 
-    if let Some((year, month, day, hour, minute)) = parsed_due {
+    if let Some((year, month, day, hour, minute, second)) = parsed_due {
       cmd
         .arg("true")
         .arg(year.to_string())
         .arg(month.to_string())
         .arg(day.to_string())
         .arg(hour.to_string())
-        .arg(minute.to_string());
+        .arg(minute.to_string())
+        .arg(second.to_string());
     } else {
       cmd.arg("false");
     }
@@ -275,20 +278,18 @@ pub fn create_apple_note(folder: String, title: String, body: String) -> Result<
       }
     };
 
-    // argv: 1 = folder, 2 = title, 3 = body (HTML). The first line of a note
-    // becomes its title in Notes, so we prepend the title as a heading.
+    // argv: 1 = folder, 2 = title, 3 = body (HTML). Notes already treats the
+    // first body line as the note title, so do not prepend a duplicate heading.
     let script = r#"on run argv
   set folderName to item 1 of argv
-  set noteTitle to item 2 of argv
   set noteBody to item 3 of argv
-  set noteHtml to "<div><b>" & noteTitle & "</b></div>" & noteBody
   tell application "Notes"
     set targetAccount to default account
     tell targetAccount
       if not (exists folder folderName) then
         make new folder with properties {name:folderName}
       end if
-      make new note at folder folderName with properties {body:noteHtml}
+      make new note at folder folderName with properties {body:noteBody}
     end tell
   end tell
 end run"#;

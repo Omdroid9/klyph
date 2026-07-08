@@ -55,12 +55,58 @@ describe("parseReminderSyntax", () => {
     const date = new Date(result.reminderTime!);
     expect(date.getHours()).toBe(15);
     expect(date.getMinutes()).toBe(0);
+    expect(result.cleanedContent).toBe("submit report");
     expect(result.isAmbiguous).toBe(false);
+  });
+
+  it("strips reminder command phrasing from natural reminder titles", () => {
+    const result = parseReminderSyntax("remind me to do laundry tomorrow at 5pm");
+    expect(result.reminderTime).not.toBeNull();
+    expect(result.cleanedContent).toBe("do laundry");
+  });
+
+  it("parses relative reminder times like in a minute", () => {
+    const result = parseReminderSyntax("remind me to close windows in a minute");
+    expect(result.reminderTime).not.toBeNull();
+    expect(result.cleanedContent).toBe("close windows");
+
+    const date = new Date(result.reminderTime!);
+    expect(date.getMinutes()).toBe(1);
+  });
+
+  it("parses second-level relative reminder times", () => {
+    const result = parseReminderSyntax("remind me to walk in 30 seconds");
+    expect(result.reminderTime).not.toBeNull();
+    expect(result.cleanedContent).toBe("walk");
+
+    const date = new Date(result.reminderTime!);
+    expect(date.getSeconds()).toBe(30);
+  });
+
+  it("parses word-number relative reminder times", () => {
+    const result = parseReminderSyntax("remind me to stretch in one minute");
+    expect(result.reminderTime).not.toBeNull();
+    expect(result.cleanedContent).toBe("stretch");
+
+    const date = new Date(result.reminderTime!);
+    expect(date.getMinutes()).toBe(1);
+  });
+
+  it("captures repeat intent and sets the first due time", () => {
+    const result = parseReminderSyntax("remind me every two hours to drink water");
+    expect(result.reminderTime).not.toBeNull();
+    expect(result.cleanedContent).toBe("drink water");
+    expect(result.recurrenceRule).toBe("every:2:hour");
+    expect(result.recurrenceLabel).toBe("Every 2 hours");
+
+    const date = new Date(result.reminderTime!);
+    expect(date.getHours()).toBe(12);
   });
 
   it("flags a date without a time as ambiguous", () => {
     const result = parseReminderSyntax("call the dentist tomorrow");
     expect(result.reminderTime).not.toBeNull();
+    expect(result.cleanedContent).toBe("call the dentist tomorrow");
     expect(result.isAmbiguous).toBe(true);
     expect(result.ambiguityReason).toBeTruthy();
   });

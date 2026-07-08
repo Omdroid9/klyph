@@ -7,6 +7,7 @@ import { sendDiscordCapture } from "./discord";
 import { createGoogleTask, refreshGoogleAccessToken } from "./googleTasks";
 import { appendNotionCapture } from "./notion";
 import { sendSlackCapture } from "./slack";
+import { recurrenceLabelFromRule } from "../recurrence";
 
 export interface SyncConfig {
   slackWebhookUrl?: string;
@@ -134,6 +135,15 @@ function appleNoteBody(capture: Capture): string {
     .join("");
   const footer = `<div><br></div><div><i>${escapeHtml(capture.list_name)} • ${escapeHtml(capture.tag)}</i></div>`;
   return `${paragraphs}${footer}`;
+}
+
+function appleReminderBody(capture: Capture): string {
+  const parts = [`${capture.list_name} • ${capture.tag}`];
+  const recurrenceLabel = recurrenceLabelFromRule(capture.recurrence_rule);
+  if (recurrenceLabel) {
+    parts.push(`Repeat request: ${recurrenceLabel}`);
+  }
+  return parts.join("\n");
 }
 
 function shouldSyncAppleReminders(capture: Capture, config: SyncConfig): boolean {
@@ -317,7 +327,7 @@ export async function syncCapture(capture: Capture, config: SyncConfig): Promise
           createAppleReminder({
             list: config.appleRemindersList,
             title: appleNoteTitle(capture.content),
-            body: `${capture.content}\n\n${capture.list_name} • ${capture.tag}`,
+            body: appleReminderBody(capture),
             dueDate: capture.reminder_time ?? null,
           }),
         isPermissionError,

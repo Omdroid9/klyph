@@ -2,13 +2,17 @@ import {
   getCaptureById,
   getSetting,
   getSettings,
+  listDueRecurringReminderCaptures,
   listCaptures,
+  setCaptureRecurrenceNextAt,
   setCaptureSyncError,
   setSetting,
   updateCaptureSyncStatus,
 } from "../db";
 import type { Capture } from "../../types";
 import { isMacOS } from "../platform";
+import { nextRecurrenceAfter, recurrenceLabelFromRule, toLocalIso } from "../recurrence";
+import { createAppleReminder } from "./appleRemindersSync";
 import { requiresSync, syncCapture, type SyncConfig } from "./syncEngine";
 
 const SYNC_SETTING_KEYS = [
@@ -31,6 +35,12 @@ export interface SyncRunStats {
   syncAttempts: number;
   syncSucceeded: number;
   syncFailed: number;
+}
+
+export interface RecurringReminderStats {
+  considered: number;
+  created: number;
+  failed: number;
 }
 
 function normalizeSetting(value: string | null): string | undefined {
@@ -109,6 +119,21 @@ function toDisplayTime(input: Date): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function reminderTitle(content: string): string {
+  const firstLine = content.split("\n")[0]?.trim() ?? "";
+  const normalized = firstLine.length > 0 ? firstLine : content.trim();
+  return normalized.length > 0 ? normalized.slice(0, 80) : "Klyph";
+}
+
+function recurringReminderBody(capture: Capture): string {
+  const parts = [`${capture.list_name} • ${capture.tag}`];
+  const recurrenceLabel = recurrenceLabelFromRule(capture.recurrence_rule);
+  if (recurrenceLabel) {
+    parts.push(`Managed by Klyph: ${recurrenceLabel}`);
+  }
+  return parts.join("\n");
 }
 
 export async function getLastSyncLabel(): Promise<string> {
@@ -219,4 +244,48 @@ export async function runSyncPass(options?: {
   }
 
   return { stats, lastSyncLabel };
+}
+
+export async function runRecurringReminderPass(limit = 25): Promise<RecurringReminderStats> {
+  const config = await loadSyncConfig();
+  const stats: RecurringReminderStats = { considered: 0, created: 0, failed: 0 };
+
+  if (!config.appleRemindersEnabled) {
+    return stats;
+  }
+
+  const now = new Date();
+  const dueCaptures = await listDueRecurringReminderCaptures(toLocalIso(now), limit);
+  stats.considered = dueCaptures.length;
+
+  for (const capture of dueCaptures) {
+    const dueAt = capture.recurrence_next_at ? new Date(capture.recurrence_next_at) : now;
+    const effectiveDueAt = Number.isNaN(dueAt.getTime()) || dueAt.getTime() < now.getTime()
+      ? now
+      : dueAt;
+
+    try {
+      await createAppleReminder({
+        list: config.appleRemindersList,
+        title: reminderTitle(capture.content),
+        body: recurringReminderBody(capture),
+        dueDate: toLocalIso(effectiveDueAt),
+      });
+
+      const nextAt = capture.recurrence_rule
+        ? nextRecurrenceAfter(effectiveDueAt, capture.recurrence_rule, now)
+        : null;
+      await setCaptureRecurrenceNextAt(capture.id, nextAt ? toLocalIso(nextAt) : null);
+      if (capture.last_sync_error) {
+        await setCaptureSyncError(capture.id, null);
+      }
+      stats.created += 1;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      await setCaptureSyncError(capture.id, `Recurring reminder: ${message}`.slice(0, 500));
+      stats.failed += 1;
+    }
+  }
+
+  return stats;
 }

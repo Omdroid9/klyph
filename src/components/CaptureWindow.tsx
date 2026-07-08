@@ -20,6 +20,7 @@ import {
   suggestedCaptureDestinations,
 } from "../lib/integrations/captureRouting";
 import { isMacOS } from "../lib/platform";
+import { recurrenceLabelFromRule } from "../lib/recurrence";
 import { useAppStore } from "../store/useAppStore";
 import TagChip from "./TagChip";
 import ListPicker from "./ListPicker";
@@ -69,6 +70,19 @@ const TARGET_META: Array<{
   { key: "reminders", label: "Reminders", available: IS_MACOS },
 ];
 
+const DESTINATION_LABELS: Record<DestinationKey, string> = {
+  slack: "Slack",
+  discord: "Discord",
+  notion: "Notion",
+  googleTasks: "Google Tasks",
+  googleCalendar: "Google Calendar",
+  appleReminders: "Apple Notes",
+  reminders: "Reminders",
+};
+
+const REMINDER_COMMAND_REGEX =
+  /^\s*(?:please\s+)?(?:remind\s+me(?:\s+to)?|remember\s+to|set\s+(?:a\s+)?reminder\s+(?:to|for)|add\s+(?:a\s+)?reminder\s+(?:to|for))\s+/i;
+
 function normalizeListName(value: string): string {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : DEFAULT_LIST;
@@ -90,6 +104,41 @@ function formatReminderDisplay(value: string): string {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function firstLineTitle(value: string): string {
+  const firstLine = value.split("\n")[0]?.trim() ?? "";
+  return firstLine.length > 0 ? firstLine : value.trim();
+}
+
+function destinationLabels(value: CaptureDestinations): string[] {
+  return (Object.keys(value) as DestinationKey[])
+    .filter((key) => value[key])
+    .map((key) => DESTINATION_LABELS[key]);
+}
+
+function activeDestinationCount(value: CaptureDestinations): number {
+  return Object.values(value).filter(Boolean).length;
+}
+
+function hasReminderCommand(value: string): boolean {
+  return REMINDER_COMMAND_REGEX.test(value);
+}
+
+function preferRemindersForCommand(
+  value: CaptureDestinations,
+  canUseReminders: boolean,
+): CaptureDestinations {
+  if (!canUseReminders) {
+    return value;
+  }
+
+  const onlyAppleNotes = value.appleReminders && activeDestinationCount(value) === 1;
+  return {
+    ...value,
+    appleReminders: onlyAppleNotes ? false : value.appleReminders,
+    reminders: true,
+  };
 }
 
 function currentLineBounds(value: string, cursor: number): { start: number; end: number; line: string } {
@@ -199,7 +248,7 @@ export default function CaptureWindow() {
   const [captureLane, setCaptureLane] = useState<CaptureLane>("focus");
   const [listName, setListName] = useState(DEFAULT_LIST);
   const [destinations, setDestinations] = useState<CaptureDestinations>(DEFAULT_DESTINATIONS);
-  const [savedFlash, setSavedFlash] = useState(false);
+  const [savedMessage, setSavedMessage] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [managedLists, setManagedLists] = useState<string[]>([DEFAULT_LIST, DISTRACTION_LIST]);
@@ -224,6 +273,9 @@ export default function CaptureWindow() {
 
   const parsed = useMemo(() => parseReminderSyntax(text), [text]);
   const effectiveReminderTime = manualReminderTime ?? parsed.reminderTime;
+  const effectiveRecurrenceRule = parsed.recurrenceRule;
+  const effectiveRecurrenceLabel =
+    parsed.recurrenceLabel ?? recurrenceLabelFromRule(effectiveRecurrenceRule);
   const effectivePreviewLabel = useMemo(() => {
     if (!effectiveReminderTime) {
       return null;
@@ -249,6 +301,60 @@ export default function CaptureWindow() {
     return [make("9 AM", 9), make("3 PM", 15), make("6 PM", 18)];
   }, [parsed.reminderTime]);
   const remaining = MAX_CHARS - text.length;
+  const reminderCommand = hasReminderCommand(text);
+  const previewContent = (parsed.cleanedContent.trim() || text.trim()).slice(0, MAX_CHARS);
+  const previewDestinations = useMemo(() => {
+    if (hasActiveDestination(destinations)) {
+      return preferRemindersForCommand(destinations, reminderCommand && Boolean(effectiveReminderTime) && IS_MACOS);
+    }
+    if (!integrationSettings) {
+      return destinations;
+    }
+    return preferRemindersForCommand(
+      suggestedCaptureDestinations(effectiveReminderTime, integrationSettings),
+      reminderCommand && Boolean(effectiveReminderTime) && availableDestinations(integrationSettings).reminders,
+    );
+  }, [destinations, effectiveReminderTime, integrationSettings, reminderCommand]);
+  const previewDestinationLabels = useMemo(
+    () => destinationLabels(previewDestinations),
+    [previewDestinations],
+  );
+  const previewPrimaryDestination = previewDestinationLabels[0] ?? "Local only";
+  const previewTitle = firstLineTitle(previewContent);
+  const previewReason = useMemo(() => {
+    if (effectiveRecurrenceRule) {
+      return "Repeat request";
+    }
+    if (reminderCommand && previewDestinations.reminders) {
+      return "Reminder command";
+    }
+    if (hasActiveDestination(destinations)) {
+      return "Selected manually";
+    }
+    if (!integrationSettings) {
+      return "Ready to capture";
+    }
+    if (effectiveReminderTime && previewDestinations.googleCalendar) {
+      return "Time detected";
+    }
+    if (effectiveReminderTime && previewDestinations.reminders) {
+      return "Reminder time detected";
+    }
+    if (previewDestinations.appleReminders) {
+      return "Default notes destination";
+    }
+    return previewDestinationLabels.length > 0 ? "Suggested destination" : "No destination selected";
+  }, [
+    destinations,
+    effectiveReminderTime,
+    effectiveRecurrenceRule,
+    integrationSettings,
+    previewDestinationLabels.length,
+    previewDestinations.appleReminders,
+    previewDestinations.googleCalendar,
+    previewDestinations.reminders,
+    reminderCommand,
+  ]);
 
   const resetDraft = useCallback(
     (clearTag = false) => {
@@ -428,6 +534,7 @@ export default function CaptureWindow() {
       if (!active) {
         return;
       }
+      setIntegrationSettings(settings);
       setGoogleConfigured(providerConfigured("google", settings));
     })();
 
@@ -437,12 +544,19 @@ export default function CaptureWindow() {
   }, []);
 
   useEffect(() => {
-    if (!effectiveReminderTime || !googleConfigured) {
+    if (!effectiveReminderTime) {
       return;
     }
 
-    setDestinations((prev) => (prev.googleCalendar ? prev : { ...prev, googleCalendar: true }));
-  }, [effectiveReminderTime, googleConfigured]);
+    if (reminderCommand && IS_MACOS) {
+      setDestinations((prev) => preferRemindersForCommand(prev, true));
+      return;
+    }
+
+    if (googleConfigured) {
+      setDestinations((prev) => (prev.googleCalendar ? prev : { ...prev, googleCalendar: true }));
+    }
+  }, [effectiveReminderTime, googleConfigured, reminderCommand]);
 
   useEffect(() => {
     let active = true;
@@ -643,6 +757,13 @@ export default function CaptureWindow() {
       const settings = await loadIntegrationSettings();
       let finalDestinations = overrideDestinations ?? destinations;
 
+      if (overrideDestinations === undefined) {
+        finalDestinations = preferRemindersForCommand(
+          finalDestinations,
+          reminderCommand && Boolean(effectiveReminderTime) && availableDestinations(settings).reminders,
+        );
+      }
+
       if (overrideDestinations === undefined && !hasActiveDestination(finalDestinations)) {
         finalDestinations = applySmartCaptureDestinations(
           finalDestinations,
@@ -667,6 +788,7 @@ export default function CaptureWindow() {
         listName,
         destinations: finalDestinations,
         reminderTime: effectiveReminderTime,
+        recurrenceRule: effectiveRecurrenceRule,
       });
 
       setDestinationPrompt(null);
@@ -683,8 +805,13 @@ export default function CaptureWindow() {
       void loadRecentCaptures();
       void loadManagedLists();
 
-      setSavedFlash(true);
-      window.setTimeout(() => setSavedFlash(false), 1100);
+      const savedDestinations = destinationLabels(finalDestinations);
+      setSavedMessage(
+        savedDestinations.length > 0
+          ? `Saved to ${savedDestinations.slice(0, 2).join(", ")}${savedDestinations.length > 2 ? ` +${savedDestinations.length - 2}` : ""}`
+          : "Saved locally",
+      );
+      window.setTimeout(() => setSavedMessage(""), 1400);
 
       if (keepOpen) {
         resetDraft();
@@ -713,7 +840,7 @@ export default function CaptureWindow() {
         key={pulse}
         className="capture-shell capture-pop relative h-full w-full shadow-floating"
       >
-        {savedFlash ? (
+        {savedMessage ? (
           <div className="save-badge pointer-events-none absolute left-1/2 top-4 z-20">
             <div className="flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-500 shadow-lg">
               <svg
@@ -729,7 +856,7 @@ export default function CaptureWindow() {
               >
                 <path className="check-draw" d="M5 13l4 4L19 7" />
               </svg>
-              Captured
+              {savedMessage}
             </div>
           </div>
         ) : null}
@@ -991,6 +1118,28 @@ export default function CaptureWindow() {
                     ))}
                   </>
                 ) : null}
+              </div>
+            ) : null}
+
+            {previewContent ? (
+              <div className="smart-preview mb-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="smart-preview-dot" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-medium text-[var(--text)]">
+                      {previewPrimaryDestination}
+                      <span className="codex-muted font-normal">
+                        {" "}· {normalizeListName(listName)} · {selectedTag}
+                      </span>
+                    </div>
+                    <div className="codex-muted truncate text-[11px]">
+                      {effectivePreviewLabel ? `${effectivePreviewLabel} · ` : ""}
+                      {effectiveRecurrenceLabel ? `${effectiveRecurrenceLabel} · ` : ""}
+                      Title: "{previewTitle.slice(0, 72)}"
+                    </div>
+                  </div>
+                </div>
+                <span className="smart-preview-reason">{previewReason}</span>
               </div>
             ) : null}
 

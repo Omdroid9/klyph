@@ -453,6 +453,48 @@ html[data-theme="dark"] .prompt-box::before {
   outline-offset: 2px;
 }
 
+.smart-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.7rem;
+  border-radius: 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--border), transparent 25%);
+  background: color-mix(in srgb, var(--btn-soft), transparent 22%);
+  padding: 0.55rem 0.7rem;
+}
+
+.smart-preview-dot {
+  width: 0.48rem;
+  height: 0.48rem;
+  flex: 0 0 auto;
+  border-radius: 9999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 86%);
+}
+
+.smart-preview-reason {
+  flex: 0 0 auto;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--muted);
+  padding: 0.22rem 0.5rem;
+  font-size: 0.62rem;
+  font-weight: 500;
+}
+
+html[data-theme="dark"] .smart-preview {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+html[data-theme="dark"] .smart-preview-reason {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
 /* Onboarding destination logo grid. */
 .onboard-logo-grid {
   display: grid;

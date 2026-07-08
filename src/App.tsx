@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import CaptureWindow from "./components/CaptureWindow";
 import CaptureList from "./components/CaptureList";
@@ -10,7 +10,7 @@ import LibraryWindow from "./components/library/LibraryWindow";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { runAgentPass } from "./lib/agent/agentEngine";
 import { bootstrapDatabase, getCapturesTodayCount, getSetting, setSetting } from "./lib/db";
-import { getLastSyncLabel, runSyncPass } from "./lib/sync/syncManager";
+import { getLastSyncLabel, runRecurringReminderPass, runSyncPass } from "./lib/sync/syncManager";
 import { useAppStore } from "./store/useAppStore";
 
 import type { ThemeMode } from "./types";
@@ -26,10 +26,11 @@ function resolveTheme(saved: string | null | undefined): ThemeMode {
 
 function App() {
   const isTauriRuntime = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+  const forceOnboarding = import.meta.env.DEV && import.meta.env.VITE_KLYPH_FORCE_ONBOARDING === "true";
   const [ready, setReady] = useState<boolean>(() => !isTauriRuntime);
   const [initError, setInitError] = useState<string | null>(null);
-  const [mainView, setMainView] = useState<MainView>("capture");
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [mainView, setMainView] = useState<MainView>(() => (forceOnboarding ? "settings" : "capture"));
+  const [needsOnboarding, setNeedsOnboarding] = useState(forceOnboarding);
   const windowLabel = useMemo(
     () => (isTauriRuntime ? getCurrentWebviewWindow().label : "main"),
     [isTauriRuntime],
@@ -116,7 +117,7 @@ function App() {
     const unlistenSecondInstance = listen("klyph://second-instance", () => {
       void (async () => {
         const onboardingComplete = await getSetting("onboarding_complete");
-        if (onboardingComplete !== "true") {
+        if (forceOnboarding || onboardingComplete !== "true") {
           setNeedsOnboarding(true);
           setMainView("settings");
           await invoke("open_settings_window");
@@ -134,7 +135,7 @@ function App() {
       unlistenSettings.then((dispose) => dispose()).catch(() => {});
       unlistenSecondInstance.then((dispose) => dispose()).catch(() => {});
     };
-  }, [isMainWindow, isTauriRuntime]);
+  }, [forceOnboarding, isMainWindow, isTauriRuntime]);
 
   useEffect(() => {
     if (!isTauriRuntime || !isMainWindow) {
@@ -156,7 +157,7 @@ function App() {
           getSetting("onboarding_complete"),
         ]);
 
-      const needsSetup = onboardingComplete !== "true";
+      const needsSetup = forceOnboarding || onboardingComplete !== "true";
 
       if (needsSetup) {
         setNeedsOnboarding(true);
@@ -220,7 +221,7 @@ function App() {
     return () => {
       active = false;
     };
-  }, [isMainWindow, isTauriRuntime, setCapturesToday, setHotkey, setLastSyncLabel, setTheme]);
+  }, [forceOnboarding, isMainWindow, isTauriRuntime, setCapturesToday, setHotkey, setLastSyncLabel, setTheme]);
 
   useEffect(() => {
     if (!isTauriRuntime || !isMainWindow || initError) {
@@ -271,7 +272,45 @@ function App() {
       window.removeEventListener("online", onlineHandler);
       unlistenPromise.then((unlisten) => unlisten()).catch(() => {});
     };
-  }, [initError, isTauriRuntime, setCapturesToday, setLastSyncLabel, isMainWindow]);
+  }, [forceOnboarding, initError, isTauriRuntime, setCapturesToday, setLastSyncLabel, isMainWindow]);
+
+  useEffect(() => {
+    if (!isTauriRuntime || !isMainWindow || initError) {
+      return;
+    }
+
+    let active = true;
+
+    async function runRecurringNow() {
+      try {
+        const stats = await runRecurringReminderPass();
+        if (active && (stats.created > 0 || stats.failed > 0)) {
+          void emit("klyph://captures-changed");
+        }
+      } catch (error) {
+        if (active) {
+          console.error("Recurring reminder pass failed", error);
+        }
+      }
+    }
+
+    void runRecurringNow();
+
+    const intervalId = window.setInterval(() => {
+      void runRecurringNow();
+    }, 60_000);
+
+    const onlineHandler = () => {
+      void runRecurringNow();
+    };
+    window.addEventListener("online", onlineHandler);
+
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("online", onlineHandler);
+    };
+  }, [initError, isMainWindow, isTauriRuntime]);
 
   useEffect(() => {
     if (!isTauriRuntime || !isMainWindow || initError) {

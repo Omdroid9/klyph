@@ -4,6 +4,8 @@ export interface ParsedReminder {
   cleanedContent: string;
   reminderTime: string | null;
   previewLabel: string | null;
+  recurrenceRule: string | null;
+  recurrenceLabel: string | null;
   confidence: number;
   isAmbiguous: boolean;
   ambiguityReason: string | null;
@@ -17,13 +19,43 @@ const REMINDER_MARKER_REGEX =
   /(^|\s)@\s*(today|tomorrow|tonight|next|mon(?:day)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?|\d{1,2}(?::\d{2})?\s*(?:am|pm)?)(?=\b|$)/gi;
 const EXPLICIT_MARKER_REGEX = /(?:^|\s)@/;
 const TEMPORAL_HINT_REGEX =
-  /\b(today|tomorrow|tonight|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun|am|pm|noon|midnight|eod|end of day|this evening|next business day|all day|throughout the day|anytime|\d{1,2}:\d{2}|\d{1,2}\s?(am|pm)|\d{1,2}(st|nd|rd|th)|\d{4}-\d{1,2}-\d{1,2}|\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)\b/i;
+  /\b(today|tomorrow|tonight|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun|am|pm|noon|midnight|eod|end of day|this evening|next business day|all day|throughout the day|anytime|in\s+(?:a|an|one|two|three|four|five|ten|fifteen|thirty|\d{1,3})\s+(?:s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours)|\d{1,2}:\d{2}|\d{1,2}\s?(am|pm)|\d{1,2}(st|nd|rd|th)|\d{4}-\d{1,2}-\d{1,2}|\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)\b/i;
 const TIME_12H_REGEX = /\b(\d{1,2})(?::([0-5]\d))?\s*(am|pm)\b/i;
 const TIME_24H_REGEX = /\b([01]?\d|2[0-3]):([0-5]\d)\b/;
 const ORDINAL_DAY_REGEX = /\b(?:on\s+)?(?:the\s+)?([12]?\d|3[01])(st|nd|rd|th)\b/i;
 const ALL_DAY_HINT_REGEX = /\b(all day|throughout the day|during the day|whole day|anytime)\b/i;
 const DURATION_HOURS_REGEX = /\bfor\s+(\d{1,2})\s*(h|hr|hrs|hour|hours)\b/i;
 const DURATION_MINUTES_REGEX = /\bfor\s+(\d{1,3})\s*(m|min|mins|minute|minutes)\b/i;
+const REMINDER_INTENT_PREFIX_REGEX =
+  /^\s*(?:please\s+)?(?:remind\s+me(?:\s+to)?|remember\s+to|set\s+(?:a\s+)?reminder\s+(?:to|for)|add\s+(?:a\s+)?reminder\s+(?:to|for))\s+/i;
+const RECURRENCE_REGEX =
+  /\bevery\s+(?:(a|an|one|two|three|four|five|six|seven|eight|nine|ten|twelve|fifteen|thirty|\d{1,3})\s+)?(second|seconds|minute|minutes|hour|hours|day|days|week|weeks)\b/i;
+
+const WORD_NUMBERS: Record<string, number> = {
+  a: 1,
+  an: 1,
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  twelve: 12,
+  fifteen: 15,
+  thirty: 30,
+};
+
+interface RecurrenceInfo {
+  rule: string;
+  label: string;
+  interval: number;
+  unit: "second" | "minute" | "hour" | "day" | "week";
+  text: string;
+}
 
 function toLocalIso(input: Date): string {
   const timezoneOffset = input.getTimezoneOffset() * 60_000;
@@ -111,6 +143,53 @@ function resolveDurationMinutes(text: string): number | null {
   }
 
   return null;
+}
+
+function parseInterval(value: string | undefined): number {
+  const normalized = value?.trim().toLowerCase() || "1";
+  const wordValue = WORD_NUMBERS[normalized];
+  if (wordValue) {
+    return wordValue;
+  }
+  const numeric = Number(normalized);
+  return Number.isFinite(numeric) && numeric > 0 ? Math.min(Math.floor(numeric), 999) : 1;
+}
+
+function singularUnit(value: string): RecurrenceInfo["unit"] {
+  if (value.startsWith("second")) return "second";
+  if (value.startsWith("minute")) return "minute";
+  if (value.startsWith("hour")) return "hour";
+  if (value.startsWith("day")) return "day";
+  return "week";
+}
+
+function recurrenceMs(recurrence: RecurrenceInfo): number {
+  const multipliers: Record<RecurrenceInfo["unit"], number> = {
+    second: 1_000,
+    minute: 60_000,
+    hour: 60 * 60_000,
+    day: 24 * 60 * 60_000,
+    week: 7 * 24 * 60 * 60_000,
+  };
+  return recurrence.interval * multipliers[recurrence.unit];
+}
+
+function parseRecurrence(text: string): RecurrenceInfo | null {
+  const match = text.match(RECURRENCE_REGEX);
+  if (!match) {
+    return null;
+  }
+
+  const interval = parseInterval(match[1]);
+  const unit = singularUnit(match[2]);
+  const plural = interval === 1 ? unit : `${unit}s`;
+  return {
+    rule: `every:${interval}:${unit}`,
+    label: `Every ${interval} ${plural}`,
+    interval,
+    unit,
+    text: match[0],
+  };
 }
 
 function escapeRegex(value: string): string {
@@ -260,6 +339,38 @@ function removeOrdinalPhrase(content: string): string {
     .trim();
 }
 
+function hasReminderIntentPrefix(content: string): boolean {
+  return REMINDER_INTENT_PREFIX_REGEX.test(content);
+}
+
+function removeReminderIntentPrefix(content: string): string {
+  return content
+    .replace(REMINDER_INTENT_PREFIX_REGEX, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function cleanReminderContent(params: {
+  normalized: string;
+  sourceText: string;
+  shouldCleanTemporalPhrase: boolean;
+  recurrenceText?: string | null;
+}): string {
+  const withoutRecurrence = params.recurrenceText
+    ? params.normalized
+        .replace(new RegExp(`\\b${escapeRegex(params.recurrenceText)}\\b`, "i"), " ")
+        .replace(/\s{2,}/g, " ")
+        .trim()
+    : params.normalized.trim();
+  const withoutTemporalPhrase = params.shouldCleanTemporalPhrase
+    ? removeOrdinalPhrase(removeParsedPhrase(withoutRecurrence, params.sourceText))
+    : withoutRecurrence;
+  const cleaned = removeReminderIntentPrefix(withoutTemporalPhrase)
+    .replace(/^\s*(?:to|for)\s+/i, "")
+    .trim();
+  return cleaned.length > 0 ? cleaned : params.normalized.trim();
+}
+
 function nextBusinessDayAt(hour: number, minute: number, now: Date): Date {
   const next = new Date(now);
   next.setHours(hour, minute, 0, 0);
@@ -370,6 +481,8 @@ function noReminder(cleanedContent: string, debug: string): ParsedReminder {
     cleanedContent,
     reminderTime: null,
     previewLabel: null,
+    recurrenceRule: null,
+    recurrenceLabel: null,
     confidence: 0,
     isAmbiguous: false,
     ambiguityReason: null,
@@ -386,7 +499,8 @@ export function parseReminderSyntax(content: string): ParsedReminder {
   }
 
   const hasExplicitMarker = EXPLICIT_MARKER_REGEX.test(content);
-  if (!hasExplicitMarker && !TEMPORAL_HINT_REGEX.test(content)) {
+  const recurrence = parseRecurrence(content);
+  if (!hasExplicitMarker && !recurrence && !TEMPORAL_HINT_REGEX.test(content)) {
     return noReminder(trimmed, "No temporal hints detected");
   }
 
@@ -419,6 +533,8 @@ export function parseReminderSyntax(content: string): ParsedReminder {
       cleanedContent,
       reminderTime: toLocalIso(reminder),
       previewLabel: reminder.toLocaleString(),
+      recurrenceRule: null,
+      recurrenceLabel: null,
       confidence,
       isAmbiguous: !token.match(/\d|am|pm|today|tomorrow|tonight/i),
       ambiguityReason: !token.match(/\d|am|pm/i) ? "No time specified. Choose a time." : null,
@@ -434,47 +550,60 @@ export function parseReminderSyntax(content: string): ParsedReminder {
   }
 
   const parsed = pickBestParsedResult(parse(normalized, now, { forwardDate: true }));
-  if (!parsed) {
+  if (!parsed && !recurrence) {
     return noReminder(trimmed, `Parse failed for normalized text: ${normalized}`);
   }
 
-  const sourceText = parsed.text?.trim() ?? "";
-  let reminder = parsed.start?.date() ?? null;
+  const sourceText = parsed?.text?.trim() ?? recurrence?.text ?? "";
+  let reminder = parsed?.start?.date() ?? null;
+  if (!reminder && recurrence) {
+    reminder = new Date(now.getTime() + recurrenceMs(recurrence));
+  }
   if (!reminder) {
     return noReminder(trimmed, "Parser returned no date");
   }
 
-  reminder = applyShortcutOverrideIfNeeded(
-    reminder,
-    sourceText,
-    content,
-    parsed.start?.isCertain("hour") ?? false,
-  );
-
   const explicitTime = extractExplicitTime(normalized);
-  reminder = applyExplicitTimeIfNeeded(reminder, normalized, parsed);
-  reminder = applyOrdinalDayIfNeeded(reminder, normalized, parsed, now);
+  if (parsed) {
+    reminder = applyShortcutOverrideIfNeeded(
+      reminder,
+      sourceText,
+      content,
+      parsed.start?.isCertain("hour") ?? false,
+    );
+
+    reminder = applyExplicitTimeIfNeeded(reminder, normalized, parsed);
+    reminder = applyOrdinalDayIfNeeded(reminder, normalized, parsed, now);
+  }
 
   const deterministic = applyDeterministicPhraseOverrides(reminder, normalized, now);
   reminder = deterministic.reminder;
 
   const hasResolvedTime =
     Boolean(explicitTime) ||
-    parsed.start.isCertain("hour") ||
+    Boolean(recurrence) ||
+    Boolean(parsed?.start.isCertain("hour")) ||
     ["eod", "this_evening", "tonight", "next_business_day"].includes(deterministic.usedRule ?? "");
 
   const isAmbiguous = !deterministic.allDay && !hasResolvedTime;
-  const confidence = estimateConfidence({
-    parsed,
-    usedRule: deterministic.usedRule,
-    hadExplicitTime: Boolean(explicitTime),
-    isAmbiguous,
-    allDay: deterministic.allDay,
-  });
+  const confidence = parsed
+    ? estimateConfidence({
+        parsed,
+        usedRule: deterministic.usedRule,
+        hadExplicitTime: Boolean(explicitTime),
+        isAmbiguous,
+        allDay: deterministic.allDay,
+      })
+    : 0.9;
 
-  const cleanedContent = hasExplicitMarker
-    ? removeOrdinalPhrase(removeParsedPhrase(normalized, sourceText))
-    : trimmed;
+  const hasReminderIntent = hasReminderIntentPrefix(normalized);
+  const shouldCleanTemporalPhrase = hasExplicitMarker || hasResolvedTime || hasReminderIntent || Boolean(recurrence);
+  const cleanedContent = cleanReminderContent({
+    normalized,
+    sourceText,
+    shouldCleanTemporalPhrase,
+    recurrenceText: recurrence?.text ?? null,
+  });
 
   const durationMinutes = resolveDurationMinutes(normalized);
 
@@ -486,6 +615,7 @@ export function parseReminderSyntax(content: string): ParsedReminder {
     explicitMarker: hasExplicitMarker,
     explicitTime: explicitTime ? `${String(explicitTime.hour).padStart(2, "0")}:${String(explicitTime.minute).padStart(2, "0")}` : null,
     usedRule: deterministic.usedRule,
+    recurrence: recurrence?.rule ?? null,
     allDay: deterministic.allDay,
     ambiguous: isAmbiguous,
     confidence,
@@ -497,6 +627,8 @@ export function parseReminderSyntax(content: string): ParsedReminder {
     previewLabel: deterministic.allDay
       ? `All day - ${reminder.toLocaleDateString()}`
       : reminder.toLocaleString(),
+    recurrenceRule: recurrence?.rule ?? null,
+    recurrenceLabel: recurrence?.label ?? null,
     confidence,
     isAmbiguous,
     ambiguityReason: isAmbiguous ? "No time specified. Pick a time or type one." : null,

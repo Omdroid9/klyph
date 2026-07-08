@@ -1,5 +1,6 @@
 import Database from "@tauri-apps/plugin-sql";
 import { LazyStore } from "@tauri-apps/plugin-store";
+import { nextRecurrenceAfter, toLocalIso } from "./recurrence";
 import type { Capture, CaptureDestinations, CaptureLane, CaptureTag } from "../types";
 
 const DB_URL = "sqlite:klyph.db";
@@ -45,6 +46,8 @@ const CAPTURE_SELECT_FIELDS = `
   captures.target_apple_reminders,
   captures.target_reminders,
   captures.reminder_time,
+  captures.recurrence_rule,
+  captures.recurrence_next_at,
   captures.last_sync_error,
   agent_jobs.status AS agent_status,
   agent_jobs.attempts AS agent_attempts,
@@ -174,6 +177,23 @@ function isDefaultListName(value: string): boolean {
   return normalizeListName(value).toLowerCase() === DEFAULT_LIST_NAME.toLowerCase();
 }
 
+function computeRecurrenceNextAt(
+  reminderTime: string | null | undefined,
+  recurrenceRule: string | null | undefined,
+): string | null {
+  if (!reminderTime || !recurrenceRule) {
+    return null;
+  }
+
+  const parsedReminder = new Date(reminderTime);
+  if (Number.isNaN(parsedReminder.getTime())) {
+    return null;
+  }
+
+  const next = nextRecurrenceAfter(parsedReminder, recurrenceRule, parsedReminder);
+  return next ? toLocalIso(next) : null;
+}
+
 async function ensureManagedList(db: Database, listName: string): Promise<string> {
   const normalized = normalizeListName(listName);
   await db.execute(
@@ -248,7 +268,9 @@ async function runBootstrap(): Promise<void> {
       target_google_calendar INTEGER DEFAULT 0,
       target_apple_reminders INTEGER DEFAULT 0,
       target_reminders INTEGER DEFAULT 0,
-      reminder_time DATETIME NULL
+      reminder_time DATETIME NULL,
+      recurrence_rule TEXT NULL,
+      recurrence_next_at DATETIME NULL
     );
   `);
 
@@ -295,6 +317,8 @@ async function runBootstrap(): Promise<void> {
   await ensureCaptureColumn(db, "synced_reminders", "INTEGER DEFAULT 0");
   await ensureCaptureColumn(db, "target_reminders", "INTEGER DEFAULT 0");
   await ensureCaptureColumn(db, "last_sync_error", "TEXT NULL");
+  await ensureCaptureColumn(db, "recurrence_rule", "TEXT NULL");
+  await ensureCaptureColumn(db, "recurrence_next_at", "DATETIME NULL");
 
   await db.execute(
     `
@@ -334,6 +358,7 @@ export async function insertCapture(params: {
   listName?: string;
   destinations?: CaptureDestinations;
   reminderTime?: string | null;
+  recurrenceRule?: string | null;
 }): Promise<void> {
   const db = await getDatabase();
   const lane = normalizeLane(params.lane);
@@ -365,9 +390,11 @@ export async function insertCapture(params: {
         target_google_calendar,
         target_apple_reminders,
         target_reminders,
-        reminder_time
+        reminder_time,
+        recurrence_rule,
+        recurrence_next_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);
     `,
     [
       params.id,
@@ -383,6 +410,8 @@ export async function insertCapture(params: {
       Number(destinations.appleReminders),
       Number(destinations.reminders),
       params.reminderTime ?? null,
+      params.recurrenceRule ?? null,
+      computeRecurrenceNextAt(params.reminderTime, params.recurrenceRule),
     ],
   );
 
@@ -528,6 +557,55 @@ export async function setCaptureSyncError(id: string, error: string | null): Pro
   );
 }
 
+export async function listDueRecurringReminderCaptures(nowIso: string, limit = 25): Promise<Capture[]> {
+  const db = await getDatabase();
+  const rows = await db.select<Capture[]>(
+    `
+      SELECT
+        ${CAPTURE_SELECT_FIELDS}
+      FROM captures
+      LEFT JOIN agent_jobs ON agent_jobs.capture_id = captures.id
+      WHERE recurrence_rule IS NOT NULL
+        AND recurrence_next_at IS NOT NULL
+        AND recurrence_next_at <= $1
+        AND target_reminders = 1
+        AND synced_reminders = 1
+      ORDER BY recurrence_next_at ASC
+      LIMIT $2;
+    `,
+    [nowIso, limit],
+  );
+  return rows;
+}
+
+export async function setCaptureRecurrenceNextAt(
+  captureId: string,
+  nextAt: string | null,
+): Promise<void> {
+  const db = await getDatabase();
+  await db.execute(
+    `
+      UPDATE captures
+      SET recurrence_next_at = $1
+      WHERE id = $2;
+    `,
+    [nextAt, captureId],
+  );
+}
+
+export async function clearCaptureRecurrence(captureId: string): Promise<void> {
+  const db = await getDatabase();
+  await db.execute(
+    `
+      UPDATE captures
+      SET recurrence_rule = NULL,
+          recurrence_next_at = NULL
+      WHERE id = $1;
+    `,
+    [captureId],
+  );
+}
+
 export async function updateCapture(params: {
   id: string;
   content: string;
@@ -536,6 +614,7 @@ export async function updateCapture(params: {
   listName: string;
   destinations: CaptureDestinations;
   reminderTime: string | null;
+  recurrenceRule?: string | null;
 }): Promise<void> {
   const db = await getDatabase();
   const lane = normalizeLane(params.lane);
@@ -556,6 +635,8 @@ export async function updateCapture(params: {
         target_apple_reminders = $10,
         target_reminders = $11,
         reminder_time = $12,
+        recurrence_rule = $13,
+        recurrence_next_at = $14,
         -- Preserve already-synced destinations on edit so fixing a typo does not
         -- re-post everywhere. A still-targeted destination keeps its prior synced
         -- state (unsent stays unsent and will sync; already-sent stays sent).
@@ -567,7 +648,7 @@ export async function updateCapture(params: {
         synced_google_calendar = CASE WHEN $9 = 1 THEN synced_google_calendar ELSE 1 END,
         synced_apple_reminders = CASE WHEN $10 = 1 THEN synced_apple_reminders ELSE 1 END,
         synced_reminders = CASE WHEN $11 = 1 THEN synced_reminders ELSE 1 END
-      WHERE id = $13;
+      WHERE id = $15;
     `,
     [
       params.content,
@@ -582,6 +663,8 @@ export async function updateCapture(params: {
       Number(params.destinations.appleReminders),
       Number(params.destinations.reminders),
       params.reminderTime,
+      params.recurrenceRule ?? null,
+      computeRecurrenceNextAt(params.reminderTime, params.recurrenceRule),
       params.id,
     ],
   );
