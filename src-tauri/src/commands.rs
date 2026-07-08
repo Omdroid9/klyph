@@ -14,6 +14,11 @@ pub fn hide_capture_window(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub fn resize_capture_window(app: tauri::AppHandle, height: f64) -> Result<(), String> {
+  window::resize_capture_window(&app, height)
+}
+
+#[tauri::command]
 pub fn exit_app(app: tauri::AppHandle) {
   window::quit_app(&app);
 }

@@ -7,7 +7,10 @@ use crate::{AppState, MainView};
 const CAPTURE_WINDOW_LABEL: &str = "main";
 const LIBRARY_WINDOW_LABEL: &str = "library";
 const CAPTURE_WIDTH: f64 = 640.0;
-const CAPTURE_HEIGHT: f64 = 620.0;
+// The capture overlay opens compact (input only) and grows once the user
+// types and the contextual controls appear. Spotlight-scale, not app-scale.
+pub const CAPTURE_HEIGHT_COMPACT: f64 = 250.0;
+pub const CAPTURE_HEIGHT_EXPANDED: f64 = 520.0;
 const HISTORY_WIDTH: f64 = 760.0;
 const HISTORY_HEIGHT: f64 = 640.0;
 const SETTINGS_WIDTH: f64 = 480.0;
@@ -75,10 +78,13 @@ pub fn show_capture_window(app: &tauri::AppHandle) -> Result<(), String> {
     .set_skip_taskbar(true)
     .map_err(|error| error.to_string())?;
   window
-    .set_size(Size::Logical(LogicalSize::new(CAPTURE_WIDTH, CAPTURE_HEIGHT)))
+    .set_size(Size::Logical(LogicalSize::new(
+      CAPTURE_WIDTH,
+      CAPTURE_HEIGHT_COMPACT,
+    )))
     .map_err(|error| error.to_string())?;
 
-  center_on_active_monitor(&window)?;
+  position_capture_window(&window)?;
   window.unminimize().map_err(|error| error.to_string())?;
   window.show().map_err(|error| error.to_string())?;
   window.set_focus().map_err(|error| error.to_string())?;
@@ -230,6 +236,59 @@ pub fn quit_app(app: &tauri::AppHandle) {
     let _ = window.destroy();
   }
   app.exit(0);
+}
+
+/// Resize the capture overlay between its compact and expanded heights.
+/// No-ops outside the capture view so History/Settings sizes are never clobbered.
+/// The top edge stays fixed, so the window grows downward under the input.
+pub fn resize_capture_window(app: &tauri::AppHandle, height: f64) -> Result<(), String> {
+  let is_capture_view = {
+    let state = app.state::<AppState>();
+    state
+      .main_view
+      .lock()
+      .map(|view| *view == MainView::Capture)
+      .unwrap_or(false)
+  };
+  if !is_capture_view {
+    return Ok(());
+  }
+
+  let window = app
+    .get_webview_window(CAPTURE_WINDOW_LABEL)
+    .ok_or_else(|| "Capture window was not found".to_string())?;
+
+  let clamped = height.clamp(CAPTURE_HEIGHT_COMPACT, CAPTURE_HEIGHT_EXPANDED);
+  window
+    .set_size(Size::Logical(LogicalSize::new(CAPTURE_WIDTH, clamped)))
+    .map_err(|error| error.to_string())?;
+
+  Ok(())
+}
+
+/// Spotlight-style placement: horizontally centered, ~22% from the top of the
+/// active monitor, so the compact overlay sits near the user's eye line and
+/// growing taller extends downward instead of shifting the whole window.
+fn position_capture_window(window: &WebviewWindow) -> Result<(), String> {
+  let fallback = window.primary_monitor().map_err(|error| error.to_string())?;
+  let monitor = active_monitor_for_cursor(window).or(fallback);
+
+  let Some(monitor) = monitor else {
+    return Ok(());
+  };
+
+  let monitor_size = monitor.size();
+  let monitor_position = monitor.position();
+  let window_size = window.outer_size().map_err(|error| error.to_string())?;
+
+  let x = monitor_position.x + ((monitor_size.width as i32 - window_size.width as i32) / 2).max(0);
+  let y = monitor_position.y + ((monitor_size.height as f64) * 0.22) as i32;
+
+  window
+    .set_position(Position::Physical(PhysicalPosition::new(x, y)))
+    .map_err(|error| error.to_string())?;
+
+  Ok(())
 }
 
 fn set_main_view(app: &tauri::AppHandle, next: MainView) -> Result<(), String> {

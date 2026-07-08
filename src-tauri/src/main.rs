@@ -217,6 +217,7 @@ fn main() {
     .invoke_handler(tauri::generate_handler![
       commands::show_capture_window,
       commands::hide_capture_window,
+      commands::resize_capture_window,
       commands::exit_app,
       commands::open_settings_window,
       commands::open_history_window,

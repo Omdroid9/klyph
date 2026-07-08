@@ -5,9 +5,11 @@ import { parseReminderSyntax } from "../lib/parser";
 import {
   createManagedList,
   createRoutingRule,
+  deleteCapture,
   getCapturesTodayCount,
   getDailyRecapStats,
   getSetting,
+  getTotalCaptureCount,
   insertCapture,
   listCaptures,
   listManagedLists,
@@ -43,8 +45,14 @@ import type {
   RoutingRuleField,
 } from "../types";
 
-const MAX_CHARS = 280;
+const MAX_CHARS = 2000;
+const CHAR_COUNTER_THRESHOLD = 100;
 const RECENT_LIMIT = 20;
+const HINT_GRADUATION_CAPTURES = 20;
+const UNDO_WINDOW_MS = 60_000;
+const SYNC_GRACE_MS = 5_000;
+const WINDOW_HEIGHT_COMPACT = 250;
+const WINDOW_HEIGHT_EXPANDED = 520;
 const DEFAULT_LIST = "Inbox";
 const DISTRACTION_LIST = "Parking Lot";
 const DRAFT_SETTING_KEY = "capture_draft";
@@ -261,6 +269,22 @@ export default function CaptureWindow() {
   const [routingRules, setRoutingRules] = useState<RoutingRule[]>([]);
   const [teachDismissed, setTeachDismissed] = useState(false);
   const [recap, setRecap] = useState<DailyRecapStats | null>(null);
+  const [totalCaptures, setTotalCaptures] = useState<number | null>(null);
+  const [allConfirm, setAllConfirm] = useState(false);
+  const [undoStrip, setUndoStrip] = useState<{ labels: string[] } | null>(null);
+  const undoRef = useRef<{
+    id: string;
+    labels: string[];
+    at: number;
+    syncTimer: number;
+    synced: boolean;
+  } | null>(null);
+  const allConfirmTimerRef = useRef<number | null>(null);
+
+  const undoAvailable = useCallback(() => {
+    const last = undoRef.current;
+    return Boolean(last && Date.now() - last.at <= UNDO_WINDOW_MS);
+  }, []);
   const [savedMessage, setSavedMessage] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -601,6 +625,10 @@ export default function CaptureWindow() {
   }, [maybeShowRecap]);
 
   useEffect(() => {
+    void getTotalCaptureCount().then(setTotalCaptures).catch(() => setTotalCaptures(null));
+  }, []);
+
+  useEffect(() => {
     let active = true;
 
     async function restoreDraft() {
@@ -702,6 +730,10 @@ export default function CaptureWindow() {
   useEffect(() => {
     const unlistenPromise = listen("klyph://show-capture", () => {
       setPulse((value) => value + 1);
+      setAllConfirm(false);
+      setUndoStrip(
+        undoAvailable() && undoRef.current ? { labels: undoRef.current.labels } : null,
+      );
       void loadRecentCaptures();
       void loadManagedLists();
       refreshRoutingInputs();
@@ -718,7 +750,7 @@ export default function CaptureWindow() {
     return () => {
       unlistenPromise.then((dispose) => dispose()).catch(() => {});
     };
-  }, [maybeShowRecap, refreshRoutingInputs]);
+  }, [maybeShowRecap, refreshRoutingInputs, undoAvailable]);
 
   async function closeCaptureWindow() {
     // Keep the draft (autosaved) so dismissing never loses an unsaved thought.
@@ -860,17 +892,35 @@ export default function CaptureWindow() {
 
       const today = await getCapturesTodayCount();
       setCapturesToday(today);
+      setTotalCaptures((prev) => (prev === null ? prev : prev + 1));
 
       await invoke("update_tray_tooltip", {
         capturesToday: today,
         lastSync: lastSyncLabel,
       });
-      void emit("klyph://request-sync");
-      void emit("klyph://request-agent");
-      void loadRecentCaptures();
-      void loadManagedLists();
 
       const savedDestinations = destinationLabels(finalDestinations);
+
+      // Grace period before the capture leaves the machine, so Undo can win
+      // the race against the sync engine. Local-only saves have no race.
+      const syncTimer = window.setTimeout(() => {
+        if (undoRef.current?.id === captureId) {
+          undoRef.current.synced = true;
+        }
+        void emit("klyph://request-sync");
+        void emit("klyph://request-agent");
+      }, SYNC_GRACE_MS);
+      undoRef.current = {
+        id: captureId,
+        labels: savedDestinations,
+        at: Date.now(),
+        syncTimer,
+        synced: false,
+      };
+      setUndoStrip(null);
+
+      void loadRecentCaptures();
+      void loadManagedLists();
       setSavedMessage(
         savedDestinations.length > 0
           ? `Saved to ${savedDestinations.slice(0, 2).join(", ")}${savedDestinations.length > 2 ? ` +${savedDestinations.length - 2}` : ""}`
@@ -898,6 +948,49 @@ export default function CaptureWindow() {
 
   const canSend = (parsed.cleanedContent.trim() || text.trim()).length > 0;
   const isEmpty = text.trim().length === 0;
+  const showHints = totalCaptures !== null && totalCaptures < HINT_GRADUATION_CAPTURES;
+
+  // Spotlight-scale when idle, expanded once typing reveals the controls.
+  useEffect(() => {
+    void invoke("resize_capture_window", {
+      height: isEmpty ? WINDOW_HEIGHT_COMPACT : WINDOW_HEIGHT_EXPANDED,
+    }).catch(() => {});
+  }, [isEmpty]);
+
+  const placeholder = useMemo(() => {
+    if (captureLane === "distraction") {
+      return "Park the distraction…";
+    }
+    const hint = CAPTURE_HINTS[pulse % CAPTURE_HINTS.length];
+    return `Try: "${hint}"`;
+  }, [captureLane, pulse]);
+
+  async function undoLastCapture() {
+    const last = undoRef.current;
+    if (!last || Date.now() - last.at > UNDO_WINDOW_MS) {
+      return;
+    }
+    window.clearTimeout(last.syncTimer);
+    undoRef.current = null;
+    setUndoStrip(null);
+    try {
+      await deleteCapture(last.id);
+      const today = await getCapturesTodayCount();
+      setCapturesToday(today);
+      setTotalCaptures((prev) => (prev === null || prev === 0 ? prev : prev - 1));
+      void emit("klyph://captures-changed");
+      void loadRecentCaptures();
+      setSavedMessage(
+        last.synced && last.labels.length > 0
+          ? "Removed from Klyph — it may have already reached your apps"
+          : "Capture undone",
+      );
+      window.setTimeout(() => setSavedMessage(""), 2000);
+    } catch (error) {
+      console.error("Undo failed", error);
+      setSaveError("Could not undo the last capture.");
+    }
+  }
 
   return (
     <div className="app-page h-full w-full overflow-hidden p-3">
@@ -931,11 +1024,7 @@ export default function CaptureWindow() {
             <div className="flex items-center gap-2.5">
               <KlyphLogo size={22} className="klyph-logo-header" />
               <span className="codex-panel-title text-base font-medium tracking-tight">
-                Flow<span className="font-serif-italic">Capture</span>
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--btn-soft)] px-2 py-0.5 text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--muted)]">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                Capture
+                Klyph
               </span>
             </div>
             <div className="flex items-center gap-0.5">
@@ -1003,7 +1092,8 @@ export default function CaptureWindow() {
             </div>
           ) : null}
 
-          {/* Lane + tags */}
+          {/* Lane + tags — contextual: only shown once there is something to file */}
+          {!isEmpty ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div
               className="inline-flex rounded-xl border border-[var(--border)] bg-[var(--btn-soft)] p-0.5"
@@ -1011,7 +1101,7 @@ export default function CaptureWindow() {
             >
               {([
                 ["focus", "Focus"],
-                ["distraction", "Distraction"],
+                ["distraction", "Park it"],
               ] as const).map(([value, label]) => (
                 <button
                   key={value}
@@ -1034,31 +1124,16 @@ export default function CaptureWindow() {
               <TagChip tag="idea" active={selectedTag === "idea"} onSelect={setSelectedTag} />
             </div>
           </div>
+          ) : null}
 
           {/* Prompt box, scrolls inside the fixed capture window height */}
           <div className="prompt-box flex min-h-0 flex-1 flex-col overflow-hidden px-3.5 pt-3 pb-2.5">
             <div className="flex min-h-0 flex-1 flex-col" data-tour="prompt-field">
-            {isEmpty ? (
-              <div className="capture-stage">
-                <p className="capture-stage-title">
-                  {captureLane === "distraction" ? "Park it and move on" : "Capture anything"}
-                </p>
-                <p className="capture-stage-sub">
-                  {captureLane === "distraction"
-                    ? "Jot the distraction — we'll route it to Parking Lot"
-                    : "Type a thought or reminder — times parse automatically"}
-                </p>
-              </div>
-            ) : null}
             <textarea
               ref={inputRef}
               value={text}
               maxLength={MAX_CHARS}
-              placeholder={
-                captureLane === "distraction"
-                  ? "Drop the distraction..."
-                  : "Ask, note, or remind..."
-              }
+              placeholder={placeholder}
               onChange={(event) => {
                 setText(event.currentTarget.value);
                 setRecentIndex(null);
@@ -1074,6 +1149,18 @@ export default function CaptureWindow() {
                 if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "q") {
                   event.preventDefault();
                   void quitApp();
+                  return;
+                }
+
+                if (
+                  (event.ctrlKey || event.metaKey) &&
+                  !event.shiftKey &&
+                  event.key.toLowerCase() === "z" &&
+                  isEmpty &&
+                  undoAvailable()
+                ) {
+                  event.preventDefault();
+                  void undoLastCapture();
                   return;
                 }
 
@@ -1167,24 +1254,6 @@ export default function CaptureWindow() {
               autoComplete="off"
               spellCheck={false}
             />
-
-            {isEmpty ? (
-              <div className="hint-chips">
-                {CAPTURE_HINTS.map((hint) => (
-                  <button
-                    key={hint}
-                    type="button"
-                    className="hint-chip"
-                    onClick={() => {
-                      setText(hint.slice(0, MAX_CHARS));
-                      requestAnimationFrame(() => inputRef.current?.focus());
-                    }}
-                  >
-                    {hint}
-                  </button>
-                ))}
-              </div>
-            ) : null}
 
             {/* Inline status chips (reminder / ambiguity) */}
             {effectivePreviewLabel || (parsed.isAmbiguous && parsed.reminderTime && !manualReminderTime) ? (
@@ -1295,14 +1364,16 @@ export default function CaptureWindow() {
               </div>
 
               <div className="flex items-center gap-2.5">
-                <span
-                  className={[
-                    "tabular-nums text-[11px]",
-                    remaining < 30 ? "text-amber-500" : "text-[var(--muted)]",
-                  ].join(" ")}
-                >
-                  {remaining}
-                </span>
+                {remaining < CHAR_COUNTER_THRESHOLD ? (
+                  <span
+                    className={[
+                      "tabular-nums text-[11px]",
+                      remaining < 30 ? "text-amber-500" : "text-[var(--muted)]",
+                    ].join(" ")}
+                  >
+                    {remaining}
+                  </span>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => void persistCapture(false)}
@@ -1317,7 +1388,8 @@ export default function CaptureWindow() {
             </div>
           </div>
 
-          {/* Destinations row, stays visible below the prompt box */}
+          {/* Destinations row — appears with the routing suggestion once there is text */}
+          {!isEmpty ? (
           <div className="flex shrink-0 flex-wrap items-center gap-1.5" data-tour="destinations">
             <span className="codex-muted mr-0.5 text-[11px] font-medium uppercase tracking-[0.1em]">
               Send to
@@ -1343,12 +1415,35 @@ export default function CaptureWindow() {
             })}
             <button
               type="button"
-              onClick={enableAllDestinations}
-              className="codex-muted ml-auto text-[11px] underline-offset-2 hover:text-[var(--text)] hover:underline"
+              onClick={() => {
+                if (allConfirmTimerRef.current !== null) {
+                  window.clearTimeout(allConfirmTimerRef.current);
+                  allConfirmTimerRef.current = null;
+                }
+                if (allConfirm) {
+                  setAllConfirm(false);
+                  enableAllDestinations();
+                  return;
+                }
+                // Two-step guard: one stray click must not broadcast a private
+                // thought to every connected app.
+                setAllConfirm(true);
+                allConfirmTimerRef.current = window.setTimeout(() => {
+                  setAllConfirm(false);
+                  allConfirmTimerRef.current = null;
+                }, 3000);
+              }}
+              className={[
+                "ml-auto text-[11px] underline-offset-2 hover:underline",
+                allConfirm
+                  ? "font-semibold text-amber-500"
+                  : "codex-muted hover:text-[var(--text)]",
+              ].join(" ")}
             >
-              All
+              {allConfirm ? "Send to every app?" : "All"}
             </button>
           </div>
+          ) : null}
 
           {teachOffer ? (
             <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-lg border border-[var(--accent)]/40 bg-[var(--btn-soft)] px-2.5 py-1.5 text-[11px]">
@@ -1378,11 +1473,29 @@ export default function CaptureWindow() {
             </div>
           ) : null}
 
-          {/* Keyboard hints */}
+          {saveError ? (
+            <span className="shrink-0 text-xs text-red-400">{saveError}</span>
+          ) : null}
+
+          {isEmpty && undoStrip ? (
+            <div className="codex-muted flex shrink-0 items-center gap-2 text-[11px]">
+              <span className="min-w-0 truncate">
+                ✓ Sent{undoStrip.labels.length > 0 ? ` to ${undoStrip.labels.join(", ")}` : " (local only)"}
+              </span>
+              <button
+                type="button"
+                onClick={() => void undoLastCapture()}
+                className="codex-btn-soft rounded-full px-2.5 py-0.5 text-[11px]"
+              >
+                Undo
+                <span className="kbd ml-1">{IS_MACOS ? "⌘Z" : "Ctrl+Z"}</span>
+              </button>
+            </div>
+          ) : null}
+
+          {/* Keyboard hints — training wheels that come off after the first ~20 captures */}
+          {!isEmpty && showHints ? (
           <div className="codex-muted flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-[10px]" data-tour="shortcuts">
-            {saveError ? (
-              <span className="w-full text-xs text-red-400">{saveError}</span>
-            ) : null}
             <span className="flex items-center gap-1.5">
               <span className="kbd">Enter</span> capture
             </span>
@@ -1398,6 +1511,7 @@ export default function CaptureWindow() {
               <span className="kbd">Esc</span> dismiss
             </span>
           </div>
+          ) : null}
         </div>
       </div>
       {showProductTour ? <CaptureProductTour onComplete={() => void completeProductTour()} /> : null}

@@ -214,9 +214,9 @@ html[data-theme="dark"] .codex-btn:hover {
 }
 
 html[data-theme="dark"] .codex-chip-active {
-  border-color: var(--border-strong);
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text);
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #111111;
 }
 
 html[data-theme="dark"] .codex-input:focus {
@@ -290,10 +290,13 @@ html[data-theme="dark"] .hint-chip:focus-visible {
   color: var(--text);
 }
 
+/* Active destination chips must be unmistakable at a glance — where a capture
+   goes is the most important state on screen. Filled, not tinted. */
 .codex-chip-active {
-  border-color: color-mix(in srgb, var(--accent), #000 6%);
-  background: color-mix(in srgb, var(--accent), transparent 82%);
-  color: var(--text);
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
 }
 
 .codex-muted {

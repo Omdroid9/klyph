@@ -585,6 +585,22 @@ export async function setCaptureSyncError(id: string, error: string | null): Pro
   );
 }
 
+export async function getTotalCaptureCount(): Promise<number> {
+  const db = await getDatabase();
+  const rows = await db.select<Array<{ total: number }>>(
+    `SELECT COUNT(*) AS total FROM captures;`,
+  );
+  return rows[0]?.total ?? 0;
+}
+
+/** Hard-delete a capture (used by undo). SQLite FK cascade is off by default,
+ * so the agent job row is removed explicitly. */
+export async function deleteCapture(id: string): Promise<void> {
+  const db = await getDatabase();
+  await db.execute(`DELETE FROM agent_jobs WHERE capture_id = $1;`, [id]);
+  await db.execute(`DELETE FROM captures WHERE id = $1;`, [id]);
+}
+
 export interface DailyRecapStats {
   yesterdayCount: number;
   dueTodayCount: number;
