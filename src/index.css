@@ -143,6 +143,10 @@ body,
   overflow: hidden;
 }
 
+html {
+  background: transparent;
+}
+
 body {
   color: var(--text);
   background: transparent;

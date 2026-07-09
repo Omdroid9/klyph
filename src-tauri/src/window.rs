@@ -21,6 +21,11 @@ pub fn configure_capture_window(app: &tauri::AppHandle) -> Result<(), String> {
     .get_webview_window(CAPTURE_WINDOW_LABEL)
     .ok_or_else(|| "Capture window was not found".to_string())?;
 
+  // `transparent: true` alone stopped clearing the native window background on
+  // macOS 26 — the default light-gray NSWindow backing shows around the shell.
+  // Force a fully transparent background explicitly.
+  let _ = window.set_background_color(Some(tauri::window::Color(0, 0, 0, 0)));
+
   let clone = window.clone();
   window.on_window_event(move |event| {
     match event {

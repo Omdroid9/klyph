@@ -285,6 +285,20 @@ export default function CaptureWindow() {
     const last = undoRef.current;
     return Boolean(last && Date.now() - last.at <= UNDO_WINDOW_MS);
   }, []);
+
+  // Focus with the caret at the end so a restored draft continues where the
+  // user left off instead of prepending at position 0.
+  const focusInputAtEnd = useCallback(() => {
+    requestAnimationFrame(() => {
+      const field = inputRef.current;
+      if (!field) {
+        return;
+      }
+      field.focus();
+      const end = field.value.length;
+      field.setSelectionRange(end, end);
+    });
+  }, []);
   const [savedMessage, setSavedMessage] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -581,9 +595,7 @@ export default function CaptureWindow() {
     setDestinations(toDestinations(capture));
     setDestinationsTouched(true);
     setManualReminderTime(capture.reminder_time);
-    requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
+    focusInputAtEnd();
   }
 
   async function loadManagedLists() {
@@ -687,6 +699,7 @@ export default function CaptureWindow() {
             setSelectedTag(draft.tag);
           }
           setManualReminderTime(draft.manualReminderTime ?? null);
+          focusInputAtEnd();
         }
       } catch (error) {
         console.error("Failed to restore draft", error);
@@ -702,7 +715,7 @@ export default function CaptureWindow() {
     return () => {
       active = false;
     };
-  }, [setSelectedTag]);
+  }, [focusInputAtEnd, setSelectedTag]);
 
   // Autosave the in-progress draft so a capture survives the window hiding on
   // focus loss (e.g. clicking the OAuth browser tab) or an app restart.
@@ -774,19 +787,15 @@ export default function CaptureWindow() {
       void loadManagedLists();
       refreshRoutingInputs();
       maybeShowRecap();
-      requestAnimationFrame(() => {
-        inputRef.current?.focus();
-      });
+      focusInputAtEnd();
     });
 
-    requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
+    focusInputAtEnd();
 
     return () => {
       unlistenPromise.then((dispose) => dispose()).catch(() => {});
     };
-  }, [maybeShowRecap, refreshRoutingInputs, undoAvailable]);
+  }, [focusInputAtEnd, maybeShowRecap, refreshRoutingInputs, undoAvailable]);
 
   async function closeCaptureWindow() {
     // Keep the draft (autosaved) so dismissing never loses an unsaved thought.
