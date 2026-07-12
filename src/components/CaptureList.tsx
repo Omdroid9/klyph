@@ -445,11 +445,13 @@ export default function CaptureList({ onBack }: CaptureListProps) {
   }
 
   return (
-    <div className="app-page h-full w-full overflow-y-auto p-5">
-      <div className="mx-auto max-w-4xl">
+    <div className="capture-overlay h-full w-full overflow-hidden p-3" data-tauri-drag-region>
+      <div className="capture-shell relative h-full w-full shadow-floating">
+        <div className="h-full w-full overflow-y-auto p-5">
+          <div className="mx-auto max-w-4xl">
         <div className="codex-surface mb-4 rounded-2xl p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
+          <div className="mb-3 flex items-center justify-between gap-3" data-tauri-drag-region>
+            <div className="pointer-events-none flex items-center gap-2.5">
               <h1 className="codex-panel-title text-[1.4rem] font-medium leading-none">
                 Capture <span className="font-serif-italic">History</span>
               </h1>
@@ -869,6 +871,8 @@ export default function CaptureList({ onBack }: CaptureListProps) {
               </article>
             );
           })}
+            </div>
+          </div>
         </div>
       </div>
     </div>

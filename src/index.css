@@ -191,6 +191,9 @@ html[data-window="library"] #root {
 
 .capture-shell {
   border-radius: var(--radius-shell);
+  /* clip children so the radius + border read on all four corners even when
+     content scrolls or bleeds to an edge */
+  overflow: hidden;
   background: linear-gradient(160deg, color-mix(in srgb, var(--panel), #fff 8%), var(--panel));
   border: 1px solid color-mix(in srgb, var(--border), transparent 20%);
   box-shadow:

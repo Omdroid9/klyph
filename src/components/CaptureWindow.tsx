@@ -29,6 +29,7 @@ import {
   sameDestinations,
 } from "../lib/integrations/captureRouting";
 import { isMacOS } from "../lib/platform";
+import { noteContentFromSplit, splitCaptureLines } from "../lib/splitCapture";
 import { recurrenceLabelFromRule } from "../lib/recurrence";
 import { useAppStore } from "../store/useAppStore";
 import TagChip from "./TagChip";
@@ -53,6 +54,8 @@ const UNDO_WINDOW_MS = 60_000;
 const SYNC_GRACE_MS = 5_000;
 const WINDOW_HEIGHT_COMPACT = 250;
 const WINDOW_HEIGHT_EXPANDED = 520;
+// Matches CAPTURE_HEIGHT_MAX on the Rust side; content-driven growth stops here.
+const WINDOW_HEIGHT_MAX = 760;
 const DEFAULT_LIST = "Inbox";
 const DISTRACTION_LIST = "Parking Lot";
 const DRAFT_SETTING_KEY = "capture_draft";
@@ -266,6 +269,8 @@ export default function CaptureWindow() {
   const [listName, setListName] = useState(DEFAULT_LIST);
   const [destinations, setDestinations] = useState<CaptureDestinations>(DEFAULT_DESTINATIONS);
   const [destinationsTouched, setDestinationsTouched] = useState(false);
+  // "Keep together" opt-out for the automatic mixed-capture split.
+  const [splitDisabled, setSplitDisabled] = useState(false);
   const [routingRules, setRoutingRules] = useState<RoutingRule[]>([]);
   const [teachDismissed, setTeachDismissed] = useState(false);
   const [recap, setRecap] = useState<DailyRecapStats | null>(null);
@@ -302,6 +307,9 @@ export default function CaptureWindow() {
   const [savedMessage, setSavedMessage] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Set by the keydown handler when double-Enter ends a list: the bullet
+  // strip must commit to state before sending, so the send fires next render.
+  const [pendingSend, setPendingSend] = useState(false);
   const [managedLists, setManagedLists] = useState<string[]>([DEFAULT_LIST, DISTRACTION_LIST]);
   const [recentCaptures, setRecentCaptures] = useState<Capture[]>([]);
   const [recentIndex, setRecentIndex] = useState<number | null>(null);
@@ -477,6 +485,7 @@ export default function CaptureWindow() {
       setManualReminderTime(null);
       setDestinations(DEFAULT_DESTINATIONS);
       setDestinationsTouched(false);
+      setSplitDisabled(false);
       setTeachDismissed(false);
       if (clearTag) {
         setSelectedTag("untagged");
@@ -551,6 +560,10 @@ export default function CaptureWindow() {
     const uptoCursor = value.slice(0, cursor);
     const line = uptoCursor.split("\n").pop() ?? "";
 
+    if (/^\s*- \[[ xX]\]\s+/.test(line)) {
+      const indent = line.match(/^\s*/)?.[0] ?? "";
+      return `${indent}- [ ] `;
+    }
     if (/^\s*[-*]\s+/.test(line)) {
       return line.match(/^\s*[-*]\s+/)?.[0] ?? "";
     }
@@ -875,6 +888,20 @@ export default function CaptureWindow() {
     }
   }
 
+  // Fires the send queued by double-Enter one render later, when the text
+  // with the trailing bullet stripped (and everything derived from it, like
+  // the split preview) is what persistCapture will actually read.
+  useEffect(() => {
+    if (!pendingSend) {
+      return;
+    }
+    setPendingSend(false);
+    void persistCapture(false);
+    // persistCapture is a plain function (new identity each render); depending
+    // on it would re-run this every render for nothing. pendingSend gates it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingSend]);
+
   async function persistCapture(keepOpen: boolean, overrideDestinations?: CaptureDestinations) {
     const trimmed = (parsed.cleanedContent.trim() || text.trim()).slice(0, MAX_CHARS);
     if (!trimmed) {
@@ -883,6 +910,13 @@ export default function CaptureWindow() {
     }
 
     if (saving) {
+      return;
+    }
+
+    // Mixed capture with the split active: one send fans out reminders and
+    // note automatically instead of routing the whole text to one place.
+    if (splitActive && overrideDestinations === undefined) {
+      await persistSplitCapture(keepOpen);
       return;
     }
 
@@ -991,6 +1025,97 @@ export default function CaptureWindow() {
     }
   }
 
+  // Mixed capture: some lines are actionable, some are prose. When active,
+  // sending fans the action lines out to Reminders and keeps the prose as one
+  // Apple Note — no extra click. Manual destination picks or "Keep together"
+  // turn it off for this draft.
+  const captureSplit = useMemo(
+    () => (IS_MACOS ? splitCaptureLines(text) : null),
+    [text],
+  );
+  const splitActive = Boolean(captureSplit) && !splitDisabled && !destinationsTouched;
+
+  async function persistSplitCapture(keepOpen: boolean) {
+    if (!captureSplit || saving) {
+      return;
+    }
+
+    setSaving(true);
+    setSaveError(null);
+
+    try {
+      const noteContent = noteContentFromSplit(captureSplit);
+
+      for (const line of captureSplit.reminders) {
+        await insertCapture({
+          id: crypto.randomUUID(),
+          content: line.cleanedContent.slice(0, MAX_CHARS),
+          tag: selectedTag,
+          lane: captureLane,
+          listName,
+          destinations: { ...DEFAULT_DESTINATIONS, reminders: true },
+          reminderTime: line.reminderTime,
+          routingSource: "split",
+          routingReason: line.reminderTime
+            ? "Line has a time → Reminders"
+            : "Action line → Reminders",
+        });
+      }
+
+      if (noteContent) {
+        await insertCapture({
+          id: crypto.randomUUID(),
+          content: noteContent.slice(0, MAX_CHARS),
+          tag: selectedTag,
+          lane: captureLane,
+          listName,
+          destinations: { ...DEFAULT_DESTINATIONS, appleReminders: true },
+          reminderTime: null,
+          routingSource: "split",
+          routingReason: "Prose lines → Apple Notes",
+        });
+      }
+
+      const today = await getCapturesTodayCount();
+      setCapturesToday(today);
+      const added = captureSplit.reminders.length + (noteContent ? 1 : 0);
+      setTotalCaptures((prev) => (prev === null ? prev : prev + added));
+
+      await invoke("update_tray_tooltip", {
+        capturesToday: today,
+        lastSync: lastSyncLabel,
+      });
+
+      // Multi-capture saves skip single-capture undo; sync after the same
+      // grace period the normal path uses.
+      undoRef.current = null;
+      setUndoStrip(null);
+      window.setTimeout(() => {
+        void emit("klyph://request-sync");
+        void emit("klyph://request-agent");
+      }, SYNC_GRACE_MS);
+
+      void loadRecentCaptures();
+      void loadManagedLists();
+      setSavedMessage(
+        `Split: ${captureSplit.reminders.length} → Reminders${noteContent ? " · note → Apple Notes" : ""}`,
+      );
+      window.setTimeout(() => setSavedMessage(""), 1800);
+
+      resetDraft();
+      if (keepOpen) {
+        requestAnimationFrame(() => inputRef.current?.focus());
+        return;
+      }
+      await invoke("hide_capture_window");
+    } catch (error) {
+      console.error("Split capture failed", error);
+      setSaveError(error instanceof Error ? error.message : "Could not split the capture.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const canSend = (parsed.cleanedContent.trim() || text.trim()).length > 0;
   const isEmpty = text.trim().length === 0;
   const showHints = totalCaptures !== null && totalCaptures < HINT_GRADUATION_CAPTURES;
@@ -998,11 +1123,38 @@ export default function CaptureWindow() {
   // Spotlight-scale when idle, expanded once typing reveals the controls.
   // Re-applied on every summon (pulse): the Rust side opens at compact size,
   // and a restored draft needs the expanded height immediately.
+  const windowHeightRef = useRef(WINDOW_HEIGHT_COMPACT);
   useEffect(() => {
-    void invoke("resize_capture_window", {
-      height: isEmpty ? WINDOW_HEIGHT_COMPACT : WINDOW_HEIGHT_EXPANDED,
-    }).catch(() => {});
+    const base = isEmpty ? WINDOW_HEIGHT_COMPACT : WINDOW_HEIGHT_EXPANDED;
+    windowHeightRef.current = base;
+    void invoke("resize_capture_window", { height: base }).catch(() => {});
   }, [isEmpty, pulse]);
+
+  // Content-driven growth: when the textarea's content outgrows its visible
+  // box, grow the window by the deficit (up to WINDOW_HEIGHT_MAX) so the
+  // caret line never gets pinched against the toolbar. Growth-only per
+  // draft — the baseline effect above resets on empty/summon.
+  useEffect(() => {
+    if (isEmpty) {
+      return;
+    }
+    const raf = requestAnimationFrame(() => {
+      const field = inputRef.current;
+      if (!field) {
+        return;
+      }
+      const deficit = field.scrollHeight - field.clientHeight;
+      if (deficit <= 4) {
+        return;
+      }
+      const target = Math.min(WINDOW_HEIGHT_MAX, windowHeightRef.current + deficit + 8);
+      if (target > windowHeightRef.current) {
+        windowHeightRef.current = target;
+        void invoke("resize_capture_window", { height: target }).catch(() => {});
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [text, isEmpty, splitActive, effectivePreviewLabel, teachOffer, saveError]);
 
   const placeholder = useMemo(() => {
     if (captureLane === "distraction") {
@@ -1040,7 +1192,9 @@ export default function CaptureWindow() {
   }
 
   return (
-    <div className="capture-overlay h-full w-full overflow-hidden p-3">
+    // No outer padding: the shell fills the window edge-to-edge. Any gap here
+    // shows the native window backing on macOS 26, which reads as a hazy border.
+    <div className="capture-overlay h-full w-full overflow-hidden" data-tauri-drag-region>
       <div
         key={pulse}
         className="capture-shell capture-pop relative h-full w-full shadow-floating"
@@ -1066,9 +1220,9 @@ export default function CaptureWindow() {
           </div>
         ) : null}
         <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden px-4 py-3">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
+          {/* Header — doubles as the window drag handle */}
+          <div className="flex items-center justify-between" data-tauri-drag-region>
+            <div className="pointer-events-none flex items-center gap-2.5">
               <KlyphLogo size={22} className="klyph-logo-header" />
               <span className="codex-panel-title text-base font-medium tracking-tight">
                 Klyph
@@ -1309,6 +1463,34 @@ export default function CaptureWindow() {
                     return;
                   }
                   event.preventDefault();
+
+                  // Mid-list, Enter behaves like a note editor: continue the
+                  // list on a line with content, exit the list on an empty
+                  // item. Only a plain (non-list) line sends the capture, so
+                  // multi-item notes never fire mid-thought.
+                  const cursor = inputRef.current?.selectionStart ?? text.length;
+                  const bounds = currentLineBounds(text, cursor);
+                  const prefix = currentLinePrefix(text, cursor);
+                  if (prefix.length > 0) {
+                    const lineBody = bounds.line
+                      .replace(/^\s*(?:- \[[ xX]\]\s+|[-*]\s+|\d+\.\s+)/, "")
+                      .trim();
+                    if (lineBody.length > 0) {
+                      insertAtCursor(`\n${prefix}`);
+                    } else {
+                      // Empty item at the end of the capture is the "I'm
+                      // done" signal: strip the bullet and send, so a list
+                      // finishes with Enter-Enter. Mid-text it just exits
+                      // the list.
+                      replaceRange(bounds.start, bounds.end, "");
+                      const rest = `${text.slice(0, bounds.start)}${text.slice(bounds.end)}`;
+                      if (bounds.end >= text.length && rest.trim().length > 0) {
+                        setPendingSend(true);
+                      }
+                    }
+                    return;
+                  }
+
                   void persistCapture(false);
                 }
               }}
@@ -1318,8 +1500,11 @@ export default function CaptureWindow() {
               spellCheck={false}
             />
 
-            {/* Inline status chips (reminder / ambiguity) */}
-            {effectivePreviewLabel || (parsed.isAmbiguous && parsed.reminderTime && !manualReminderTime) ? (
+            {/* Inline status chips (reminder / ambiguity) — hidden while the
+                split preview owns the routing story, since per-line times are
+                what actually ship */}
+            {!splitActive &&
+            (effectivePreviewLabel || (parsed.isAmbiguous && parsed.reminderTime && !manualReminderTime)) ? (
               <div className="flex flex-wrap items-center gap-1.5 pb-2 text-[11px]">
                 {effectivePreviewLabel ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--btn-soft)] px-2.5 py-1">
@@ -1357,7 +1542,38 @@ export default function CaptureWindow() {
               </div>
             ) : null}
 
-            {previewContent ? (
+            {splitActive && captureSplit ? (
+              <div className="smart-preview mb-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="smart-preview-dot" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-medium text-[var(--text)]">
+                      Split on send
+                      <span className="codex-muted font-normal">
+                        {" "}· {captureSplit.reminders.length} action
+                        {captureSplit.reminders.length === 1 ? "" : "s"} → Reminders
+                        {" "}· {captureSplit.notes.length} line
+                        {captureSplit.notes.length === 1 ? "" : "s"} → Apple Notes
+                      </span>
+                    </div>
+                    <div className="codex-muted truncate text-[11px]">
+                      Enter twice to send — each action keeps its own time
+                      {captureSplit.heading ? ` — note titled “${captureSplit.heading}”` : ""}
+                    </div>
+                  </div>
+                </div>
+                <span className="flex shrink-0 items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setSplitDisabled(true)}
+                    className="codex-btn-soft rounded-full px-2 py-0.5 text-[10px]"
+                    title="Skip the split and send everything to one place"
+                  >
+                    Keep together
+                  </button>
+                </span>
+              </div>
+            ) : previewContent ? (
               <div className="smart-preview mb-2">
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="smart-preview-dot" aria-hidden="true" />
@@ -1572,7 +1788,7 @@ export default function CaptureWindow() {
           {!isEmpty && showHints ? (
           <div className="codex-muted flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-[10px]" data-tour="shortcuts">
             <span className="flex items-center gap-1.5">
-              <span className="kbd">Enter</span> capture
+              <span className="kbd">Enter</span> capture · twice in a list
             </span>
             <span className="flex items-center gap-1.5">
               <span className="kbd">{IS_MACOS ? "⌘" : "Ctrl"}</span>
