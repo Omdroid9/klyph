@@ -1476,10 +1476,10 @@ export default function CaptureWindow() {
                   }
                   event.preventDefault();
 
-                  // Mid-list, Enter behaves like a note editor: continue the
-                  // list on a line with content, exit the list on an empty
-                  // item. Only a plain (non-list) line sends the capture, so
-                  // multi-item notes never fire mid-thought.
+                  // Enter always sends — one keystroke, even from inside a
+                  // list (Shift+Enter adds lines). If the caret sits on an
+                  // empty bullet, strip it first and let the pending-send
+                  // effect fire once the cleaned text commits to state.
                   const cursor = inputRef.current?.selectionStart ?? text.length;
                   const bounds = currentLineBounds(text, cursor);
                   const prefix = currentLinePrefix(text, cursor);
@@ -1487,20 +1487,14 @@ export default function CaptureWindow() {
                     const lineBody = bounds.line
                       .replace(/^\s*(?:- \[[ xX]\]\s+|[-*]\s+|\d+\.\s+)/, "")
                       .trim();
-                    if (lineBody.length > 0) {
-                      insertAtCursor(`\n${prefix}`);
-                    } else {
-                      // Empty item at the end of the capture is the "I'm
-                      // done" signal: strip the bullet and send, so a list
-                      // finishes with Enter-Enter. Mid-text it just exits
-                      // the list.
+                    if (lineBody.length === 0) {
                       replaceRange(bounds.start, bounds.end, "");
                       const rest = `${text.slice(0, bounds.start)}${text.slice(bounds.end)}`;
-                      if (bounds.end >= text.length && rest.trim().length > 0) {
+                      if (rest.trim().length > 0) {
                         setPendingSend(true);
                       }
+                      return;
                     }
-                    return;
                   }
 
                   void persistCapture(false);
@@ -1569,7 +1563,7 @@ export default function CaptureWindow() {
                       </span>
                     </div>
                     <div className="codex-muted truncate text-[11px]">
-                      Enter twice to send — each action keeps its own time
+                      Enter sends — each action keeps its own time
                       {captureSplit.heading ? ` — note titled “${captureSplit.heading}”` : ""}
                     </div>
                   </div>
@@ -1800,7 +1794,7 @@ export default function CaptureWindow() {
           {!isEmpty && showHints ? (
           <div className="codex-muted flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-[10px]" data-tour="shortcuts">
             <span className="flex items-center gap-1.5">
-              <span className="kbd">Enter</span> capture · twice in a list
+              <span className="kbd">Enter</span> capture
             </span>
             <span className="flex items-center gap-1.5">
               <span className="kbd">{IS_MACOS ? "⌘" : "Ctrl"}</span>
