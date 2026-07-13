@@ -736,11 +736,12 @@ if (demoInput) {
   const tryBtn = document.querySelector("[data-demo-try]");
 
   const DEMO_EXAMPLES = [
-    "buy milk tomorrow at 5pm",
-    "ideas for the launch video",
-    "don't forget passport renewal",
-    "Weekend plan\n- do laundry\n- call landlord at 5pm\nthe pricing thought from the walk",
-    "why do the best tools feel invisible?",
+    "call the dentist tomorrow at 9am",
+    "ideas for dad's 60th birthday",
+    "don't forget to renew the car insurance",
+    "Monday standup\n- send Sarah the final deck\n- book flights for the offsite\nfeels like pricing is the real blocker",
+    "should we charge per seat or flat?",
+    "buy milk on the way home at 6pm",
   ];
 
   let userOwnsInput = false;
@@ -748,6 +749,11 @@ if (demoInput) {
   let typeTimer = null;
 
   function renderRoute() {
+    // Grow with the content so multi-line examples never clip mid-word.
+    // Capped so a bad scrollHeight read can never blow up the hero layout.
+    demoInput.style.height = "auto";
+    demoInput.style.height = `${Math.min(demoInput.scrollHeight, 320)}px`;
+
     const route = demoRoute(demoInput.value);
     chips.forEach((chip) => {
       chip.classList.toggle(

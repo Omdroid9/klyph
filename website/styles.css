@@ -3798,3 +3798,10 @@ main h2 .accent-serif {
   font-weight: 500;
   letter-spacing: 0;
 }
+
+/* The demo input grows with content (JS sets height); never scroll inside.
+   No height transition — it makes the JS measurement read stale values. */
+.routing-demo-input {
+  overflow: hidden;
+  transition: border-color 0.18s var(--ease), background 0.18s var(--ease);
+}
