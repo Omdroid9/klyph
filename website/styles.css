@@ -3741,3 +3741,60 @@ main h2 {
 .routing-demo-hint {
   color: var(--muted-deep);
 }
+
+/* =====================================================================
+   Display face: Nohemi. Warmer, more characterful than Geist at large
+   sizes — headings only. Body, UI, and the demo window stay Geist so
+   the mock still matches the real app. Self-hosted woff2.
+   ===================================================================== */
+
+@font-face {
+  font-family: "Nohemi";
+  src: url("/fonts/nohemi/Nohemi-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Nohemi";
+  src: url("/fonts/nohemi/Nohemi-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Nohemi";
+  src: url("/fonts/nohemi/Nohemi-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
+.hero-title,
+main h2,
+.bento-h,
+.bento-h-sm,
+.cta-inner h2 {
+  font-family: "Nohemi", var(--font);
+}
+
+/* Nohemi is naturally compact; ease the negative tracking Geist needed */
+.hero-title {
+  letter-spacing: -0.015em;
+  font-weight: 600;
+}
+
+main h2 {
+  letter-spacing: -0.012em;
+}
+
+/* The serif accent word keeps Instrument Serif — the contrast is the point */
+.hero-title .word-accent,
+main h2 .accent-serif {
+  font-family: var(--serif);
+}
+
+.how-body h2 {
+  font-family: "Nohemi", var(--font);
+  font-weight: 500;
+  letter-spacing: 0;
+}
