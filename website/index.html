@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Klyph — capture a thought from anywhere and send it to Slack, Notion, Google Calendar, and more. One keystroke."
+      content="Klyph — capture a thought from anywhere and send it to Reminders, Notes, Calendar, Slack, and Notion. One keystroke, with a reason attached."
     />
-    <title>Klyph — Capture anywhere. Send anywhere.</title>
+    <title>Klyph — Type once. It knows where it goes.</title>
     <link rel="icon" href="/klyph-sphere.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,25 +19,8 @@
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
 
-    <div class="page-curtain" aria-hidden="true">
-      <div class="page-curtain-orb">
-        <img src="/klyph-sphere.svg" alt="" width="80" height="80" />
-      </div>
-    </div>
-
     <div class="scroll-progress" aria-hidden="true"></div>
-    <div class="cursor-spotlight" aria-hidden="true"></div>
     <div class="bg-noise" aria-hidden="true"></div>
-    <div class="bg-blobs" aria-hidden="true">
-      <div class="bg-blob bg-blob-1"></div>
-      <div class="bg-blob bg-blob-2"></div>
-      <div class="bg-blob bg-blob-3"></div>
-    </div>
-    <div class="bg-particles" aria-hidden="true">
-      <span></span><span></span><span></span><span></span><span></span>
-      <span></span><span></span><span></span><span></span><span></span>
-      <span></span><span></span>
-    </div>
 
     <header class="site-nav" data-reveal>
       <div class="site-nav-inner">
@@ -46,9 +29,9 @@
           <span>Klyph</span>
         </a>
         <nav aria-label="Primary">
-          <a href="#product">Product</a>
-          <a href="#capture">Capture</a>
-          <a href="#smart">Smart</a>
+          <a href="#how">How it works</a>
+          <a href="#smart">Routing</a>
+          <a href="#product">Features</a>
           <a href="#integrations">Integrations</a>
           <a href="#privacy">Privacy</a>
         </nav>
@@ -57,141 +40,84 @@
     </header>
 
     <main id="main">
-      <!-- Hero -->
-      <section class="hero" aria-labelledby="hero-title">
+      <!-- Hero — the product itself, alive, above the fold -->
+      <section class="hero hero-demo-layout" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow" data-reveal>Quick capture for notes, reminders, tasks, and messages</p>
+          <p class="eyebrow" data-reveal>One keystroke, from any app</p>
           <h1 id="hero-title" class="hero-title">
             <span class="word">Type once.</span>
-            <span class="word">Klyph sorts</span>
-            <span class="word word-accent">where it goes.</span>
+            <span class="word word-accent">It knows</span>
+            <span class="word">where it goes.</span>
           </h1>
           <p class="hero-lead" data-reveal data-reveal-delay="2">
-            Klyph is a desktop command box for capturing thoughts before they disappear. Type
-            naturally, and it can save the text as a note, reminder, task, calendar event, Slack
-            message, Notion entry, or local history item.
+            Klyph is a tiny command bar that catches a thought before it vanishes —
+            then files it as a reminder, note, or calendar event. With the reason
+            shown, every time.
           </p>
-          <div class="hero-definition" data-reveal data-reveal-delay="3" aria-label="What Klyph creates">
-            <span>Notes</span>
-            <span>Reminders</span>
-            <span>Tasks</span>
-            <span>Calendar events</span>
-            <span>Messages</span>
-          </div>
           <div class="hero-actions" data-reveal data-reveal-delay="3">
             <a class="btn btn-primary magnetic" href="#download"><span>Request beta access</span></a>
-            <a class="btn btn-ghost magnetic" href="#capture"><span>See how it works</span></a>
+            <a class="btn btn-ghost magnetic" href="#how"><span>How it works</span></a>
           </div>
           <p class="hero-note" data-reveal data-reveal-delay="4">
-            Private beta · Mac &amp; Windows · <kbd class="inline-kbd">Ctrl</kbd>+<kbd class="inline-kbd">Shift</kbd>+<kbd class="inline-kbd">Space</kbd> (<kbd class="inline-kbd">Cmd</kbd> on Mac)
+            Private beta · macOS &amp; Windows ·
+            <kbd class="inline-kbd">⌘</kbd><kbd class="inline-kbd">⇧</kbd><kbd class="inline-kbd">Space</kbd>
           </p>
         </div>
 
-        <div class="hero-visual" data-reveal data-reveal-delay="2">
+        <div class="hero-visual hero-visual-demo" data-reveal data-reveal-delay="2">
           <div class="glow glow-hero" aria-hidden="true"></div>
-          <div class="hero-orb-bg" aria-hidden="true">
-            <img src="/klyph-sphere.svg" alt="" width="320" height="320" />
-          </div>
-          <figure class="product-frame product-frame-hero product-frame-shot tilt" aria-label="Klyph capture window preview">
-            <img
-              class="product-shot"
-              src="/product-images/capture-focus-window.png"
-              alt="Klyph capture window in Focus mode with destination chips and a large writing area."
-              width="1250"
-              height="1190"
-              fetchpriority="high"
-            />
-          </figure>
-          <div class="hero-toast" aria-hidden="true" data-hero-toast>
-            <span class="hero-toast-check">✓</span>
-            <span class="hero-toast-text">Sent to <strong>Slack</strong></span>
-          </div>
-
-          <!-- Floating UI: history glance -->
-          <div class="hero-float hero-float-history" aria-hidden="true">
-            <div class="hero-float-eyebrow">History · earlier today</div>
-            <div class="hero-float-row">
-              <span class="hero-float-dot"></span>
-              Email Sarah about Q3 roadmap
-              <span class="hero-float-tag">Notion</span>
+          <div class="routing-demo routing-demo-hero">
+            <div class="routing-demo-window" role="group" aria-label="Live routing demo">
+              <div class="routing-demo-head">
+                <img src="/klyph-sphere.svg" alt="" width="18" height="18" />
+                <span>Klyph</span>
+                <span class="routing-demo-live"><span class="routing-demo-live-dot"></span>live demo</span>
+              </div>
+              <label class="sr-only" for="routing-demo-input">Type a thought to see where Klyph routes it</label>
+              <textarea
+                id="routing-demo-input"
+                class="routing-demo-input"
+                rows="3"
+                spellcheck="false"
+                autocomplete="off"
+                placeholder="Type a thought…"
+              ></textarea>
+              <div class="routing-demo-reason" data-demo-reason hidden>
+                <span class="routing-demo-dot" aria-hidden="true"></span>
+                <span data-demo-reason-text></span>
+              </div>
+              <div class="routing-demo-chips" aria-label="Suggested destinations">
+                <span class="routing-demo-chip" data-demo-chip="reminders">Reminders</span>
+                <span class="routing-demo-chip" data-demo-chip="notes">Apple Notes</span>
+                <span class="routing-demo-chip" data-demo-chip="calendar">Google Calendar</span>
+                <span class="routing-demo-chip" data-demo-chip="slack">Slack</span>
+              </div>
             </div>
-            <div class="hero-float-row hero-float-row-muted">
-              <span class="hero-float-dot"></span>
-              Standup notes — orb polish
-              <span class="hero-float-tag">Slack</span>
-            </div>
-          </div>
-
-          <!-- Floating UI: tag pill -->
-          <div class="hero-float hero-float-tag-card" aria-hidden="true">
-            <span class="hero-float-key">#</span>
-            <span>idea</span>
-            <span class="hero-float-divider"></span>
-            <span class="hero-float-key">⌘</span>
-            <span>K</span>
+            <p class="routing-demo-hint">
+              The app's actual routing brain, running in your browser.
+              <button type="button" class="routing-demo-try" data-demo-try>Try your own thought</button>
+            </p>
           </div>
         </div>
       </section>
 
-      <!-- Workflow strip -->
-      <section class="workflow-strip" aria-label="How Klyph works">
+      <!-- How it works -->
+      <section class="workflow-strip" id="how" aria-label="How Klyph works">
         <article class="workflow-step" data-reveal>
           <span>01</span>
-          <h2>Open Klyph anywhere</h2>
-          <p>Use the shortcut while you are in Chrome, VS Code, Slack, Notes, or another app.</p>
+          <h2>Summon it anywhere</h2>
+          <p>One shortcut over any app — browser, IDE, spreadsheet. The bar arrives in a blink and leaves the same way.</p>
         </article>
         <article class="workflow-step" data-reveal data-reveal-delay="1">
           <span>02</span>
           <h2>Type like a person</h2>
-          <p>Write things like “remind me to call mom tomorrow” or “parking lot: pricing idea.”</p>
+          <p>“Buy milk tomorrow at 5pm.” Times, lists, and links are understood as you type — no syntax to learn.</p>
         </article>
         <article class="workflow-step" data-reveal data-reveal-delay="2">
           <span>03</span>
-          <h2>See why it goes there</h2>
-          <p>Every suggestion carries its reason — “looks like a to-do” — and a one-tap correction if the guess is wrong.</p>
+          <h2>Enter. Sorted.</h2>
+          <p>It sends with the reason attached. Wrong guess? Flip it in one tap — and <kbd class="inline-kbd">⌘</kbd><kbd class="inline-kbd">Z</kbd> brings anything back.</p>
         </article>
-      </section>
-
-      <!-- Product walkthrough -->
-      <section class="section section-product-gallery" id="product" aria-labelledby="gallery-title">
-        <div class="product-story" data-reveal>
-          <div class="product-story-copy">
-            <p class="eyebrow">Product tour</p>
-            <h2 id="gallery-title">One input for every small thing you need to remember or send.</h2>
-            <p>
-              Instead of switching apps to make a note, create a reminder, or send a task to a
-              workspace, Klyph gives you one capture box and a preview before anything leaves.
-            </p>
-          </div>
-
-          <figure class="product-demo-card" aria-label="Klyph capture window in Focus mode">
-            <img
-              src="/product-images/capture-focus-window.png"
-              alt="Klyph capture window in Focus mode with Apple Notes and Reminders selected."
-              width="1250"
-              height="1190"
-              loading="lazy"
-            />
-          </figure>
-
-          <div class="product-story-points" data-reveal data-reveal-delay="1">
-            <article class="product-point">
-              <span class="product-point-num">01</span>
-              <h3>Capture from anywhere</h3>
-              <p>One shortcut opens the same surface, no matter what app you are in.</p>
-            </article>
-            <article class="product-point">
-              <span class="product-point-num">02</span>
-              <h3>Preview the intent</h3>
-              <p>Notes, reminders, dates, and recurring requests are shown before they are sent.</p>
-            </article>
-            <article class="product-point">
-              <span class="product-point-num">03</span>
-              <h3>Send to the right place</h3>
-              <p>Apple Notes, Reminders, Slack, Notion, and Google stay one action away.</p>
-            </article>
-          </div>
-        </div>
       </section>
 
       <!-- Manifesto -->
@@ -205,19 +131,138 @@
         </p>
       </section>
 
-      <!-- Chapter I -->
-      <div class="chapter" aria-hidden="true">
-        <span class="chapter-line"></span>
-        <span class="chapter-num">I</span>
-        <span class="chapter-title">The surface</span>
-        <span class="chapter-line"></span>
-      </div>
+      <!-- Explainable routing -->
+      <section class="section section-smart" id="smart" aria-labelledby="smart-title">
+        <div class="section-intro center" data-reveal>
+          <p class="eyebrow">Explainable routing</p>
+          <h2 id="smart-title">It decides where things go.<br />And it <span class="accent-serif">shows its work.</span></h2>
+          <p>
+            No black box. Every capture carries a plain-English reason — “looks like a
+            to-do”, “has a time”, “contains a link” — so you always know why something
+            landed where it did, and you can correct it once.
+          </p>
+        </div>
 
-      <!-- Destinations -->
-      <section class="slider-wrap" aria-label="Where captures go">
-        <p class="marquee-label">Sends captures to</p>
+        <div class="release-strip" data-reveal data-reveal-delay="1" aria-label="New in this release">
+          <article class="release-card">
+            <p class="release-eyebrow">Split on send</p>
+            <p class="release-p">
+              One mixed capture fans out — action lines become individual reminders,
+              the prose stays together as one note.
+            </p>
+          </article>
+          <article class="release-card">
+            <p class="release-eyebrow">One-tap correction</p>
+            <p class="release-p">
+              Every guess carries its reason and a “Not a to-do?” flip.
+              You are never stuck with the machine's opinion.
+            </p>
+          </article>
+          <article class="release-card">
+            <p class="release-eyebrow">Undo, even after send</p>
+            <p class="release-p">
+              A short grace window holds each capture back. <kbd class="inline-kbd">⌘</kbd><kbd class="inline-kbd">Z</kbd>
+              pulls it back before it leaves your machine.
+            </p>
+          </article>
+          <article class="release-card">
+            <p class="release-eyebrow">Updates itself</p>
+            <p class="release-p">
+              Signed builds arrive quietly in the background.
+              Restart when you feel like it — never mid-thought.
+            </p>
+          </article>
+        </div>
+      </section>
 
-        <div class="destination-grid" aria-label="Klyph destinations">
+      <!-- Features bento -->
+      <section class="section section-bento" id="product" aria-labelledby="bento-title">
+        <div class="section-intro center" data-reveal>
+          <p class="eyebrow">Designed for thinking</p>
+          <h2 id="bento-title">
+            A small surface,<br />
+            <span class="accent-serif">considered</span> in every detail.
+          </h2>
+        </div>
+
+        <div class="bento" data-reveal data-reveal-delay="1">
+          <article class="bento-card bento-1">
+            <div class="bento-card-body">
+              <p class="bento-eyebrow">01 · The capture</p>
+              <h3 class="bento-h">Anywhere a thought<br /> can interrupt&nbsp;you.</h3>
+              <p class="bento-p">
+                Browser. IDE. Spreadsheet. The capture box opens on top, takes one line,
+                and disappears.
+              </p>
+            </div>
+            <div class="bento-art bento-art-orb">
+              <div class="bento-orb-glow"></div>
+              <img src="/klyph-sphere.svg" alt="" width="200" height="200" />
+            </div>
+          </article>
+
+          <article class="bento-card bento-2">
+            <p class="bento-eyebrow">02</p>
+            <h3 class="bento-h-sm">Tags &amp; lists,<br />without a sidebar.</h3>
+            <div class="bento-chips">
+              <span class="mock-tag mock-tag-on">Work</span>
+              <span class="mock-tag">Personal</span>
+              <span class="mock-tag">Idea</span>
+              <span class="mock-tag">Read later</span>
+            </div>
+          </article>
+
+          <article class="bento-card bento-3">
+            <p class="bento-eyebrow">03</p>
+            <h3 class="bento-h-sm">Lives in the tray.<br />Quiet until you call.</h3>
+            <div class="bento-tray">
+              <div class="mock-tray">
+                <span class="mock-tray-icon"><img src="/klyph-sphere.svg" alt="" width="14" height="14" /></span>
+                <span class="mock-tray-app"><span class="mock-tray-dot"></span>Figma</span>
+                <span class="mock-tray-time">11:42</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="bento-card bento-4">
+            <p class="bento-eyebrow">04</p>
+            <h3 class="bento-h-sm">Times find<br />the right home.</h3>
+            <div class="bento-cal">
+              <span class="bento-cal-time">Fri · 5:00 PM</span>
+              <span class="bento-cal-arrow">→</span>
+              <span class="brand-logo" data-logo="gcal"></span>
+            </div>
+          </article>
+
+          <article class="bento-card bento-5">
+            <div class="bento-card-body">
+              <p class="bento-eyebrow">05</p>
+              <h3 class="bento-h-sm">Yours by default.<br />Cloud is opt-in.</h3>
+              <p class="bento-p">
+                Every capture saves to a local SQLite store before any network call.
+                You decide what leaves your machine.
+              </p>
+            </div>
+            <div class="bento-art bento-art-local">
+              <span class="brand-logo brand-logo-xl" data-logo="local"></span>
+              <span class="bento-badge">On device</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Integrations -->
+      <section class="section section-integrations" id="integrations" aria-labelledby="int-title">
+        <div class="section-intro center" data-reveal>
+          <p class="eyebrow">Integrations</p>
+          <h2 id="int-title">Configured once.<br />Sent on capture.</h2>
+          <p>
+            Connect your tools during setup, then forget about them. Destinations are
+            one tap away on every capture — and timed text finds the calendar on its own.
+          </p>
+        </div>
+
+        <div class="destination-grid" data-reveal data-reveal-delay="1" aria-label="Klyph destinations">
           <article class="destination-card">
             <span class="brand-logo brand-logo-lg" data-logo="slack"></span>
             <span class="logo-name">Slack</span>
@@ -260,336 +305,6 @@
           </article>
         </div>
       </section>
-
-      <!-- Bento grid — features at a glance -->
-      <section class="section section-bento" aria-labelledby="bento-title">
-        <div class="section-intro center" data-reveal>
-          <p class="eyebrow">Designed for thinking</p>
-          <h2 id="bento-title">
-            A small surface,<br />
-            <span class="accent-serif">considered</span> in every detail.
-          </h2>
-        </div>
-
-        <div class="bento" data-reveal data-reveal-delay="1">
-          <!-- Big hero cell: capture from anywhere -->
-          <article class="bento-card bento-1">
-            <div class="bento-card-body">
-              <p class="bento-eyebrow">01 · The capture</p>
-              <h3 class="bento-h">Anywhere a thought<br /> can interrupt&nbsp;you.</h3>
-              <p class="bento-p">
-                Browser. IDE. Spreadsheet. The capture box opens on top, takes one line,
-                and disappears.
-              </p>
-            </div>
-            <div class="bento-art bento-art-orb">
-              <div class="bento-orb-glow"></div>
-              <img src="/klyph-sphere.svg" alt="" width="200" height="200" />
-            </div>
-          </article>
-
-          <!-- Tags & lists -->
-          <article class="bento-card bento-2">
-            <p class="bento-eyebrow">02</p>
-            <h3 class="bento-h-sm">Tags &amp; lists,<br />without a sidebar.</h3>
-            <div class="bento-chips">
-              <span class="mock-tag mock-tag-on">Work</span>
-              <span class="mock-tag">Personal</span>
-              <span class="mock-tag">Idea</span>
-              <span class="mock-tag">Read later</span>
-            </div>
-          </article>
-
-          <!-- Lives in tray -->
-          <article class="bento-card bento-3">
-            <p class="bento-eyebrow">03</p>
-            <h3 class="bento-h-sm">Lives in the tray.<br />Quiet until you call.</h3>
-            <div class="bento-tray">
-              <div class="mock-tray">
-                <span class="mock-tray-icon"><img src="/klyph-sphere.svg" alt="" width="14" height="14" /></span>
-                <span class="mock-tray-app"><span class="mock-tray-dot"></span>chrome.exe</span>
-                <span class="mock-tray-time">11:42</span>
-              </div>
-            </div>
-          </article>
-
-          <!-- Smart times -->
-          <article class="bento-card bento-4">
-            <p class="bento-eyebrow">04</p>
-            <h3 class="bento-h-sm">Times find<br />the right home.</h3>
-            <div class="bento-cal">
-              <span class="bento-cal-time">Fri · 5:00 PM</span>
-              <span class="bento-cal-arrow">→</span>
-              <span class="brand-logo" data-logo="gcal"></span>
-            </div>
-          </article>
-
-          <!-- Local-first wide -->
-          <article class="bento-card bento-5">
-            <div class="bento-card-body">
-              <p class="bento-eyebrow">05</p>
-              <h3 class="bento-h-sm">Yours by default.<br />Cloud is opt-in.</h3>
-              <p class="bento-p">
-                Every capture saves to a local SQLite store before any network call.
-                You decide what leaves your machine.
-              </p>
-            </div>
-            <div class="bento-art bento-art-local">
-              <span class="brand-logo brand-logo-xl" data-logo="local"></span>
-              <span class="bento-badge">On device</span>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <!-- Hotkey + tray flow -->
-      <section class="section section-hotkey" id="hotkey" aria-labelledby="hotkey-title">
-        <div class="section-intro center" data-reveal>
-          <p class="eyebrow">The flow</p>
-          <h2 id="hotkey-title">From tray to thought<br />in under a second.</h2>
-          <p>
-            Klyph lives quietly in your tray. Hit the shortcut from a browser tab, IDE, or
-            spreadsheet — the capture box arrives, you type, you're back to work.
-          </p>
-        </div>
-
-        <div class="tray-flow" data-reveal data-reveal-delay="1">
-          <!-- Step 1: tray icon -->
-          <div class="tray-step">
-            <div class="tray-frame">
-              <div class="mock-tray">
-                <span class="mock-tray-icon"><img src="/klyph-sphere.svg" alt="" width="14" height="14" /></span>
-                <span class="mock-tray-app"><span class="mock-tray-dot"></span>chrome.exe</span>
-                <span class="mock-tray-time">11:42</span>
-              </div>
-            </div>
-            <p class="tray-step-label"><span>01</span> Lives in the tray</p>
-          </div>
-
-          <span class="tray-arrow" aria-hidden="true">→</span>
-
-          <!-- Step 2: hotkey -->
-          <div class="tray-step">
-            <div class="tray-frame tray-frame-keys">
-              <div class="keycap-row" id="hotkey-keys">
-                <kbd>Ctrl</kbd>
-                <span class="key-plus">+</span>
-                <kbd>Shift</kbd>
-                <span class="key-plus">+</span>
-                <kbd>Space</kbd>
-              </div>
-            </div>
-            <p class="tray-step-label"><span>02</span> Press the hotkey</p>
-          </div>
-
-          <span class="tray-arrow" aria-hidden="true">→</span>
-
-          <!-- Step 3: capture window opens -->
-          <div class="tray-step">
-            <div class="tray-frame">
-              <div class="mock-mini-capture">
-                <span class="mock-mini-caret"></span>
-                <span class="mock-mini-text">_</span>
-              </div>
-            </div>
-            <p class="tray-step-label"><span>03</span> Type. Hit Enter.</p>
-          </div>
-        </div>
-
-        <p class="hotkey-caption"><kbd class="inline-kbd">Ctrl</kbd>+<kbd class="inline-kbd">Shift</kbd>+<kbd class="inline-kbd">Space</kbd> on Windows · <kbd class="inline-kbd">Cmd</kbd>+<kbd class="inline-kbd">Shift</kbd>+<kbd class="inline-kbd">Space</kbd> on macOS</p>
-      </section>
-
-      <!-- Capture -->
-      <section class="section section-capture" id="capture" aria-labelledby="capture-title">
-        <div class="section-intro" data-reveal>
-          <p class="eyebrow">The capture box</p>
-          <h2 id="capture-title">Built like a command palette.<br />Not a notes app.</h2>
-          <p>
-            Focus and Distraction lanes, tags, lists, and smart routing — without leaving the flow
-            of your work.
-          </p>
-        </div>
-
-        <figure class="product-stage" data-reveal data-reveal-delay="1">
-          <div class="glow glow-stage" aria-hidden="true"></div>
-          <div class="product-frame product-frame-wide product-frame-shot tilt">
-            <img
-              class="product-shot"
-              src="/product-images/capture-distraction-window.png"
-              alt="Klyph Distraction lane with the Parking Lot list selected."
-              width="1250"
-              height="1190"
-              loading="lazy"
-            />
-          </div>
-          <figcaption class="stage-caption">Lanes, tags, lists, and Send to — all in one surface.</figcaption>
-        </figure>
-      </section>
-
-      <!-- Chapter II -->
-      <div class="chapter" aria-hidden="true">
-        <span class="chapter-line"></span>
-        <span class="chapter-num">II</span>
-        <span class="chapter-title">The intelligence</span>
-        <span class="chapter-line"></span>
-      </div>
-
-      <!-- Smart routing — live demo running the app's real classifier -->
-      <section class="section section-smart" id="smart" aria-labelledby="smart-title">
-        <div class="section-intro center" data-reveal>
-          <p class="eyebrow">Explainable routing</p>
-          <h2 id="smart-title">It decides where things go.<br />And it <span class="accent-serif">shows its work.</span></h2>
-          <p>
-            A to-do, a note, a time — Klyph reads the shape of what you type and says
-            <em>why</em> it chose a destination. Wrong guess? Correct it in one tap.
-          </p>
-        </div>
-
-        <div class="routing-demo" data-reveal data-reveal-delay="1">
-          <div class="glow glow-stage" aria-hidden="true"></div>
-          <div class="routing-demo-window" role="group" aria-label="Live routing demo">
-            <div class="routing-demo-head">
-              <img src="/klyph-sphere.svg" alt="" width="18" height="18" />
-              <span>Klyph</span>
-              <span class="routing-demo-live"><span class="routing-demo-live-dot"></span>live demo</span>
-            </div>
-            <label class="sr-only" for="routing-demo-input">Type a thought to see where Klyph routes it</label>
-            <textarea
-              id="routing-demo-input"
-              class="routing-demo-input"
-              rows="3"
-              spellcheck="false"
-              autocomplete="off"
-              placeholder="Type a thought…"
-            ></textarea>
-            <div class="routing-demo-reason" data-demo-reason hidden>
-              <span class="routing-demo-dot" aria-hidden="true"></span>
-              <span data-demo-reason-text></span>
-            </div>
-            <div class="routing-demo-chips" aria-label="Suggested destinations">
-              <span class="routing-demo-chip" data-demo-chip="reminders">Reminders</span>
-              <span class="routing-demo-chip" data-demo-chip="notes">Apple Notes</span>
-              <span class="routing-demo-chip" data-demo-chip="calendar">Google Calendar</span>
-              <span class="routing-demo-chip" data-demo-chip="slack">Slack</span>
-            </div>
-          </div>
-          <p class="routing-demo-hint">
-            This is the app's actual routing brain, running in your browser.
-            <button type="button" class="routing-demo-try" data-demo-try>Try your own thought</button>
-          </p>
-        </div>
-
-        <!-- What shipped in the latest build -->
-        <div class="release-strip" data-reveal data-reveal-delay="2" aria-label="New in this release">
-          <article class="release-card">
-            <p class="release-eyebrow">Split on send</p>
-            <p class="release-p">
-              One mixed capture fans out — action lines become individual reminders,
-              the prose stays together as one note.
-            </p>
-          </article>
-          <article class="release-card">
-            <p class="release-eyebrow">One-tap correction</p>
-            <p class="release-p">
-              Every guess carries its reason and a “Not a to-do?” flip.
-              You are never stuck with the machine's opinion.
-            </p>
-          </article>
-          <article class="release-card">
-            <p class="release-eyebrow">Undo, even after send</p>
-            <p class="release-p">
-              A short grace window holds each capture back. <kbd class="inline-kbd">⌘</kbd><kbd class="inline-kbd">Z</kbd>
-              pulls it back before it leaves your machine.
-            </p>
-          </article>
-          <article class="release-card">
-            <p class="release-eyebrow">Updates itself</p>
-            <p class="release-p">
-              Signed builds arrive quietly in the background.
-              Restart when you feel like it — never mid-thought.
-            </p>
-          </article>
-        </div>
-      </section>
-
-      <!-- Integrations -->
-      <section class="section section-integrations" id="integrations" aria-labelledby="int-title">
-        <div class="split">
-          <div class="section-copy" data-reveal>
-            <p class="eyebrow">Integrations</p>
-            <h2 id="int-title">Configured once.<br />Sent on capture.</h2>
-            <p>
-              Connect Slack, Discord, Notion, and Google during setup. Enable destinations per
-              capture with a tap — timed text automatically routes to Google Calendar.
-            </p>
-            <ul class="int-list">
-              <li>Slack & Discord webhooks</li>
-              <li>Notion pages & databases</li>
-              <li>Google Tasks & Calendar</li>
-              <li>Apple Notes &amp; Reminders on macOS</li>
-            </ul>
-          </div>
-
-          <figure class="product-frame product-frame-tall product-frame-shot tilt" data-reveal data-reveal-delay="1">
-            <img
-              class="product-shot"
-              src="/product-images/onboarding-integrations-window.png"
-              alt="Klyph onboarding step for connecting Slack, Discord, Notion, Google, and Apple Notes."
-              width="960"
-              height="1280"
-              loading="lazy"
-            />
-          </figure>
-        </div>
-      </section>
-
-      <!-- History -->
-      <section class="section section-history" id="history" aria-labelledby="history-title">
-        <div class="section-intro center" data-reveal>
-          <p class="eyebrow">History</p>
-          <h2 id="history-title">Every capture, searchable.<br />Edit and re-sync anytime.</h2>
-        </div>
-
-        <figure class="product-stage" data-reveal data-reveal-delay="1">
-          <div class="product-frame product-frame-wide product-frame-shot tilt">
-            <img
-              class="product-shot"
-              src="/product-images/history-window.png"
-              alt="Klyph capture history with filters, list management, and saved captures."
-              width="1500"
-              height="1240"
-              loading="lazy"
-            />
-          </div>
-        </figure>
-      </section>
-
-      <!-- Quote moment -->
-      <section class="section section-quote" aria-label="Beta feedback">
-        <div class="quote-inner" data-reveal>
-          <span class="quote-mark" aria-hidden="true">"</span>
-          <blockquote class="quote-text">
-            <span class="accent-serif">I stopped opening Notion to jot one-liners.</span>
-            Klyph became the place a thought lands before I forget it,
-            and the place it gets routed from.
-          </blockquote>
-          <footer class="quote-attribution">
-            <span class="quote-avatar" aria-hidden="true">M</span>
-            <div>
-              <div class="quote-name">Maya R.</div>
-              <div class="quote-role">Beta tester · Designer</div>
-            </div>
-          </footer>
-        </div>
-      </section>
-
-      <!-- Chapter III -->
-      <div class="chapter" aria-hidden="true">
-        <span class="chapter-line"></span>
-        <span class="chapter-num">III</span>
-        <span class="chapter-title">On your device</span>
-        <span class="chapter-line"></span>
-      </div>
 
       <!-- Privacy / On-Device -->
       <section class="section section-privacy" id="privacy" aria-labelledby="privacy-title">
@@ -636,7 +351,7 @@
               <input type="email" class="cta-email-input" placeholder="your@email.com" required aria-label="Your email address" />
               <button type="submit" class="btn btn-primary magnetic"><span>Request access</span></button>
             </div>
-            <p class="cta-fine">Mac (.dmg) and Windows (.exe) installers sent by hand.</p>
+            <p class="cta-fine">Mac (.dmg) and Windows (.exe) installers sent by hand. Updates arrive on their own.</p>
           </form>
           <div class="cta-success" id="cta-success" hidden>
             <span class="cta-success-icon" aria-hidden="true">✓</span>
@@ -661,26 +376,17 @@
 
         <div class="footer-col">
           <p class="footer-col-title">Product</p>
-          <a href="#product">Product tour</a>
-          <a href="#capture">Capture</a>
-          <a href="#smart">Smart routing</a>
+          <a href="#how">How it works</a>
+          <a href="#smart">Routing</a>
+          <a href="#product">Features</a>
           <a href="#integrations">Integrations</a>
-          <a href="#privacy">On device</a>
         </div>
 
         <div class="footer-col">
-          <p class="footer-col-title">Resources</p>
-          <a href="#download">Request access</a>
-          <a href="#privacy">On-device privacy</a>
-          <a href="mailto:hi@klyph.app">Contact</a>
-        </div>
-
-        <div class="footer-col">
-          <p class="footer-col-title">Learn more</p>
-          <a href="#capture">Capture flow</a>
-          <a href="#smart">Smart routing</a>
+          <p class="footer-col-title">Company</p>
           <a href="#privacy">Privacy</a>
-          <a href="#download">Get access</a>
+          <a href="#download">Request access</a>
+          <a href="mailto:hi@klyph.app">Contact</a>
         </div>
       </div>
 

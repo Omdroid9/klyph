@@ -3409,3 +3409,55 @@ h3 {
     padding: 0.9rem 0.95rem 1rem;
   }
 }
+
+/* =====================================================================
+   Hero demo layout — the live capture window replaces the screenshot.
+   ===================================================================== */
+
+.hero-demo-layout {
+  min-height: 88vh;
+}
+
+.hero-visual-demo {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.routing-demo-hero {
+  margin: 0;
+  max-width: 33rem;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.routing-demo-hero .routing-demo-window {
+  padding: 1.2rem 1.35rem 1.3rem;
+}
+
+.routing-demo-hero .routing-demo-input {
+  min-height: 6.2rem;
+}
+
+@media (max-width: 959px) {
+  .hero-demo-layout {
+    min-height: auto;
+  }
+}
+
+/* Hero title sized for the two-column demo layout: three calm lines,
+   CTAs above the fold. Words flow inline so breaks land naturally. */
+.hero-demo-layout .hero-title {
+  font-size: clamp(2.5rem, 4.6vw, 3.9rem);
+  line-height: 1.06;
+  max-width: 30rem;
+}
+
+.hero-demo-layout .hero-title .word {
+  display: inline-block;
+  margin-right: 0.28em;
+}
+
+.hero-demo-layout .hero-lead {
+  max-width: 30rem;
+}
