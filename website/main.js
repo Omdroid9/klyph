@@ -422,59 +422,6 @@ if (spotlight && !prefersReduced && hasFinePointer) {
   );
 }
 
-/* ---------- Section heading letter reveal ---------- */
-const headings = document.querySelectorAll("main h2");
-
-// Walk a node and wrap each word in <span class="char-word">, preserving
-// nested inline elements like <br> and <span class="accent-serif">.
-function splitTextNodes(node) {
-  const children = Array.from(node.childNodes);
-  for (const child of children) {
-    if (child.nodeType === Node.TEXT_NODE) {
-      const text = child.nodeValue;
-      if (!text || !text.trim()) continue;
-      const frag = document.createDocumentFragment();
-      for (const part of text.split(/(\s+)/)) {
-        if (!part) continue;
-        if (/^\s+$/.test(part)) {
-          frag.appendChild(document.createTextNode(part));
-        } else {
-          const span = document.createElement("span");
-          span.className = "char-word";
-          span.textContent = part;
-          frag.appendChild(span);
-        }
-      }
-      child.replaceWith(frag);
-    } else if (child.nodeType === Node.ELEMENT_NODE) {
-      // Recurse into inline children (span, em, strong, etc.) but skip <br>.
-      if (child.tagName !== "BR") splitTextNodes(child);
-    }
-  }
-}
-
-headings.forEach((h) => {
-  if (h.dataset.split === "true") return;
-  h.dataset.split = "true";
-  splitTextNodes(h);
-});
-
-const charObs = new IntersectionObserver(
-  (entries) => {
-    for (const entry of entries) {
-      if (!entry.isIntersecting) continue;
-      const words = entry.target.querySelectorAll(".char-word");
-      words.forEach((w, i) => {
-        w.style.animationDelay = `${i * 70}ms`;
-        w.classList.add("is-in");
-      });
-      charObs.unobserve(entry.target);
-    }
-  },
-  { threshold: 0.25 },
-);
-headings.forEach((h) => charObs.observe(h));
-
 /* ---------- Scroll-spy active nav ---------- */
 const navLinks = document.querySelectorAll(".site-nav nav a");
 const spyTargets = [];

@@ -97,28 +97,9 @@ export const logos = {
     </svg>
   `,
 
-  // Klyph's own "On Device" mark, kept in the same rounded-square family
-  // as the other brand tiles so it sits naturally beside them.
-  local: `
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <defs>
-        <linearGradient id="fc-local-bg" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#8FB8FF"/>
-          <stop offset="55%" stop-color="#3D6FB8"/>
-          <stop offset="100%" stop-color="#15294A"/>
-        </linearGradient>
-        <radialGradient id="fc-local-spec" cx="30%" cy="22%" r="40%">
-          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
-          <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-        </radialGradient>
-      </defs>
-      <rect width="24" height="24" rx="5.5" fill="url(#fc-local-bg)"/>
-      <rect width="24" height="24" rx="5.5" fill="url(#fc-local-spec)"/>
-      <rect x="5.5" y="7" width="13" height="9" rx="1.4" fill="none" stroke="#ffffff" stroke-width="1.4"/>
-      <path d="M3.8 16.5h16.4l-.8 1.6a.8.8 0 0 1-.7.4H5.3a.8.8 0 0 1-.7-.4l-.8-1.6z" fill="#ffffff"/>
-      <path d="M9 11.2l2 2 4-4" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  `,
+  // Klyph's own "On Device" mark — the orb itself. The product is the
+  // destination, so it wears its own face beside the brand logos.
+  local: `<img src="/klyph-sphere.svg" alt="" style="width:100%;height:100%;display:block" />`,
 };
 
 export function injectLogos(root = document) {
