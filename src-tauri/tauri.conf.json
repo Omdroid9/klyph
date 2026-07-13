@@ -52,6 +52,7 @@
     "bundle":  {
                    "active":  true,
                    "targets":  "all",
+                   "createUpdaterArtifacts":  true,
                    "icon":  [
                                 "icons/tray-32.png",
                                 "icons/128x128.png",
@@ -59,7 +60,15 @@
                                 "icons/icon.icns",
                                 "icons/icon.ico"
                             ]
-               }
+               },
+    "plugins":  {
+                    "updater":  {
+                                    "pubkey":  "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk5Qzc0ODNGODM2N0ZERgpSV1RmZnpiNGczU2NDWWtCRFNrbkZHU0R2d3JxczJKQnVwU3FqV01LWnFaazN6T2RuV3ptMzljcgo=",
+                                    "endpoints":  [
+                                                      "https://github.com/Omdroid9/klyph/releases/latest/download/latest.json"
+                                                  ]
+                                }
+                }
 }
 
 

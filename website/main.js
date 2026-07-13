@@ -672,3 +672,216 @@ if (heroOrbBg && !prefersReduced) {
     { passive: true },
   );
 }
+
+/* ---------- Live routing demo ----------
+   A vanilla-JS port of the app's intent classifier (src/lib/intent.ts) plus
+   the routing precedence from captureRouting.ts: time signals, then intent,
+   then the Apple Notes fallback. Keep the two in sync when signals change. */
+
+const DEMO_IMPERATIVES = new Set([
+  "apply", "ask", "backup", "book", "bring", "buy", "call", "cancel",
+  "charge", "check", "clean", "collect", "complete", "deposit", "drop",
+  "email", "feed", "fill", "finish", "fix", "get", "grab", "install",
+  "invite", "mail", "message", "order", "pay", "pick", "practice", "print",
+  "read", "refill", "register", "renew", "reply", "return", "review",
+  "schedule", "sell", "send", "ship", "sign", "submit", "take", "tell",
+  "text", "transfer", "update", "upgrade", "walk", "wash", "water",
+]);
+
+const DEMO_TIME_REGEX =
+  /\b(tomorrow|tonight|today|at \d{1,2}(:\d{2})?\s*(am|pm)\b|\d{1,2}(:\d{2})?\s*(am|pm)\b|next (week|monday|tuesday|wednesday|thursday|friday|saturday|sunday)|every (day|week|morning|monday|tuesday|wednesday|thursday|friday|saturday|sunday))\b/i;
+const DEMO_TASK_PHRASE =
+  /\b(don'?t forget|need to|have to|has to|remember to|make sure (?:to|i|we)|to-?do)\b/i;
+const DEMO_URL = /\bhttps?:\/\/|\bwww\./i;
+const DEMO_NOTE_OPENER =
+  /^(idea|ideas|note|notes|thought|thoughts|journal|draft|brainstorm|observation|quote)\b/i;
+const DEMO_QUESTION_OPENER =
+  /^(what|why|how|when|where|which|who|should|could|would|can|is|are|do|does|did)\b/i;
+
+function demoFirstWord(text) {
+  return (text.trim().split(/\s+/)[0] || "").toLowerCase().replace(/[^a-z'-]/g, "");
+}
+
+function demoLineIsAction(line) {
+  const body = line.replace(/^\s*(?:- \[[ xX]?\]\s*|[-*]\s+|\d+\.\s+)/, "").trim();
+  if (!body) return false;
+  return (
+    DEMO_TIME_REGEX.test(body) ||
+    DEMO_TASK_PHRASE.test(body) ||
+    DEMO_IMPERATIVES.has(demoFirstWord(body))
+  );
+}
+
+function demoRoute(rawText) {
+  const text = rawText.trim();
+  if (!text) return null;
+
+  const lines = text.split("\n").filter((l) => l.trim().length > 0);
+
+  // Mixed multi-line capture → split on send
+  if (lines.length >= 2) {
+    const actions = lines.filter(demoLineIsAction);
+    const prose = lines.length - actions.length;
+    if (actions.length > 0 && prose > 0) {
+      return {
+        chips: ["reminders", "notes"],
+        reason: `Mixed capture → <strong>${actions.length} action${actions.length === 1 ? "" : "s"} to Reminders</strong> · ${prose} line${prose === 1 ? "" : "s"} to <strong>Apple Notes</strong>`,
+      };
+    }
+  }
+
+  const time = text.match(DEMO_TIME_REGEX);
+  if (time) {
+    return {
+      chips: ["reminders", "calendar"],
+      reason: `Has a time (“${time[0]}”) → <strong>Reminders</strong> + <strong>Google Calendar</strong>`,
+    };
+  }
+
+  const phrase = text.match(DEMO_TASK_PHRASE);
+  if (phrase) {
+    return {
+      chips: ["reminders"],
+      reason: `Looks like a to-do (says “${phrase[0].toLowerCase()}”) → <strong>Reminders</strong>`,
+    };
+  }
+
+  const opener = demoFirstWord(text);
+  if (
+    DEMO_IMPERATIVES.has(opener) &&
+    text.split(/\s+/).length >= 2 &&
+    lines.length === 1 &&
+    !DEMO_URL.test(text)
+  ) {
+    return {
+      chips: ["reminders"],
+      reason: `Looks like a to-do (starts with “${opener}”) → <strong>Reminders</strong>`,
+    };
+  }
+
+  if (DEMO_URL.test(text)) {
+    return { chips: ["notes"], reason: `Contains a link → <strong>Apple Notes</strong>` };
+  }
+  if (DEMO_NOTE_OPENER.test(text)) {
+    return {
+      chips: ["notes"],
+      reason: `Looks like a note (starts with “${demoFirstWord(text)}”) → <strong>Apple Notes</strong>`,
+    };
+  }
+  if (DEMO_QUESTION_OPENER.test(text) && text.endsWith("?")) {
+    return { chips: ["notes"], reason: `Is a question → <strong>Apple Notes</strong>` };
+  }
+  if (lines.length >= 3 || text.length > 200) {
+    return { chips: ["notes"], reason: `Long-form text → <strong>Apple Notes</strong>` };
+  }
+
+  return {
+    chips: ["notes"],
+    reason: `No task signal → <strong>Apple Notes</strong> (safe default)`,
+  };
+}
+
+const demoInput = document.getElementById("routing-demo-input");
+if (demoInput) {
+  const reasonWrap = document.querySelector("[data-demo-reason]");
+  const reasonText = document.querySelector("[data-demo-reason-text]");
+  const chips = document.querySelectorAll("[data-demo-chip]");
+  const tryBtn = document.querySelector("[data-demo-try]");
+
+  const DEMO_EXAMPLES = [
+    "buy milk tomorrow at 5pm",
+    "ideas for the launch video",
+    "don't forget passport renewal",
+    "Weekend plan\n- do laundry\n- call landlord at 5pm\nthe pricing thought from the walk",
+    "why do the best tools feel invisible?",
+  ];
+
+  let userOwnsInput = false;
+  let exampleIndex = 0;
+  let typeTimer = null;
+
+  function renderRoute() {
+    const route = demoRoute(demoInput.value);
+    chips.forEach((chip) => {
+      chip.classList.toggle(
+        "is-active",
+        Boolean(route && route.chips.includes(chip.dataset.demoChip)),
+      );
+    });
+    if (route) {
+      reasonText.innerHTML = route.reason;
+      reasonWrap.hidden = false;
+    } else {
+      reasonWrap.hidden = true;
+    }
+  }
+
+  function stopAutoType() {
+    if (typeTimer) {
+      clearTimeout(typeTimer);
+      typeTimer = null;
+    }
+  }
+
+  function autoTypeExample() {
+    if (userOwnsInput) return;
+    const phrase = DEMO_EXAMPLES[exampleIndex % DEMO_EXAMPLES.length];
+    exampleIndex += 1;
+    let pos = 0;
+
+    function tick() {
+      if (userOwnsInput) return;
+      pos += 1;
+      demoInput.value = phrase.slice(0, pos);
+      renderRoute();
+      if (pos < phrase.length) {
+        typeTimer = setTimeout(tick, 34 + Math.random() * 40);
+      } else {
+        typeTimer = setTimeout(() => {
+          if (userOwnsInput) return;
+          demoInput.value = "";
+          renderRoute();
+          typeTimer = setTimeout(autoTypeExample, 700);
+        }, 3200);
+      }
+    }
+    tick();
+  }
+
+  function takeOver() {
+    if (userOwnsInput) return;
+    userOwnsInput = true;
+    stopAutoType();
+    demoInput.value = "";
+    renderRoute();
+    demoInput.focus();
+  }
+
+  demoInput.addEventListener("focus", takeOver);
+  demoInput.addEventListener("input", () => {
+    userOwnsInput = true;
+    stopAutoType();
+    renderRoute();
+  });
+  if (tryBtn) tryBtn.addEventListener("click", takeOver);
+
+  if (prefersReduced) {
+    // No animation: show a filled-in example immediately.
+    demoInput.value = DEMO_EXAMPLES[0];
+    renderRoute();
+  } else {
+    // Start typing when the demo scrolls into view.
+    const demoObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            demoObserver.disconnect();
+            typeTimer = setTimeout(autoTypeExample, 500);
+          }
+        }
+      },
+      { threshold: 0.4 },
+    );
+    demoObserver.observe(demoInput);
+  }
+}

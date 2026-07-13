@@ -147,8 +147,8 @@
         </article>
         <article class="workflow-step" data-reveal data-reveal-delay="2">
           <span>03</span>
-          <h2>Confirm where it goes</h2>
-          <p>Klyph previews the destination, then sends it to Notes, Reminders, Slack, Notion, or Google.</p>
+          <h2>See why it goes there</h2>
+          <p>Every suggestion carries its reason — “looks like a to-do” — and a one-tap correction if the guess is wrong.</p>
         </article>
       </section>
 
@@ -434,31 +434,82 @@
         <span class="chapter-line"></span>
       </div>
 
-      <!-- Smart routing -->
+      <!-- Smart routing — live demo running the app's real classifier -->
       <section class="section section-smart" id="smart" aria-labelledby="smart-title">
         <div class="section-intro center" data-reveal>
-          <p class="eyebrow">Smart routing</p>
-          <h2 id="smart-title">Type a time.<br />Calendar handles the rest.</h2>
+          <p class="eyebrow">Explainable routing</p>
+          <h2 id="smart-title">It decides where things go.<br />And it <span class="accent-serif">shows its work.</span></h2>
           <p>
-            Klyph spots dates, times, and intent in your text, and offers the right
-            destination without you reaching for the mouse.
+            A to-do, a note, a time — Klyph reads the shape of what you type and says
+            <em>why</em> it chose a destination. Wrong guess? Correct it in one tap.
           </p>
         </div>
 
-        <figure class="product-stage smart-stage" data-reveal data-reveal-delay="1">
+        <div class="routing-demo" data-reveal data-reveal-delay="1">
           <div class="glow glow-stage" aria-hidden="true"></div>
-          <div class="product-frame product-frame-mid product-frame-shot tilt">
-            <img
-              class="product-shot"
-              src="/product-images/smart-reminder-window.png"
-              alt="Klyph previewing a reminder command with detected date, destination, title, and reminder status."
-              width="1250"
-              height="1190"
-              loading="lazy"
-            />
+          <div class="routing-demo-window" role="group" aria-label="Live routing demo">
+            <div class="routing-demo-head">
+              <img src="/klyph-sphere.svg" alt="" width="18" height="18" />
+              <span>Klyph</span>
+              <span class="routing-demo-live"><span class="routing-demo-live-dot"></span>live demo</span>
+            </div>
+            <label class="sr-only" for="routing-demo-input">Type a thought to see where Klyph routes it</label>
+            <textarea
+              id="routing-demo-input"
+              class="routing-demo-input"
+              rows="3"
+              spellcheck="false"
+              autocomplete="off"
+              placeholder="Type a thought…"
+            ></textarea>
+            <div class="routing-demo-reason" data-demo-reason hidden>
+              <span class="routing-demo-dot" aria-hidden="true"></span>
+              <span data-demo-reason-text></span>
+            </div>
+            <div class="routing-demo-chips" aria-label="Suggested destinations">
+              <span class="routing-demo-chip" data-demo-chip="reminders">Reminders</span>
+              <span class="routing-demo-chip" data-demo-chip="notes">Apple Notes</span>
+              <span class="routing-demo-chip" data-demo-chip="calendar">Google Calendar</span>
+              <span class="routing-demo-chip" data-demo-chip="slack">Slack</span>
+            </div>
           </div>
-          <figcaption class="stage-caption">No menus, no second window — just the right destination, suggested.</figcaption>
-        </figure>
+          <p class="routing-demo-hint">
+            This is the app's actual routing brain, running in your browser.
+            <button type="button" class="routing-demo-try" data-demo-try>Try your own thought</button>
+          </p>
+        </div>
+
+        <!-- What shipped in the latest build -->
+        <div class="release-strip" data-reveal data-reveal-delay="2" aria-label="New in this release">
+          <article class="release-card">
+            <p class="release-eyebrow">Split on send</p>
+            <p class="release-p">
+              One mixed capture fans out — action lines become individual reminders,
+              the prose stays together as one note.
+            </p>
+          </article>
+          <article class="release-card">
+            <p class="release-eyebrow">One-tap correction</p>
+            <p class="release-p">
+              Every guess carries its reason and a “Not a to-do?” flip.
+              You are never stuck with the machine's opinion.
+            </p>
+          </article>
+          <article class="release-card">
+            <p class="release-eyebrow">Undo, even after send</p>
+            <p class="release-p">
+              A short grace window holds each capture back. <kbd class="inline-kbd">⌘</kbd><kbd class="inline-kbd">Z</kbd>
+              pulls it back before it leaves your machine.
+            </p>
+          </article>
+          <article class="release-card">
+            <p class="release-eyebrow">Updates itself</p>
+            <p class="release-p">
+              Signed builds arrive quietly in the background.
+              Restart when you feel like it — never mid-thought.
+            </p>
+          </article>
+        </div>
       </section>
 
       <!-- Integrations -->
@@ -634,7 +685,7 @@
       </div>
 
       <div class="site-footer-base">
-        <span>© 2026 Klyph · Beta v0.1</span>
+        <span>© 2026 Klyph · Beta v0.2</span>
         <span class="footer-locale">English · Made for desktops</span>
       </div>
     </footer>

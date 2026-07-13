@@ -145,6 +145,8 @@ fn main() {
     .plugin(tauri_plugin_http::init())
     .plugin(tauri_plugin_sql::Builder::default().build())
     .plugin(tauri_plugin_store::Builder::default().build())
+    .plugin(tauri_plugin_updater::Builder::new().build())
+    .plugin(tauri_plugin_process::init())
     .setup(move |app| {
       build_tray(app.handle())?;
       window::close_legacy_settings_window(app.handle());

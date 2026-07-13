@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import { parseReminderSyntax } from "../lib/parser";
+import { useAutoUpdater } from "../lib/updater";
 import {
   createManagedList,
   createRoutingRule,
@@ -264,6 +265,7 @@ const IconBookmark = ({ size = 14 }: IconProps) => (
 );
 
 export default function CaptureWindow() {
+  const { update, restartToUpdate } = useAutoUpdater();
   const [text, setText] = useState("");
   const [captureLane, setCaptureLane] = useState<CaptureLane>("focus");
   const [listName, setListName] = useState(DEFAULT_LIST);
@@ -1229,6 +1231,16 @@ export default function CaptureWindow() {
               </span>
             </div>
             <div className="flex items-center gap-0.5">
+              {update.state === "ready" ? (
+                <button
+                  type="button"
+                  onClick={restartToUpdate}
+                  className="mr-1 rounded-full border border-[var(--accent)]/40 bg-[var(--btn-soft)] px-2.5 py-1 text-[10px] font-medium text-[var(--text)] transition-colors hover:bg-[var(--btn-soft-hover)]"
+                  title={`Klyph ${update.version} is downloaded — restart to apply`}
+                >
+                  Update ready · Restart
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => void toggleTheme()}
