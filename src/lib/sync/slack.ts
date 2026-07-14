@@ -20,7 +20,7 @@ export async function testSlackWebhook(webhookUrl: string): Promise<void> {
   await httpPostJson(
     webhookUrl,
     {
-      text: "\u2705 Klyph test message",
+      text: "\u2705 Chute test message",
     },
   );
 }

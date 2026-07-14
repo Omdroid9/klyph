@@ -374,7 +374,7 @@ function App() {
     return (
       <div className="app-page flex h-full w-full items-center justify-center p-6">
         <div className="codex-surface max-w-md rounded-xl p-4 text-sm">
-          <p className="mb-2 font-semibold">Klyph Web Preview</p>
+          <p className="mb-2 font-semibold">Chute Web Preview</p>
           <p className="codex-muted">
             This app is Tauri-first. Use <code>npm run tauri dev</code> and open capture via{" "}
             <code>Ctrl+Shift+Space</code> or tray menu.
@@ -388,7 +388,7 @@ function App() {
     return (
       <div className="app-page flex h-full w-full items-center justify-center p-6">
         <div className="max-w-md rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-sm text-white">
-          <p className="mb-2 font-semibold">Klyph initialization error</p>
+          <p className="mb-2 font-semibold">Chute initialization error</p>
           <p className="break-words text-red-100/90">{initError}</p>
         </div>
       </div>

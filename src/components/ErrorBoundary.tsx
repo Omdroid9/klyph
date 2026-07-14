@@ -31,7 +31,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
           <p className="font-display mb-2 text-base font-semibold">Something went wrong</p>
           <p className="codex-muted mb-3 text-xs leading-5">
             {this.props.windowLabel ? `${this.props.windowLabel} window` : "This window"} hit a
-            rendering error. You can reload or restart Klyph from the tray.
+            rendering error. You can reload or restart Chute from the tray.
           </p>
           <p className="mb-4 break-words rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-600 dark:text-red-300">
             {this.state.error.message}

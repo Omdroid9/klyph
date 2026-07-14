@@ -116,7 +116,7 @@ function appleNoteTitle(content: string): string {
   const firstLine = content.split("\n")[0]?.trim() ?? "";
   const normalized = firstLine.length > 0 ? firstLine : content.trim();
   if (normalized.length === 0) {
-    return "Klyph";
+    return "Chute";
   }
   return normalized.slice(0, 80);
 }
@@ -198,7 +198,7 @@ async function syncGoogleCapture(capture: Capture, config: SyncConfig): Promise<
       accessToken,
       listId: config.googleTasksListId!,
       title: capture.content,
-      notes: `Klyph list: ${capture.list_name}`,
+      notes: `Chute list: ${capture.list_name}`,
       due: capture.reminder_time ?? undefined,
     });
   };
@@ -233,7 +233,7 @@ async function syncGoogleCalendarCapture(capture: Capture, config: SyncConfig): 
       accessToken,
       calendarId: config.googleCalendarId!,
       summary: capture.content,
-      description: `Klyph list: ${capture.list_name}\nTag: ${capture.tag}`,
+      description: `Chute list: ${capture.list_name}\nTag: ${capture.tag}`,
       reminderTime: capture.reminder_time,
       eventId: calendarEventId(capture.id),
     });

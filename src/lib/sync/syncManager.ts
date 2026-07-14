@@ -61,9 +61,9 @@ export async function loadSyncConfig(): Promise<SyncConfig> {
     googleTasksListId: normalizeSetting(settings.google_tasks_list_id),
     googleCalendarId: normalizeSetting(settings.google_calendar_id),
     appleNotesEnabled: isMacOS(),
-    appleNotesFolder: normalizeSetting(settings.apple_notes_folder) ?? "Klyph",
+    appleNotesFolder: normalizeSetting(settings.apple_notes_folder) ?? "Chute",
     appleRemindersEnabled: isMacOS(),
-    appleRemindersList: normalizeSetting(settings.apple_reminders_list) ?? "Klyph",
+    appleRemindersList: normalizeSetting(settings.apple_reminders_list) ?? "Chute",
   };
 }
 
@@ -124,14 +124,14 @@ function toDisplayTime(input: Date): string {
 function reminderTitle(content: string): string {
   const firstLine = content.split("\n")[0]?.trim() ?? "";
   const normalized = firstLine.length > 0 ? firstLine : content.trim();
-  return normalized.length > 0 ? normalized.slice(0, 80) : "Klyph";
+  return normalized.length > 0 ? normalized.slice(0, 80) : "Chute";
 }
 
 function recurringReminderBody(capture: Capture): string {
   const parts = [`${capture.list_name} • ${capture.tag}`];
   const recurrenceLabel = recurrenceLabelFromRule(capture.recurrence_rule);
   if (recurrenceLabel) {
-    parts.push(`Managed by Klyph: ${recurrenceLabel}`);
+    parts.push(`Managed by Chute: ${recurrenceLabel}`);
   }
   return parts.join("\n");
 }

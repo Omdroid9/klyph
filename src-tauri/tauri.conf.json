@@ -1,6 +1,6 @@
 {
     "$schema":  "../node_modules/@tauri-apps/cli/config.schema.json",
-    "productName":  "Klyph",
+    "productName":  "Chute",
     "version":  "0.1.0",
     "identifier":  "app.klyph",
     "build":  {
@@ -14,7 +14,7 @@
                 "windows":  [
                                 {
                                     "label":  "main",
-                                    "title":  "Klyph",
+                                    "title":  "Chute",
                                     "width":  640,
                                     "height":  250,
                                     "minWidth":  640,
@@ -30,7 +30,7 @@
                                 },
                                 {
                                     "label":  "library",
-                                    "title":  "Klyph Library",
+                                    "title":  "Chute Library",
                                     "width":  1080,
                                     "height":  720,
                                     "minWidth":  860,

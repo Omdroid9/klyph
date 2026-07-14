@@ -74,7 +74,7 @@ pub fn show_capture_window(app: &tauri::AppHandle) -> Result<(), String> {
 
   set_main_view(app, MainView::Capture)?;
   window
-    .set_title("Klyph")
+    .set_title("Chute")
     .map_err(|error| error.to_string())?;
   window
     .set_resizable(false)
@@ -118,7 +118,7 @@ pub fn show_history_window(app: &tauri::AppHandle) -> Result<(), String> {
 
   set_main_view(app, MainView::History)?;
   window
-    .set_title("Klyph")
+    .set_title("Chute")
     .map_err(|error| error.to_string())?;
   window
     .set_resizable(true)
@@ -201,7 +201,7 @@ pub fn show_settings_window(app: &tauri::AppHandle) -> Result<(), String> {
 
   set_main_view(app, MainView::Settings)?;
   window
-    .set_title("Klyph Settings")
+    .set_title("Chute Settings")
     .map_err(|error| error.to_string())?;
   window
     .set_resizable(true)

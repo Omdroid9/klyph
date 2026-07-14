@@ -586,11 +586,11 @@ if (ctaForm) {
     }
     // Fallback: open mailto with email pre-filled
     try {
-      const sub = encodeURIComponent("Klyph beta access");
+      const sub = encodeURIComponent("Chute beta access");
       const body = encodeURIComponent(
-        `Hi — I'd like to try Klyph.\n\nEmail: ${email}\nOS: Mac or Windows?\nHow I'd use it: `,
+        `Hi — I'd like to try Chute.\n\nEmail: ${email}\nOS: Mac or Windows?\nHow I'd use it: `,
       );
-      window.location.href = `mailto:hi@klyph.app?subject=${sub}&body=${body}`;
+      window.location.href = `mailto:hello@usechute.com?subject=${sub}&body=${body}`;
     } catch {}
   });
 }

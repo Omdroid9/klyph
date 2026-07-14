@@ -164,7 +164,7 @@ pub fn create_apple_reminder(
 
     let list = {
       let trimmed = list.trim();
-      if trimmed.is_empty() { "Klyph".to_string() } else { trimmed.to_string() }
+      if trimmed.is_empty() { "Chute".to_string() } else { trimmed.to_string() }
     };
 
     let parsed_due = due_date
@@ -246,7 +246,7 @@ end run"#;
       let stderr = String::from_utf8_lossy(&output.stderr);
       let message = stderr.trim();
       let detail = if message.is_empty() {
-        "Apple Reminders automation failed. Grant Klyph permission to control Reminders in System Settings > Privacy & Security > Automation.".to_string()
+        "Apple Reminders automation failed. Grant Chute permission to control Reminders in System Settings > Privacy & Security > Automation.".to_string()
       } else {
         message.to_string()
       };
@@ -277,7 +277,7 @@ pub fn create_apple_note(folder: String, title: String, body: String) -> Result<
     let folder = {
       let trimmed = folder.trim();
       if trimmed.is_empty() {
-        "Klyph".to_string()
+        "Chute".to_string()
       } else {
         trimmed.to_string()
       }
@@ -328,7 +328,7 @@ end run"#;
       let stderr = String::from_utf8_lossy(&output.stderr);
       let message = stderr.trim();
       let detail = if message.is_empty() {
-        "Apple Notes automation failed. Grant Klyph permission to control Notes in System Settings > Privacy & Security > Automation.".to_string()
+        "Apple Notes automation failed. Grant Chute permission to control Notes in System Settings > Privacy & Security > Automation.".to_string()
       } else {
         message.to_string()
       };

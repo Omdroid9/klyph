@@ -14,7 +14,7 @@ export interface CreateAppleReminderInput {
  */
 export async function createAppleReminder(input: CreateAppleReminderInput): Promise<void> {
   await invoke("create_apple_reminder", {
-    list: input.list?.trim() || "Klyph",
+    list: input.list?.trim() || "Chute",
     title: input.title,
     body: input.body,
     dueDate: input.dueDate ?? null,
@@ -25,7 +25,7 @@ export async function createAppleReminder(input: CreateAppleReminderInput): Prom
 export async function testAppleReminders(list?: string): Promise<void> {
   await createAppleReminder({
     list,
-    title: "Klyph test reminder",
-    body: "If you can see this in Reminders, Klyph is connected.",
+    title: "Chute test reminder",
+    body: "If you can see this in Reminders, Chute is connected.",
   });
 }

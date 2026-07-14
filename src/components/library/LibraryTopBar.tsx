@@ -36,7 +36,7 @@ export default function LibraryTopBar({
     <header className="library-topbar">
       <div className="library-topbar-row">
         <div className="library-brand">
-          <span className="library-brand-word">Klyph</span>
+          <span className="library-brand-word">Chute</span>
           <span className="library-brand-word font-serif-italic">Library</span>
         </div>
 

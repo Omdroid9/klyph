@@ -13,7 +13,7 @@ export interface CreateAppleNoteInput {
  */
 export async function createAppleNote(input: CreateAppleNoteInput): Promise<void> {
   await invoke("create_apple_note", {
-    folder: input.folder?.trim() || "Klyph",
+    folder: input.folder?.trim() || "Chute",
     title: input.title,
     body: input.body,
   });
@@ -23,7 +23,7 @@ export async function createAppleNote(input: CreateAppleNoteInput): Promise<void
 export async function testAppleNotes(folder?: string): Promise<void> {
   await createAppleNote({
     folder,
-    title: "Klyph test note",
-    body: "If you can see this in Apple Notes, Klyph is connected.",
+    title: "Chute test note",
+    body: "If you can see this in Apple Notes, Chute is connected.",
   });
 }

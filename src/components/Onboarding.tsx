@@ -165,7 +165,7 @@ function TourMock({ visual }: { visual: (typeof FEATURE_SLIDES)[number]["visual"
     return (
       <div className="tour-mock">
         <div className="tour-mock-bar">
-          <span className="tour-mock-title">Klyph</span>
+          <span className="tour-mock-title">Chute</span>
           <span className="tour-mock-pill">
             <span className="tour-mock-dot" />
             Capture
@@ -500,7 +500,7 @@ export default function Onboarding({ onDone }: OnboardingProps) {
               <div className="onboard-connect-head mb-5 shrink-0">
                 <h2 className="text-lg font-semibold tracking-tight">Connect your apps</h2>
                 <p className="codex-muted mx-auto mt-2 max-w-sm text-xs leading-5">
-                  Sign in here so Klyph can send captures outward. Start the OAuth backend first
+                  Sign in here so Chute can send captures outward. Start the OAuth backend first
                   with <code className="text-[10px]">npm run auth:dev</code>, then click Connect for each
                   app. Connected apps auto-enable under Send to when you capture.
                 </p>

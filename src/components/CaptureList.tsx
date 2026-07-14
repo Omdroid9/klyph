@@ -331,7 +331,7 @@ export default function CaptureList({ onBack }: CaptureListProps) {
     try {
       await clearCaptureRecurrence(capture.id);
       await refresh();
-      setStatus("Repeat stopped. Klyph will not create more reminders for that item.");
+      setStatus("Repeat stopped. Chute will not create more reminders for that item.");
       await emit("klyph://captures-changed");
     } catch (error) {
       console.error(error);
@@ -654,7 +654,7 @@ export default function CaptureList({ onBack }: CaptureListProps) {
                 <p className="codex-muted mt-1.5 max-w-sm text-xs leading-5">
                   Press your global shortcut anywhere to jot a thought. Try something like
                   <span className="text-[var(--text)]"> “call mom tomorrow 5pm” </span>
-                  — Klyph parses the reminder for you.
+                  — Chute parses the reminder for you.
                 </p>
               </>
             ) : (

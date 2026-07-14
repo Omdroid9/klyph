@@ -364,7 +364,7 @@ export default function CaptureWindow() {
   const reminderCommand = hasReminderCommand(text);
   const previewContent = (parsed.cleanedContent.trim() || text.trim()).slice(0, MAX_CHARS);
 
-  // Where Klyph *would* route this capture right now, and why. This is the
+  // Where Chute *would* route this capture right now, and why. This is the
   // single decision the preview, the save path, and the teach prompt all share.
   const routingDecision = useMemo(() => {
     if (!integrationSettings) {
@@ -1183,7 +1183,7 @@ export default function CaptureWindow() {
       void loadRecentCaptures();
       setSavedMessage(
         last.synced && last.labels.length > 0
-          ? "Removed from Klyph — it may have already reached your apps"
+          ? "Removed from Chute — it may have already reached your apps"
           : "Capture undone",
       );
       window.setTimeout(() => setSavedMessage(""), 2000);
@@ -1227,7 +1227,7 @@ export default function CaptureWindow() {
             <div className="pointer-events-none flex items-center gap-2.5">
               <KlyphLogo size={22} className="klyph-logo-header" />
               <span className="codex-panel-title text-base font-medium tracking-tight">
-                Klyph
+                Chute
               </span>
             </div>
             <div className="flex items-center gap-0.5">
@@ -1236,7 +1236,7 @@ export default function CaptureWindow() {
                   type="button"
                   onClick={restartToUpdate}
                   className="mr-1 rounded-full border border-[var(--accent)]/40 bg-[var(--btn-soft)] px-2.5 py-1 text-[10px] font-medium text-[var(--text)] transition-colors hover:bg-[var(--btn-soft-hover)]"
-                  title={`Klyph ${update.version} is downloaded — restart to apply`}
+                  title={`Chute ${update.version} is downloaded — restart to apply`}
                 >
                   Update ready · Restart
                 </button>
@@ -1604,7 +1604,7 @@ export default function CaptureWindow() {
                       type="button"
                       onClick={intentFlip.apply}
                       className="codex-btn-soft rounded-full px-2 py-0.5 text-[10px]"
-                      title="Wrong guess? Flip it — Klyph offers to remember your correction"
+                      title="Wrong guess? Flip it — Chute offers to remember your correction"
                     >
                       {intentFlip.label}
                     </button>

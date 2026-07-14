@@ -125,8 +125,8 @@ export default function SettingsPanel() {
   const [googleRefreshToken, setGoogleRefreshToken] = useState("");
   const [googleListId, setGoogleListId] = useState("");
   const [googleCalendarId, setGoogleCalendarId] = useState("primary");
-  const [appleNotesFolder, setAppleNotesFolder] = useState("Klyph");
-  const [appleRemindersList, setAppleRemindersList] = useState("Klyph");
+  const [appleNotesFolder, setAppleNotesFolder] = useState("Chute");
+  const [appleRemindersList, setAppleRemindersList] = useState("Chute");
 
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -207,8 +207,8 @@ export default function SettingsPanel() {
     setGoogleRefreshToken(saved.google_tasks_refresh_token ?? "");
     setGoogleListId(saved.google_tasks_list_id ?? "");
     setGoogleCalendarId(saved.google_calendar_id ?? "primary");
-    setAppleNotesFolder(saved.apple_notes_folder?.trim() || "Klyph");
-    setAppleRemindersList(saved.apple_reminders_list?.trim() || "Klyph");
+    setAppleNotesFolder(saved.apple_notes_folder?.trim() || "Chute");
+    setAppleRemindersList(saved.apple_reminders_list?.trim() || "Chute");
 
     try {
       setRoutingRules(await listRoutingRules());
@@ -339,7 +339,7 @@ export default function SettingsPanel() {
     setBusyAction("save-apple-notes");
     setStatus("");
     try {
-      await setSetting("apple_notes_folder", appleNotesFolder.trim() || "Klyph");
+      await setSetting("apple_notes_folder", appleNotesFolder.trim() || "Chute");
       setStatus("Apple Notes folder saved.");
       await emit("klyph://request-sync");
     } catch (error) {
@@ -354,7 +354,7 @@ export default function SettingsPanel() {
     setBusyAction("save-apple-reminders");
     setStatus("");
     try {
-      await setSetting("apple_reminders_list", appleRemindersList.trim() || "Klyph");
+      await setSetting("apple_reminders_list", appleRemindersList.trim() || "Chute");
       setStatus("Reminders list saved.");
       await emit("klyph://request-sync");
     } catch (error) {
@@ -461,7 +461,7 @@ export default function SettingsPanel() {
       <div className="mb-5 flex items-center gap-2.5">
         <KlyphLogo size={28} />
         <h1 className="codex-panel-title text-[1.4rem] font-medium leading-none">
-          Klyph <span className="font-serif-italic">Settings</span>
+          Chute <span className="font-serif-italic">Settings</span>
         </h1>
       </div>
 
@@ -600,7 +600,7 @@ export default function SettingsPanel() {
       <section className="codex-surface mb-4 rounded-xl p-4">
         <h2 className="label-micro mb-2">Smart Routing Rules</h2>
         <p className="codex-muted mb-3 text-[11px] leading-5">
-          Klyph learns these when you correct a suggested destination and press{" "}
+          Chute learns these when you correct a suggested destination and press{" "}
           <strong className="font-medium text-[var(--text)]">Always</strong> in the capture window.
           A rule sends every matching capture (by tag, list, lane, or keyword) to your chosen apps
           and always beats the built-in heuristics.
@@ -608,7 +608,7 @@ export default function SettingsPanel() {
 
         {routingRules.length === 0 ? (
           <p className="codex-muted text-xs">
-            No rules yet. Change the destination of a tagged capture and Klyph will offer to
+            No rules yet. Change the destination of a tagged capture and Chute will offer to
             remember it.
           </p>
         ) : (
@@ -785,7 +785,7 @@ export default function SettingsPanel() {
               <input
                 value={appleNotesFolder}
                 onChange={(event) => setAppleNotesFolder(event.currentTarget.value)}
-                placeholder="Klyph"
+                placeholder="Chute"
                 className="codex-input w-full rounded-lg px-3 py-2 text-xs outline-none"
               />
             </label>
@@ -829,7 +829,7 @@ export default function SettingsPanel() {
               <input
                 value={appleRemindersList}
                 onChange={(event) => setAppleRemindersList(event.currentTarget.value)}
-                placeholder="Klyph"
+                placeholder="Chute"
                 className="codex-input w-full rounded-lg px-3 py-2 text-xs outline-none"
               />
             </label>
@@ -1071,11 +1071,11 @@ export default function SettingsPanel() {
           }}
           className="codex-btn rounded-lg px-3 py-2 text-xs font-semibold"
         >
-          Quit Klyph
+          Quit Chute
         </button>
       </div>
       <p className="codex-muted mt-2 text-[11px] leading-4">
-        Klyph runs in your system tray. Closing a window hides it. Use Quit to fully exit.
+        Chute runs in your system tray. Closing a window hides it. Use Quit to fully exit.
       </p>
     </div>
   );

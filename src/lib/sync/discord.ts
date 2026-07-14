@@ -20,7 +20,7 @@ export async function testDiscordWebhook(webhookUrl: string): Promise<void> {
   await httpPostJson(
     webhookUrl,
     {
-      content: "\u2705 Klyph test message",
+      content: "\u2705 Chute test message",
     },
   );
 }

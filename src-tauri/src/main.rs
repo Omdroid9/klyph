@@ -49,7 +49,7 @@ pub fn default_library_hotkey() -> &'static str {
 
 pub fn tray_tooltip(captures_today: u32, last_sync: &str) -> String {
   format!(
-    "Klyph - {} captures today - Last sync: {}",
+    "Chute - {} captures today - Last sync: {}",
     captures_today, last_sync
   )
 }
