@@ -231,7 +231,8 @@ fn main() {
       commands::update_tray_tooltip,
       commands::open_external_url,
       commands::create_apple_note,
-      commands::create_apple_reminder
+      commands::create_apple_reminder,
+      commands::create_apple_calendar_event
     ])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")

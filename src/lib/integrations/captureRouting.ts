@@ -5,7 +5,7 @@ import type {
   RoutingDecision,
   RoutingRule,
 } from "../../types";
-import { classifyIntent } from "../intent";
+import { classifyIntent, classifyTimedEvent } from "../intent";
 import { isMacOS } from "../platform";
 import { destinationsFromSettings, providerConfigured, type IntegrationSettings } from "./connectionStatus";
 
@@ -34,6 +34,7 @@ export function availableDestinations(settings: IntegrationSettings): CaptureDes
     googleCalendar: googleReady,
     appleReminders: onMac,
     reminders: onMac,
+    appleCalendar: onMac,
   };
 }
 
@@ -66,6 +67,7 @@ export function suggestedCaptureDestinations(
     googleCalendar: false,
     appleReminders: false,
     reminders: false,
+    appleCalendar: false,
   };
 
   if (reminderTime && available.googleCalendar) {
@@ -102,6 +104,7 @@ const DESTINATION_NAMES: Record<keyof CaptureDestinations, string> = {
   googleCalendar: "Google Calendar",
   appleReminders: "Apple Notes",
   reminders: "Reminders",
+  appleCalendar: "Apple Calendar",
 };
 
 const EMPTY_DESTINATIONS: CaptureDestinations = {
@@ -112,6 +115,7 @@ const EMPTY_DESTINATIONS: CaptureDestinations = {
   googleCalendar: false,
   appleReminders: false,
   reminders: false,
+  appleCalendar: false,
 };
 
 export interface RoutingInput {
@@ -219,6 +223,7 @@ export function evaluateRouting(input: RoutingInput): RoutingDecision {
   const connected = {
     ...intersectAvailable(destinationsFromSettings(input.settings), available),
     reminders: false,
+    appleCalendar: false,
   };
 
   if (input.isReminderCommand && input.reminderTime && available.reminders) {
@@ -236,22 +241,47 @@ export function evaluateRouting(input: RoutingInput): RoutingDecision {
     };
   }
 
-  if (input.reminderTime && available.googleCalendar) {
-    return {
-      destinations: { ...connected, googleCalendar: true },
-      source: "time-calendar",
-      reason: "Has a time → Google Calendar",
-      ruleId: null,
-    };
-  }
+  // Timed captures split by shape. An appointment ("dentist at 9am", "meeting
+  // with Sam 2-3pm") is an EVENT — it belongs on a calendar, occupying a slot.
+  // A timed to-do ("pay rent at 5pm") is a TASK — it belongs in Reminders with
+  // a due date, never as a calendar block. Google Calendar wins for events when
+  // connected (cross-device, the user opted in); Apple Calendar is the native,
+  // zero-setup default on a Mac that hasn't linked Google.
+  if (input.reminderTime) {
+    const event = classifyTimedEvent(input.text);
 
-  if (input.reminderTime && available.reminders) {
-    return {
-      destinations: { ...connected, reminders: true },
-      source: "time-reminders",
-      reason: "Has a time → Reminders",
-      ruleId: null,
-    };
+    if (event.isEvent) {
+      if (available.googleCalendar) {
+        return {
+          destinations: { ...connected, googleCalendar: true },
+          source: "time-calendar",
+          reason: `Looks like an appointment (${event.signal}) → Google Calendar`,
+          ruleId: null,
+        };
+      }
+      if (available.appleCalendar) {
+        return {
+          destinations: { ...connected, appleCalendar: true },
+          source: "event-apple-calendar",
+          reason: `Looks like an appointment (${event.signal}) → Apple Calendar`,
+          ruleId: null,
+        };
+      }
+    }
+
+    // Timed task (or an event with no calendar available): Reminders holds a
+    // due date and surfaces in Today. Explicitly drop Calendar so a to-do like
+    // "pay rent at 5pm" never becomes a calendar block from the connected
+    // spray. Off-Mac, this falls through to the task-intent branch → Google
+    // Tasks, which carries the due date.
+    if (available.reminders) {
+      return {
+        destinations: { ...connected, googleCalendar: false, reminders: true },
+        source: "time-reminders",
+        reason: "Has a time → Reminders",
+        ruleId: null,
+      };
+    }
   }
 
   // Untimed captures: task-shaped content belongs in a task app, not the

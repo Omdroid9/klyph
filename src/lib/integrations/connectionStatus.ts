@@ -53,6 +53,7 @@ export function destinationsFromSettings(settings: IntegrationSettings): Capture
     googleCalendar: providerConfigured("google", settings),
     appleReminders: onMac,
     reminders: onMac,
+    appleCalendar: onMac,
   };
 }
 

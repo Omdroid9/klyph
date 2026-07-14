@@ -66,6 +66,7 @@ function captureDestinations(capture: Capture): CaptureDestinations {
     googleCalendar: capture.target_google_calendar === 1,
     appleReminders: capture.target_apple_reminders === 1,
     reminders: capture.target_reminders === 1,
+    appleCalendar: capture.target_apple_calendar === 1,
   };
 }
 
@@ -164,6 +165,7 @@ export default function CaptureList({ onBack }: CaptureListProps) {
     googleCalendar: false,
     appleReminders: false,
     reminders: false,
+    appleCalendar: false,
   });
   const [draftReminderTime, setDraftReminderTime] = useState<string | null>(null);
   const [draftRecurrenceRule, setDraftRecurrenceRule] = useState<string | null>(null);

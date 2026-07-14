@@ -197,6 +197,7 @@ export default function LibraryWindow() {
           googleCalendar: Boolean(capture.target_google_calendar),
           appleReminders: Boolean(capture.target_apple_reminders),
           reminders: Boolean(capture.target_reminders),
+          appleCalendar: Boolean(capture.target_apple_calendar),
         },
         reminderTime: capture.reminder_time,
         recurrenceRule: capture.recurrence_rule,

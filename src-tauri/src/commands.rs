@@ -344,3 +344,130 @@ end run"#;
     Err("Apple Notes is only available on macOS.".to_string())
   }
 }
+
+/// Create an event in macOS Calendar.app via AppleScript. `start` and `end`
+/// are local ISO strings ("2026-06-15T09:00:00"). An empty `calendar` targets
+/// the first writable calendar (the user's default); a name creates it if
+/// missing. `alarm_minutes` adds a display alarm that many minutes before the
+/// start. Values are passed as argv, never interpolated into the script.
+#[tauri::command]
+pub fn create_apple_calendar_event(
+  calendar: String,
+  title: String,
+  notes: String,
+  start: String,
+  end: String,
+  alarm_minutes: Option<i64>,
+) -> Result<(), String> {
+  #[cfg(target_os = "macos")]
+  {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+
+    let start_parts =
+      parse_local_iso(&start).ok_or_else(|| "Event start time was invalid.".to_string())?;
+    let end_parts =
+      parse_local_iso(&end).ok_or_else(|| "Event end time was invalid.".to_string())?;
+
+    let script = r#"on run argv
+  set calName to item 1 of argv
+  set evtSummary to item 2 of argv
+  set evtBody to item 3 of argv
+  set alarmMin to item 4 of argv
+  set startDate to current date
+  set year of startDate to (item 5 of argv) as integer
+  set month of startDate to (item 6 of argv) as integer
+  set day of startDate to (item 7 of argv) as integer
+  set hours of startDate to (item 8 of argv) as integer
+  set minutes of startDate to (item 9 of argv) as integer
+  set seconds of startDate to (item 10 of argv) as integer
+  set endDate to current date
+  set year of endDate to (item 11 of argv) as integer
+  set month of endDate to (item 12 of argv) as integer
+  set day of endDate to (item 13 of argv) as integer
+  set hours of endDate to (item 14 of argv) as integer
+  set minutes of endDate to (item 15 of argv) as integer
+  set seconds of endDate to (item 16 of argv) as integer
+  tell application "Calendar"
+    if calName is "" then
+      set targetCal to first calendar whose writable is true
+    else
+      if not (exists calendar calName) then
+        make new calendar with properties {name:calName}
+      end if
+      set targetCal to calendar calName
+    end if
+    tell targetCal
+      set newEvent to make new event with properties {summary:evtSummary, start date:startDate, end date:endDate, description:evtBody}
+      if alarmMin is not "" then
+        tell newEvent to make new display alarm at end of display alarms with properties {trigger interval:-(alarmMin as integer)}
+      end if
+    end tell
+  end tell
+end run"#;
+
+    let alarm_arg = alarm_minutes
+      .map(|m| m.to_string())
+      .unwrap_or_default();
+
+    let mut cmd = Command::new("osascript");
+    cmd
+      .arg("-")
+      .arg(calendar.trim())
+      .arg(&title)
+      .arg(&notes)
+      .arg(alarm_arg)
+      .arg(start_parts.0.to_string())
+      .arg(start_parts.1.to_string())
+      .arg(start_parts.2.to_string())
+      .arg(start_parts.3.to_string())
+      .arg(start_parts.4.to_string())
+      .arg(start_parts.5.to_string())
+      .arg(end_parts.0.to_string())
+      .arg(end_parts.1.to_string())
+      .arg(end_parts.2.to_string())
+      .arg(end_parts.3.to_string())
+      .arg(end_parts.4.to_string())
+      .arg(end_parts.5.to_string())
+      .stdin(Stdio::piped())
+      .stdout(Stdio::piped())
+      .stderr(Stdio::piped());
+
+    let mut child = cmd
+      .spawn()
+      .map_err(|e| format!("Could not launch osascript: {e}"))?;
+
+    {
+      let mut stdin = child
+        .stdin
+        .take()
+        .ok_or_else(|| "Could not write AppleScript to osascript".to_string())?;
+      stdin
+        .write_all(script.as_bytes())
+        .map_err(|e| format!("Could not send AppleScript: {e}"))?;
+    }
+
+    let output = child
+      .wait_with_output()
+      .map_err(|e| format!("osascript did not complete: {e}"))?;
+
+    if !output.status.success() {
+      let stderr = String::from_utf8_lossy(&output.stderr);
+      let message = stderr.trim();
+      let detail = if message.is_empty() {
+        "Apple Calendar automation failed. Grant Chute permission to control Calendar in System Settings > Privacy & Security > Automation.".to_string()
+      } else {
+        message.to_string()
+      };
+      return Err(detail);
+    }
+
+    Ok(())
+  }
+
+  #[cfg(not(target_os = "macos"))]
+  {
+    let _ = (calendar, title, notes, start, end, alarm_minutes);
+    Err("Apple Calendar is only available on macOS.".to_string())
+  }
+}

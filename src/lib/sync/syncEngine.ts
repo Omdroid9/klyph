@@ -1,6 +1,7 @@
 import { setSetting } from "../db";
 import { createAppleNote } from "./appleNotes";
 import { createAppleReminder } from "./appleRemindersSync";
+import { createAppleCalendarEvent } from "./appleCalendar";
 import type { Capture } from "../../types";
 import { calendarEventId, createGoogleCalendarEvent } from "./googleCalendar";
 import { sendDiscordCapture } from "./discord";
@@ -25,6 +26,9 @@ export interface SyncConfig {
   // Apple Reminders — same native path, separate destination.
   appleRemindersEnabled?: boolean;
   appleRemindersList?: string;
+  // Apple Calendar — native events on macOS. Empty name = default calendar.
+  appleCalendarEnabled?: boolean;
+  appleCalendarName?: string;
 }
 
 export interface SyncResult {
@@ -35,6 +39,7 @@ export interface SyncResult {
   googleCalendarSynced: boolean;
   appleRemindersSynced: boolean;
   remindersSynced: boolean;
+  appleCalendarSynced: boolean;
   errors: string[];
 }
 
@@ -162,6 +167,15 @@ function shouldSyncReminders(capture: Capture, config: SyncConfig): boolean {
   );
 }
 
+function shouldSyncAppleCalendar(capture: Capture, config: SyncConfig): boolean {
+  return Boolean(
+    config.appleCalendarEnabled &&
+      capture.target_apple_calendar === 1 &&
+      capture.synced_apple_calendar === 0 &&
+      capture.reminder_time,
+  );
+}
+
 export function requiresSync(capture: Capture, config: SyncConfig): boolean {
   return (
     shouldSyncSlack(capture, config) ||
@@ -170,7 +184,8 @@ export function requiresSync(capture: Capture, config: SyncConfig): boolean {
     shouldSyncGoogle(capture, config) ||
     shouldSyncGoogleCalendar(capture, config) ||
     shouldSyncAppleReminders(capture, config) ||
-    shouldSyncReminders(capture, config)
+    shouldSyncReminders(capture, config) ||
+    shouldSyncAppleCalendar(capture, config)
   );
 }
 
@@ -334,6 +349,20 @@ export async function syncCapture(capture: Capture, config: SyncConfig): Promise
       )
     : false;
 
+  const appleCalendarSynced = shouldSyncAppleCalendar(capture, config)
+    ? await attempt(
+        "Apple Calendar",
+        () =>
+          createAppleCalendarEvent({
+            calendar: config.appleCalendarName,
+            title: appleNoteTitle(capture.content),
+            notes: appleReminderBody(capture),
+            start: capture.reminder_time!,
+          }),
+        isPermissionError,
+      )
+    : false;
+
   return {
     slackSynced,
     discordSynced,
@@ -342,6 +371,7 @@ export async function syncCapture(capture: Capture, config: SyncConfig): Promise
     googleCalendarSynced,
     appleRemindersSynced,
     remindersSynced,
+    appleCalendarSynced,
     errors,
   };
 }

@@ -45,6 +45,7 @@ const CAPTURE_SELECT_FIELDS = `
   captures.synced_notion,
   captures.synced_apple_reminders,
   captures.synced_reminders,
+  captures.synced_apple_calendar,
   captures.target_slack,
   captures.target_discord,
   captures.target_notion,
@@ -52,6 +53,7 @@ const CAPTURE_SELECT_FIELDS = `
   captures.target_google_calendar,
   captures.target_apple_reminders,
   captures.target_reminders,
+  captures.target_apple_calendar,
   captures.reminder_time,
   captures.recurrence_rule,
   captures.recurrence_next_at,
@@ -270,6 +272,7 @@ async function runBootstrap(): Promise<void> {
       synced_notion INTEGER DEFAULT 0,
       synced_apple_reminders INTEGER DEFAULT 0,
       synced_reminders INTEGER DEFAULT 0,
+      synced_apple_calendar INTEGER DEFAULT 0,
       target_slack INTEGER DEFAULT 1,
       target_discord INTEGER DEFAULT 1,
       target_notion INTEGER DEFAULT 1,
@@ -277,6 +280,7 @@ async function runBootstrap(): Promise<void> {
       target_google_calendar INTEGER DEFAULT 0,
       target_apple_reminders INTEGER DEFAULT 0,
       target_reminders INTEGER DEFAULT 0,
+      target_apple_calendar INTEGER DEFAULT 0,
       reminder_time DATETIME NULL,
       recurrence_rule TEXT NULL,
       recurrence_next_at DATETIME NULL
@@ -336,6 +340,8 @@ async function runBootstrap(): Promise<void> {
   await ensureCaptureColumn(db, "target_apple_reminders", "INTEGER DEFAULT 0");
   await ensureCaptureColumn(db, "synced_reminders", "INTEGER DEFAULT 0");
   await ensureCaptureColumn(db, "target_reminders", "INTEGER DEFAULT 0");
+  await ensureCaptureColumn(db, "synced_apple_calendar", "INTEGER DEFAULT 0");
+  await ensureCaptureColumn(db, "target_apple_calendar", "INTEGER DEFAULT 0");
   await ensureCaptureColumn(db, "last_sync_error", "TEXT NULL");
   await ensureCaptureColumn(db, "recurrence_rule", "TEXT NULL");
   await ensureCaptureColumn(db, "recurrence_next_at", "DATETIME NULL");
@@ -398,6 +404,7 @@ export async function insertCapture(params: {
     googleCalendar: false,
     appleReminders: false,
     reminders: false,
+    appleCalendar: false,
   };
   await db.execute(
     `
@@ -418,9 +425,10 @@ export async function insertCapture(params: {
         recurrence_rule,
         recurrence_next_at,
         routing_source,
-        routing_reason
+        routing_reason,
+        target_apple_calendar
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18);
     `,
     [
       params.id,
@@ -440,6 +448,7 @@ export async function insertCapture(params: {
       computeRecurrenceNextAt(params.reminderTime, params.recurrenceRule),
       params.routingSource ?? null,
       params.routingReason ?? null,
+      Number(destinations.appleCalendar),
     ],
   );
 
@@ -553,6 +562,7 @@ export async function updateCaptureSyncStatus(
     synced_notion: number;
     synced_apple_reminders: number;
     synced_reminders: number;
+    synced_apple_calendar: number;
   }>,
 ): Promise<void> {
   const entries = Object.entries(updates).filter(([, value]) => typeof value === "number");
@@ -651,6 +661,7 @@ const EMPTY_RULE_DESTINATIONS: CaptureDestinations = {
   googleCalendar: false,
   appleReminders: false,
   reminders: false,
+  appleCalendar: false,
 };
 
 function parseRuleDestinations(raw: string): CaptureDestinations {
@@ -810,6 +821,7 @@ export async function updateCapture(params: {
         reminder_time = $12,
         recurrence_rule = $13,
         recurrence_next_at = $14,
+        target_apple_calendar = $15,
         -- Preserve already-synced destinations on edit so fixing a typo does not
         -- re-post everywhere. A still-targeted destination keeps its prior synced
         -- state (unsent stays unsent and will sync; already-sent stays sent).
@@ -820,8 +832,9 @@ export async function updateCapture(params: {
         synced_google_tasks = CASE WHEN $8 = 1 THEN synced_google_tasks ELSE 1 END,
         synced_google_calendar = CASE WHEN $9 = 1 THEN synced_google_calendar ELSE 1 END,
         synced_apple_reminders = CASE WHEN $10 = 1 THEN synced_apple_reminders ELSE 1 END,
-        synced_reminders = CASE WHEN $11 = 1 THEN synced_reminders ELSE 1 END
-      WHERE id = $15;
+        synced_reminders = CASE WHEN $11 = 1 THEN synced_reminders ELSE 1 END,
+        synced_apple_calendar = CASE WHEN $15 = 1 THEN synced_apple_calendar ELSE 1 END
+      WHERE id = $16;
     `,
     [
       params.content,
@@ -838,6 +851,7 @@ export async function updateCapture(params: {
       params.reminderTime,
       params.recurrenceRule ?? null,
       computeRecurrenceNextAt(params.reminderTime, params.recurrenceRule),
+      Number(params.destinations.appleCalendar),
       params.id,
     ],
   );

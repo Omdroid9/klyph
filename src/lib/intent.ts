@@ -82,6 +82,49 @@ const QUESTION_OPENER_REGEX =
   /^(what|why|how|when|where|which|who|should|could|would|can|is|are|do|does|did)\b/i;
 const NOTE_LENGTH_THRESHOLD = 200;
 
+// Words that mark a timed capture as an appointment (belongs on a calendar,
+// occupies a slot) rather than a task (a to-do with a nudge). Presence of one
+// of these alongside a time routes to a calendar event instead of Reminders.
+const EVENT_NOUN_REGEX =
+  /\b(meeting|meet|appt|appointment|call with|sync|standup|stand-up|1:1|one[- ]on[- ]one|interview|lunch|dinner|breakfast|brunch|coffee|drinks|reservation|booking|flight|train|checkup|check-up|doctor|dentist|therapy|gym|class|lesson|session|demo|webinar|conference|party|date night|haircut|viewing|showing|catch[- ]?up|review with)\b/i;
+// A "with <name>" or "2-3pm" range also reads as a booked slot.
+const EVENT_WITH_REGEX = /\bwith\s+[A-Z]/;
+const TIME_RANGE_REGEX =
+  /\b\d{1,2}(?::\d{2})?\s*(?:am|pm)?\s*[-–—]\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)\b|\bfrom\s+\d{1,2}.*\bto\s+\d{1,2}\b/i;
+
+export interface EventResult {
+  isEvent: boolean;
+  /** Human-readable trigger for the routing reason, e.g. `has "meeting"`. */
+  signal: string | null;
+}
+
+/**
+ * Event-vs-task for a capture that already carries a time. An imperative
+ * action opener ("call the dentist…", "pay rent…") stays a task even with a
+ * time; appointment nouns, a "with <Name>", or an explicit range make it an
+ * event. Deterministic and explainable, like the rest of routing.
+ */
+export function classifyTimedEvent(rawText: string): EventResult {
+  const text = rawText.trim();
+  if (text.length === 0) {
+    return { isEvent: false, signal: null };
+  }
+
+  const noun = text.match(EVENT_NOUN_REGEX);
+  if (noun) {
+    return { isEvent: true, signal: `has "${noun[0].toLowerCase()}"` };
+  }
+  if (TIME_RANGE_REGEX.test(text)) {
+    return { isEvent: true, signal: "spans a time range" };
+  }
+  // "…with Sarah at 4pm" reads as a meeting only when it doesn't open with a
+  // task verb ("call mom" stays a reminder even though mom is capitalized).
+  if (EVENT_WITH_REGEX.test(text) && !IMPERATIVE_VERBS.has(firstWord(text))) {
+    return { isEvent: true, signal: "a meeting with someone" };
+  }
+  return { isEvent: false, signal: null };
+}
+
 function firstWord(text: string): string {
   return text.trim().split(/\s+/)[0]?.toLowerCase().replace(/[^a-z'-]/g, "") ?? "";
 }

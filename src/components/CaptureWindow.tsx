@@ -93,6 +93,7 @@ const DEFAULT_DESTINATIONS: CaptureDestinations = {
   googleCalendar: false,
   appleReminders: false,
   reminders: false,
+  appleCalendar: false,
 };
 
 type DestinationKey = keyof CaptureDestinations;
@@ -109,6 +110,7 @@ const TARGET_META: Array<{
   { key: "googleCalendar", label: "GCal", available: true },
   { key: "appleReminders", label: "Apple Notes", available: IS_MACOS },
   { key: "reminders", label: "Reminders", available: IS_MACOS },
+  { key: "appleCalendar", label: "Apple Cal", available: IS_MACOS },
 ];
 
 const DESTINATION_LABELS: Record<DestinationKey, string> = {
@@ -119,6 +121,7 @@ const DESTINATION_LABELS: Record<DestinationKey, string> = {
   googleCalendar: "Google Calendar",
   appleReminders: "Apple Notes",
   reminders: "Reminders",
+  appleCalendar: "Apple Calendar",
 };
 
 const REMINDER_COMMAND_REGEX =
@@ -427,6 +430,19 @@ export default function CaptureWindow() {
         },
       };
     }
+    if (routingDecision.source === "event-apple-calendar") {
+      return {
+        label: "Not an event?",
+        apply: () => {
+          setDestinations({
+            ...routingDecision.destinations,
+            appleCalendar: false,
+            reminders: IS_MACOS,
+          });
+          setDestinationsTouched(true);
+        },
+      };
+    }
     if (routingDecision.source === "intent-note") {
       return {
         label: "Make it a to-do",
@@ -506,6 +522,7 @@ export default function CaptureWindow() {
       googleCalendar: capture.target_google_calendar === 1,
       appleReminders: capture.target_apple_reminders === 1,
       reminders: capture.target_reminders === 1,
+      appleCalendar: capture.target_apple_calendar === 1,
     };
   }
 
@@ -1834,6 +1851,7 @@ export default function CaptureWindow() {
               googleCalendar: false,
               appleReminders: false,
               reminders: false,
+              appleCalendar: false,
             };
             void persistCapture(destinationPrompt.keepOpen, localOnly);
           }}

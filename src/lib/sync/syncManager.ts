@@ -64,6 +64,8 @@ export async function loadSyncConfig(): Promise<SyncConfig> {
     appleNotesFolder: normalizeSetting(settings.apple_notes_folder) ?? "Chute",
     appleRemindersEnabled: isMacOS(),
     appleRemindersList: normalizeSetting(settings.apple_reminders_list) ?? "Chute",
+    appleCalendarEnabled: isMacOS(),
+    appleCalendarName: normalizeSetting(settings.apple_calendar_name) ?? "",
   };
 }
 
@@ -107,6 +109,14 @@ function countExpectedSyncTargets(capture: Capture, config: SyncConfig): number 
     config.appleRemindersEnabled &&
     capture.target_reminders === 1 &&
     capture.synced_reminders === 0
+  ) {
+    expected += 1;
+  }
+  if (
+    config.appleCalendarEnabled &&
+    capture.target_apple_calendar === 1 &&
+    capture.synced_apple_calendar === 0 &&
+    capture.reminder_time
   ) {
     expected += 1;
   }
@@ -211,6 +221,10 @@ export async function runSyncPass(options?: {
       updatePayload.synced_reminders = 1;
       stats.syncSucceeded += 1;
     }
+    if (result.appleCalendarSynced) {
+      updatePayload.synced_apple_calendar = 1;
+      stats.syncSucceeded += 1;
+    }
 
     const failedTargets =
       expectedTargets -
@@ -220,7 +234,8 @@ export async function runSyncPass(options?: {
       Number(result.googleSynced) -
       Number(result.googleCalendarSynced) -
       Number(result.appleRemindersSynced) -
-      Number(result.remindersSynced);
+      Number(result.remindersSynced) -
+      Number(result.appleCalendarSynced);
     stats.syncFailed += Math.max(failedTargets, 0);
 
     if (Object.keys(updatePayload).length > 0) {

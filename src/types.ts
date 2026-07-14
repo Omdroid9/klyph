@@ -9,6 +9,7 @@ export interface CaptureDestinations {
   googleCalendar: boolean;
   appleReminders: boolean;
   reminders: boolean;
+  appleCalendar: boolean;
 }
 
 export type RoutingRuleField = "tag" | "list" | "lane" | "keyword";
@@ -27,6 +28,7 @@ export type RoutingSource =
   | "reminder-command"
   | "time-calendar"
   | "time-reminders"
+  | "event-apple-calendar"
   | "intent-task"
   | "intent-note"
   | "connected-default"
@@ -55,6 +57,7 @@ export interface Capture {
   synced_notion: number;
   synced_apple_reminders: number;
   synced_reminders: number;
+  synced_apple_calendar: number;
   target_slack: number;
   target_discord: number;
   target_notion: number;
@@ -62,6 +65,7 @@ export interface Capture {
   target_google_calendar: number;
   target_apple_reminders: number;
   target_reminders: number;
+  target_apple_calendar: number;
   reminder_time: string | null;
   recurrence_rule: string | null;
   recurrence_next_at: string | null;

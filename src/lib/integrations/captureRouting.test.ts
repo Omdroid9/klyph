@@ -45,6 +45,7 @@ function destinations(overrides: Partial<CaptureDestinations> = {}): CaptureDest
     googleCalendar: false,
     appleReminders: false,
     reminders: false,
+    appleCalendar: false,
     ...overrides,
   };
 }
@@ -143,9 +144,10 @@ describe("evaluateRouting", () => {
     expect(decision.reason).toContain("Reminders");
   });
 
-  it("adds Google Calendar for timed captures when Google is connected", () => {
+  it("routes a timed appointment to Google Calendar when Google is connected", () => {
     const decision = evaluateRouting(
       input({
+        text: "team meeting",
         reminderTime: "2026-07-08T17:00:00",
         settings: settings(GOOGLE_CONNECTED),
       }),
@@ -153,7 +155,43 @@ describe("evaluateRouting", () => {
 
     expect(decision.source).toBe("time-calendar");
     expect(decision.destinations.googleCalendar).toBe(true);
-    expect(decision.reason).toContain("time");
+    expect(decision.reason).toContain("appointment");
+  });
+
+  it("routes a timed appointment to Apple Calendar on a Mac without Google", () => {
+    const decision = evaluateRouting(
+      input({ text: "dentist appointment", reminderTime: "2026-07-08T09:00:00" }),
+    );
+
+    expect(decision.source).toBe("event-apple-calendar");
+    expect(decision.destinations.appleCalendar).toBe(true);
+    expect(decision.destinations.reminders).toBe(false);
+    expect(decision.reason).toContain("Apple Calendar");
+    expect(decision.reason).toContain("appointment");
+  });
+
+  it("routes a timed to-do to Reminders, not a calendar", () => {
+    const decision = evaluateRouting(
+      input({ text: "pay rent", reminderTime: "2026-07-08T17:00:00" }),
+    );
+
+    expect(decision.source).toBe("time-reminders");
+    expect(decision.destinations.reminders).toBe(true);
+    expect(decision.destinations.appleCalendar).toBe(false);
+  });
+
+  it("keeps a timed to-do in Reminders even when Google is connected", () => {
+    const decision = evaluateRouting(
+      input({
+        text: "pay rent",
+        reminderTime: "2026-07-08T17:00:00",
+        settings: settings(GOOGLE_CONNECTED),
+      }),
+    );
+
+    expect(decision.source).toBe("time-reminders");
+    expect(decision.destinations.reminders).toBe(true);
+    expect(decision.destinations.googleCalendar).toBe(false);
   });
 
   it("falls back to Reminders for timed captures without Google", () => {
