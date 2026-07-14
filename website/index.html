@@ -5,19 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Chute — capture a thought from anywhere and send it to Reminders, Notes, Calendar, Slack, and Notion. One keystroke, with a reason attached."
+      content="Chute is a tiny command bar for macOS and Windows that catches a thought before it vanishes — then files it as a reminder, note, or calendar event, with the reason shown every time. Sends to Reminders, Apple Notes, Google Calendar, Slack, and Notion."
     />
-    <title>Chute — Type once. It knows where it goes.</title>
+    <meta name="theme-color" content="#07070a" />
+    <title>Chute — Quick capture that knows where your thoughts go</title>
     <link rel="canonical" href="https://usechute.com/" />
+
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Chute" />
     <meta property="og:url" content="https://usechute.com/" />
-    <meta property="og:title" content="Chute — Type once. It knows where it goes." />
+    <meta property="og:title" content="Chute — Quick capture that knows where your thoughts go" />
     <meta
       property="og:description"
       content="A tiny command bar that catches a thought before it vanishes — then files it as a reminder, note, or calendar event. With the reason shown, every time."
     />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="https://usechute.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Chute — type once, it knows where it goes." />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Chute — Quick capture that knows where your thoughts go" />
+    <meta
+      name="twitter:description"
+      content="A tiny command bar that catches a thought before it vanishes — then files it as a reminder, note, or calendar event."
+    />
+    <meta name="twitter:image" content="https://usechute.com/og-image.png" />
+
     <link rel="icon" href="/klyph-sphere.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/klyph-sphere.svg" />
+
+    <!-- Structured data: helps search engines show a rich app result -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Chute",
+        "url": "https://usechute.com/",
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "macOS, Windows",
+        "description": "A tiny command bar that catches a thought before it vanishes, then files it as a reminder, note, or calendar event — with the reason shown every time. Sends to Reminders, Apple Notes, Google Calendar, Slack, and Notion.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "Global hotkey quick capture",
+          "Explainable routing to the right destination",
+          "One-tap correction",
+          "Undo after send",
+          "Local-first, on-device storage"
+        ]
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
