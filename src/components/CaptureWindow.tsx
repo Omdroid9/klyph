@@ -1273,34 +1273,37 @@ export default function CaptureWindow() {
           </div>
 
           {recap && isEmpty ? (
-            <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-lg border border-[var(--accent)]/35 bg-[var(--btn-soft)] px-3 py-1.5 text-[11px]">
-              <span className="codex-muted min-w-0">
+            <div className="group flex shrink-0 items-center gap-2 px-1 text-[11px]">
+              <span className="inline-block h-1 w-1 shrink-0 rounded-full bg-[var(--accent)]" aria-hidden="true" />
+              <span className="codex-muted min-w-0 truncate">
                 <span className="font-medium text-[var(--text)]">{recapGreeting()}.</span>{" "}
                 {recap.yesterdayCount > 0
-                  ? `You captured ${recap.yesterdayCount} thought${recap.yesterdayCount === 1 ? "" : "s"} yesterday`
+                  ? `${recap.yesterdayCount} thought${recap.yesterdayCount === 1 ? "" : "s"} yesterday`
                   : null}
                 {recap.yesterdayCount > 0 && recap.dueTodayCount > 0 ? " · " : null}
                 {recap.dueTodayCount > 0
                   ? `${recap.dueTodayCount} due today`
                   : null}
               </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setRecap(null);
-                  void openHistoryWindow();
-                }}
-                className="codex-btn rounded-full px-2.5 py-0.5 text-[11px]"
-              >
-                Review
-              </button>
+              {recap.dueTodayCount > 0 || recap.yesterdayCount > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRecap(null);
+                    void openHistoryWindow();
+                  }}
+                  className="shrink-0 text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-2 transition hover:decoration-[var(--accent)]"
+                >
+                  Review
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => setRecap(null)}
-                className="codex-muted hover:text-[var(--text)]"
+                className="codex-muted ml-auto shrink-0 opacity-0 transition hover:text-[var(--text)] group-hover:opacity-100"
                 aria-label="Dismiss recap"
               >
-                <IconClose size={13} />
+                <IconClose size={12} />
               </button>
             </div>
           ) : null}
