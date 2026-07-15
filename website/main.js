@@ -734,6 +734,48 @@ if (demoInput) {
   const reasonText = document.querySelector("[data-demo-reason-text]");
   const chips = document.querySelectorAll("[data-demo-chip]");
   const tryBtn = document.querySelector("[data-demo-try]");
+  const timePill = document.querySelector("[data-demo-time]");
+  const toast = document.querySelector("[data-demo-toast]");
+  const toastDest = document.querySelector("[data-demo-toast-dest]");
+  const historyCard = document.querySelector("[data-demo-history]");
+  const historyList = document.querySelector("[data-demo-history-list]");
+
+  const DEST_LABELS = {
+    reminders: "Reminders",
+    notes: "Apple Notes",
+    calendar: "Calendar",
+    slack: "Slack",
+  };
+
+  let toastTimer = null;
+
+  // "Send" a finished example: pop the toast with the routed destination and
+  // stack the capture into the floating history card (newest first, keep 3).
+  function finishExample(text) {
+    const route = demoRoute(text);
+    if (!route || !toast || !historyList) return;
+    const dest = DEST_LABELS[route.chips[0]] || "Reminders";
+
+    toastDest.textContent = dest;
+    toast.hidden = false;
+    requestAnimationFrame(() => toast.classList.add("is-in"));
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("is-in"), 1700);
+
+    const li = document.createElement("li");
+    const oneLine = text.replace(/\n+/g, " · ");
+    li.innerHTML =
+      '<span class="demo-history-dot"></span>' +
+      `<span class="demo-history-text"></span>` +
+      `<span class="demo-history-dest"></span>`;
+    li.querySelector(".demo-history-text").textContent = oneLine;
+    li.querySelector(".demo-history-dest").textContent = dest;
+    historyList.prepend(li);
+    while (historyList.children.length > 3) {
+      historyList.removeChild(historyList.lastChild);
+    }
+    if (historyCard) historyCard.hidden = false;
+  }
 
   const DEMO_EXAMPLES = [
     "call the dentist tomorrow at 9am",
@@ -767,6 +809,18 @@ if (demoInput) {
     } else {
       reasonWrap.hidden = true;
     }
+
+    // Time pill mirrors the app: detected time surfaces on the right of the
+    // chip row in tabular mono.
+    if (timePill) {
+      const time = demoInput.value.match(DEMO_TIME_REGEX);
+      if (time) {
+        timePill.textContent = time[0];
+        timePill.hidden = false;
+      } else {
+        timePill.hidden = true;
+      }
+    }
   }
 
   function stopAutoType() {
@@ -792,10 +846,11 @@ if (demoInput) {
       } else {
         typeTimer = setTimeout(() => {
           if (userOwnsInput) return;
+          finishExample(phrase);
           demoInput.value = "";
           renderRoute();
-          typeTimer = setTimeout(autoTypeExample, 700);
-        }, 3200);
+          typeTimer = setTimeout(autoTypeExample, 1100);
+        }, 2600);
       }
     }
     tick();
@@ -805,6 +860,7 @@ if (demoInput) {
     if (userOwnsInput) return;
     userOwnsInput = true;
     stopAutoType();
+    if (toast) toast.classList.remove("is-in");
     demoInput.value = "";
     renderRoute();
     demoInput.focus();
@@ -819,9 +875,12 @@ if (demoInput) {
   if (tryBtn) tryBtn.addEventListener("click", takeOver);
 
   if (prefersReduced) {
-    // No animation: show a filled-in example immediately.
+    // No animation: show a filled-in example and a static history card.
     demoInput.value = DEMO_EXAMPLES[0];
     renderRoute();
+    finishExample(DEMO_EXAMPLES[1]);
+    finishExample(DEMO_EXAMPLES[2]);
+    if (toast) toast.classList.remove("is-in");
   } else {
     // Start typing when the demo scrolls into view.
     const demoObserver = new IntersectionObserver(

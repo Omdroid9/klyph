@@ -3805,3 +3805,211 @@ main h2 .accent-serif {
   overflow: hidden;
   transition: border-color 0.18s var(--ease), background 0.18s var(--ease);
 }
+
+/* =====================================================================
+   Hero demo — premium layered stage. The history card and sent-toast
+   float over the window like the old collage mock, but they are driven
+   by the live demo: finished examples stack into history, the toast
+   fires with the routed destination.
+   ===================================================================== */
+
+.routing-demo-hero {
+  position: relative;
+}
+
+/* Deeper, softer shadow stack + crisp top highlight on the window */
+.routing-demo-hero .routing-demo-window {
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0) 34%),
+    linear-gradient(180deg, #18181e 0%, #111116 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.07) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+    0 32px 90px rgba(0, 0, 0, 0.6),
+    0 12px 32px rgba(0, 0, 0, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Floating history card — overlaps the window's top-left corner */
+.demo-history {
+  position: absolute;
+  z-index: 3;
+  top: -3.4rem;
+  left: -2.6rem;
+  width: 15.5rem;
+  transform: rotate(-2.5deg);
+  background: linear-gradient(180deg, #1c1c23 0%, #14141a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  padding: 0.8rem 0.95rem 0.65rem;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 18px 48px rgba(0, 0, 0, 0.55);
+  animation: demo-card-in 0.5s var(--ease) both;
+}
+
+@keyframes demo-card-in {
+  from { opacity: 0; transform: rotate(-2.5deg) translateY(8px); }
+  to { opacity: 1; transform: rotate(-2.5deg) translateY(0); }
+}
+
+.demo-history-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-deep);
+}
+
+.demo-history ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.demo-history li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.32rem 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  animation: demo-row-in 0.4s var(--ease) both;
+}
+
+.demo-history li:first-child {
+  border-top: none;
+}
+
+@keyframes demo-row-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.demo-history-dot {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #6ee7a0;
+  box-shadow: 0 0 6px rgba(110, 231, 160, 0.7);
+}
+
+.demo-history-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.demo-history-dest {
+  flex: none;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* Sent toast — pops over the top-right edge when an example completes */
+.demo-toast {
+  position: absolute;
+  z-index: 3;
+  top: -1.4rem;
+  right: -1.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #22222a 0%, #17171d 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.07) inset,
+    0 14px 36px rgba(0, 0, 0, 0.5);
+  font-size: 0.8rem;
+  color: var(--text);
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+  transition: opacity 0.28s var(--ease), transform 0.28s var(--ease);
+  pointer-events: none;
+}
+
+.demo-toast.is-in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.demo-toast strong {
+  font-weight: 600;
+}
+
+.demo-toast-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #7cc7ff, #4d8ef7);
+  color: #0a1224;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* Time pill — right-aligned in the chip row, tabular mono */
+.routing-demo-time {
+  margin-left: auto;
+  align-self: center;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: #8fd7a8;
+  white-space: nowrap;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Footer — quiet keycap hints, like the app's own shortcut row */
+.routing-demo-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+  font-size: 0.7rem;
+  color: var(--muted-deep);
+}
+
+.routing-demo-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.routing-demo-keys kbd {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  padding: 0.14rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-bottom-width: 2px;
+  color: var(--muted);
+}
+
+.routing-demo-keys-sep {
+  width: 1px;
+  height: 0.8rem;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* The floating layers need breathing room on small screens — hide them */
+@media (max-width: 900px) {
+  .demo-history,
+  .demo-toast {
+    display: none;
+  }
+}

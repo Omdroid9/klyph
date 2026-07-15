@@ -119,6 +119,15 @@
         <div class="hero-visual hero-visual-demo" data-reveal data-reveal-delay="2">
           <div class="glow glow-hero" aria-hidden="true"></div>
           <div class="routing-demo routing-demo-hero">
+            <!-- Floating layers — driven by the live demo, not painted on -->
+            <aside class="demo-history" data-demo-history hidden aria-hidden="true">
+              <p class="demo-history-title">History · just now</p>
+              <ul data-demo-history-list></ul>
+            </aside>
+            <div class="demo-toast" data-demo-toast hidden aria-hidden="true">
+              <span class="demo-toast-check">✓</span>
+              <span>Sent to <strong data-demo-toast-dest>Reminders</strong></span>
+            </div>
             <div class="routing-demo-window" role="group" aria-label="Live routing demo">
               <div class="routing-demo-head">
                 <img src="/klyph-sphere.svg" alt="" width="18" height="18" />
@@ -141,8 +150,17 @@
               <div class="routing-demo-chips" aria-label="Suggested destinations">
                 <span class="routing-demo-chip" data-demo-chip="reminders">Reminders</span>
                 <span class="routing-demo-chip" data-demo-chip="notes">Apple Notes</span>
-                <span class="routing-demo-chip" data-demo-chip="calendar">Google Calendar</span>
+                <span class="routing-demo-chip" data-demo-chip="calendar">Calendar</span>
                 <span class="routing-demo-chip" data-demo-chip="slack">Slack</span>
+                <span class="routing-demo-time" data-demo-time hidden></span>
+              </div>
+              <div class="routing-demo-foot" aria-hidden="true">
+                <span class="routing-demo-foot-label">Send to</span>
+                <span class="routing-demo-keys">
+                  <kbd>Enter</kbd> send
+                  <span class="routing-demo-keys-sep"></span>
+                  <kbd>Esc</kbd> dismiss
+                </span>
               </div>
             </div>
             <p class="routing-demo-hint">
