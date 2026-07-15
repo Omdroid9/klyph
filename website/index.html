@@ -262,68 +262,82 @@
           </h2>
         </div>
 
-        <div class="bento" data-reveal data-reveal-delay="1">
-          <article class="bento-card bento-1">
-            <div class="bento-card-body">
-              <p class="bento-eyebrow">01 · The capture</p>
-              <h3 class="bento-h">Anywhere a thought<br /> can interrupt&nbsp;you.</h3>
-              <p class="bento-p">
-                Browser. IDE. Spreadsheet. The capture box opens on top, takes one line,
-                and disappears.
-              </p>
-            </div>
-            <div class="bento-art bento-art-orb">
-              <div class="bento-orb-glow"></div>
-              <img src="/klyph-sphere.svg" alt="" width="200" height="200" />
-            </div>
-          </article>
-
-          <article class="bento-card bento-2">
-            <p class="bento-eyebrow">02</p>
-            <h3 class="bento-h-sm">Tags &amp; lists,<br />without a sidebar.</h3>
-            <div class="bento-chips">
-              <span class="mock-tag mock-tag-on">Work</span>
-              <span class="mock-tag">Personal</span>
-              <span class="mock-tag">Idea</span>
-              <span class="mock-tag">Read later</span>
-            </div>
-          </article>
-
-          <article class="bento-card bento-3">
-            <p class="bento-eyebrow">03</p>
-            <h3 class="bento-h-sm">Lives in the tray.<br />Quiet until you call.</h3>
-            <div class="bento-tray">
-              <div class="mock-tray">
-                <span class="mock-tray-icon"><img src="/klyph-sphere.svg" alt="" width="14" height="14" /></span>
-                <span class="mock-tray-app">Menu bar</span>
-                <span class="mock-tray-time">⌘⇧Space</span>
+        <div class="details-grid" data-reveal data-reveal-delay="1">
+          <article class="detail-card">
+            <div class="detail-vignette" aria-hidden="true">
+              <div class="dv-summon">
+                <span class="dv-keys"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>Space</kbd></span>
+                <span class="dv-bar">
+                  <img src="/klyph-sphere.svg" alt="" width="12" height="12" />
+                  <span class="dv-bar-caret"></span>
+                </span>
               </div>
             </div>
+            <h3>Summoned, not opened</h3>
+            <p>One shortcut over any app. The bar arrives in a blink and leaves the same way — no dock, no window juggling.</p>
           </article>
 
-          <article class="bento-card bento-4">
-            <p class="bento-eyebrow">04</p>
-            <h3 class="bento-h-sm">Times find<br />the right home.</h3>
-            <div class="bento-cal">
-              <span class="bento-cal-time">Fri · 5:00 PM</span>
-              <span class="bento-cal-arrow">→</span>
-              <span class="brand-logo" data-logo="gcal"></span>
+          <article class="detail-card">
+            <div class="detail-vignette" aria-hidden="true">
+              <div class="dv-tags">
+                <span class="dv-tag" data-cycle="0">Work</span>
+                <span class="dv-tag" data-cycle="1">Personal</span>
+                <span class="dv-tag" data-cycle="2">Idea</span>
+                <span class="dv-tag" data-cycle="3">Read later</span>
+              </div>
             </div>
+            <h3>Tags, not taxonomy</h3>
+            <p>One keystroke files a thought under work, personal, or idea — no sidebar, no folders to tend.</p>
           </article>
 
-          <article class="bento-card bento-5">
-            <div class="bento-card-body">
-              <p class="bento-eyebrow">05</p>
-              <h3 class="bento-h-sm">Yours by default.<br />Cloud is opt-in.</h3>
-              <p class="bento-p">
-                Every capture saves to a local SQLite store before any network call.
-                You decide what leaves your machine.
-              </p>
+          <article class="detail-card">
+            <div class="detail-vignette" aria-hidden="true">
+              <div class="dv-menubar">
+                <span class="dv-menubar-cluster">
+                  <img src="/klyph-sphere.svg" alt="" width="13" height="13" />
+                  <span class="dv-menubar-dot"></span>
+                </span>
+                <span class="dv-menubar-time">2:47 PM</span>
+              </div>
             </div>
-            <div class="bento-art bento-art-local">
-              <span class="brand-logo brand-logo-xl" data-logo="local"></span>
-              <span class="bento-badge">On device</span>
+            <h3>Lives in the menu bar</h3>
+            <p>Quiet until you call. No dock icon demanding attention, nothing running loud in the background.</p>
+          </article>
+
+          <article class="detail-card">
+            <div class="detail-vignette" aria-hidden="true">
+              <div class="dv-route">
+                <span class="dv-route-time">Fri · 5:00 PM</span>
+                <span class="dv-route-line"><span class="dv-route-pulse"></span></span>
+                <span class="dv-route-dest">Calendar</span>
+              </div>
             </div>
+            <h3>Times find the right home</h3>
+            <p>An appointment becomes an event, a deadline becomes a reminder. The distinction is automatic — and explained.</p>
+          </article>
+
+          <article class="detail-card">
+            <div class="detail-vignette" aria-hidden="true">
+              <div class="dv-undo">
+                <span class="dv-keys"><kbd>⌘</kbd><kbd>Z</kbd></span>
+                <span class="dv-undo-strip">Capture pulled back</span>
+              </div>
+            </div>
+            <h3>Undo, even after send</h3>
+            <p>A short grace window holds every capture on your machine. Change your mind before it leaves.</p>
+          </article>
+
+          <article class="detail-card">
+            <div class="detail-vignette" aria-hidden="true">
+              <div class="dv-local">
+                <span class="dv-local-disk">
+                  <span></span><span></span><span></span>
+                </span>
+                <span class="dv-local-badge"><span class="dv-local-dot"></span>on device</span>
+              </div>
+            </div>
+            <h3>Yours by default</h3>
+            <p>Every capture lands in a local SQLite store before any network call. You decide what leaves your machine.</p>
           </article>
         </div>
       </section>
@@ -420,20 +434,39 @@
       <!-- CTA -->
       <section class="section section-cta" id="download" aria-labelledby="cta-title">
         <div class="cta-inner" data-reveal>
-          <img class="cta-orb float-orb" src="/klyph-sphere.svg" alt="" width="88" height="88" />
-          <h2 id="cta-title">Ready to capture faster?</h2>
-          <p>Chute is in a closed beta while the rough edges get polished. Leave your email and we'll send an installer for macOS or Windows.</p>
-          <form class="cta-form" id="cta-form" novalidate>
-            <div class="cta-form-row">
-              <input type="email" class="cta-email-input" placeholder="your@email.com" required aria-label="Your email address" />
-              <button type="submit" class="btn btn-primary magnetic"><span>Request access</span></button>
+          <h2 id="cta-title">Capture your <span class="accent-serif">first thought.</span></h2>
+          <p>Chute is in closed beta. Drop your email in — it routes straight to us, installer comes back by hand.</p>
+
+          <!-- The CTA is the product: a capture window that captures your email -->
+          <form class="cta-window" id="cta-form" novalidate>
+            <div class="cta-window-head">
+              <img src="/klyph-sphere.svg" alt="" width="16" height="16" />
+              <span>Chute</span>
+              <span class="cta-window-badge">beta request</span>
             </div>
-            <p class="cta-fine">Mac (.dmg) and Windows (.exe) installers sent by hand. Updates arrive on their own.</p>
+            <div class="cta-window-body">
+              <label class="sr-only" for="cta-email">Your email address</label>
+              <input
+                id="cta-email"
+                type="email"
+                class="cta-window-input"
+                placeholder="your@email.com"
+                autocomplete="email"
+                required
+              />
+              <button type="submit" class="cta-window-send" aria-label="Request beta access">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4z" />
+                </svg>
+              </button>
+            </div>
+            <div class="cta-window-reason" data-cta-reason>
+              <span class="cta-window-dot" aria-hidden="true"></span>
+              <span data-cta-reason-text>Looks like an invite request → your inbox</span>
+            </div>
           </form>
-          <div class="cta-success" id="cta-success" hidden>
-            <span class="cta-success-icon" aria-hidden="true">✓</span>
-            <p>Got it — we'll reach out at <strong id="cta-success-email"></strong></p>
-          </div>
+
+          <p class="cta-fine">Mac (.dmg) and Windows (.exe) installers sent by hand. Updates arrive on their own.</p>
         </div>
       </section>
     </main>

@@ -570,29 +570,70 @@ if (privacyArt && !prefersReduced) {
 }
 
 /* ---------- CTA email form ---------- */
+/* ---------- CTA capture window ----------
+   The form is styled as the product; the reason strip narrates state the
+   same way the app explains routing. States: idle → ready → error → sent. */
 const ctaForm = document.getElementById("cta-form");
-const ctaSuccess = document.getElementById("cta-success");
-const ctaSuccessEmail = document.getElementById("cta-success-email");
 if (ctaForm) {
+  const input = document.getElementById("cta-email");
+  const reasonText = ctaForm.querySelector("[data-cta-reason-text]");
+  const sendBtn = ctaForm.querySelector(".cta-window-send");
+  const EMAIL_OK = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  const setReason = (text, state) => {
+    if (reasonText) reasonText.textContent = text;
+    ctaForm.classList.toggle("is-sent", state === "sent");
+    ctaForm.classList.toggle("is-error", state === "error");
+  };
+
+  input.addEventListener("input", () => {
+    const value = input.value.trim();
+    if (!value) {
+      setReason("Looks like an invite request → your inbox", null);
+    } else if (EMAIL_OK.test(value)) {
+      setReason(`Looks like an email → beta list · Enter sends`, null);
+    } else {
+      setReason("Keep typing — that's not a full email yet", null);
+    }
+  });
+
   ctaForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const input = ctaForm.querySelector('input[type="email"]');
-    const email = (input ? input.value : "").trim();
-    if (!email) return;
-    ctaForm.hidden = true;
-    if (ctaSuccess) {
-      ctaSuccess.hidden = false;
-      if (ctaSuccessEmail) ctaSuccessEmail.textContent = email;
+    const email = input.value.trim();
+    if (!EMAIL_OK.test(email)) {
+      setReason("That doesn't look like an email address yet", "error");
+      input.focus();
+      return;
     }
-    // Fallback: open mailto with email pre-filled
+    // No backend by design: hand off to the visitor's mail app, prefilled.
+    // The reason strip says exactly what happened and what's left to do.
     try {
       const sub = encodeURIComponent("Chute beta access");
       const body = encodeURIComponent(
         `Hi — I'd like to try Chute.\n\nEmail: ${email}\nOS: Mac or Windows?\nHow I'd use it: `,
       );
       window.location.href = `mailto:hello@usechute.com?subject=${sub}&body=${body}`;
-    } catch {}
+      setReason("Your mail app just opened — hit send there and you're in", "sent");
+      if (sendBtn) sendBtn.disabled = true;
+      input.disabled = true;
+    } catch {
+      setReason("Could not open your mail app — write to hello@usechute.com", "error");
+    }
   });
+}
+
+/* ---------- Details grid: cycle the active tag pill ---------- */
+const dvTags = document.querySelectorAll(".dv-tag");
+if (dvTags.length > 0 && !prefersReduced) {
+  let onIndex = 0;
+  dvTags[0].classList.add("is-on");
+  setInterval(() => {
+    dvTags[onIndex].classList.remove("is-on");
+    onIndex = (onIndex + 1) % dvTags.length;
+    dvTags[onIndex].classList.add("is-on");
+  }, 1600);
+} else if (dvTags.length > 0) {
+  dvTags[0].classList.add("is-on");
 }
 
 /* ---------- Bento card mouse spotlight ---------- */
