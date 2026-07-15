@@ -471,6 +471,48 @@
       </section>
     </main>
 
+    <!-- ⌘⇧Space summons a capture window over the page — the site performs
+         the product's own gesture. Esc or the hotkey again dismisses. -->
+    <div class="summon-overlay" data-summon hidden role="dialog" aria-modal="true" aria-label="Chute capture demo">
+      <div class="summon-backdrop" data-summon-close aria-hidden="true"></div>
+      <div class="summon-window routing-demo-window">
+        <div class="routing-demo-head">
+          <img src="/klyph-sphere.svg" alt="" width="18" height="18" />
+          <span>Chute</span>
+          <span class="routing-demo-live"><span class="routing-demo-live-dot"></span>demo — nothing is saved</span>
+        </div>
+        <label class="sr-only" for="summon-input">Type a thought to see where Chute routes it</label>
+        <textarea
+          id="summon-input"
+          class="routing-demo-input"
+          data-summon-input
+          rows="3"
+          spellcheck="false"
+          autocomplete="off"
+          placeholder="Type a thought — this is what ⌘⇧Space feels like…"
+        ></textarea>
+        <div class="routing-demo-reason" data-summon-reason hidden>
+          <span class="routing-demo-dot" aria-hidden="true"></span>
+          <span data-summon-reason-text></span>
+        </div>
+        <div class="routing-demo-chips" aria-label="Suggested destinations">
+          <span class="routing-demo-chip" data-summon-chip="reminders">Reminders</span>
+          <span class="routing-demo-chip" data-summon-chip="notes">Apple Notes</span>
+          <span class="routing-demo-chip" data-summon-chip="calendar">Calendar</span>
+          <span class="routing-demo-chip" data-summon-chip="slack">Slack</span>
+          <span class="routing-demo-time" data-summon-time hidden></span>
+        </div>
+        <div class="routing-demo-foot" aria-hidden="true">
+          <span class="routing-demo-foot-label">In the real app, Enter files it</span>
+          <span class="routing-demo-keys"><kbd>Esc</kbd> dismiss</span>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="summon-pill" data-summon-open hidden>
+      <kbd>⌘</kbd><kbd>⇧</kbd><kbd>Space</kbd><span>try the reflex</span>
+    </button>
+
     <footer class="site-footer">
       <div class="site-footer-grid">
         <div class="footer-brand">

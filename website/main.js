@@ -938,3 +938,87 @@ if (demoInput) {
     demoObserver.observe(demoInput);
   }
 }
+
+/* ---------- ⌘⇧Space summon overlay ----------
+   The site performs the app's gesture: the global-hotkey combo drops a
+   working capture window over the page. Same brain (demoRoute), scoped
+   to the overlay's own elements. The hotkey toggles, exactly like the
+   real app; Esc and the backdrop dismiss. */
+const summonOverlay = document.querySelector("[data-summon]");
+if (summonOverlay) {
+  const summonInput = summonOverlay.querySelector("[data-summon-input]");
+  const summonReason = summonOverlay.querySelector("[data-summon-reason]");
+  const summonReasonText = summonOverlay.querySelector("[data-summon-reason-text]");
+  const summonChips = summonOverlay.querySelectorAll("[data-summon-chip]");
+  const summonTime = summonOverlay.querySelector("[data-summon-time]");
+  const summonPill = document.querySelector("[data-summon-open]");
+  let lastFocus = null;
+
+  function renderSummon() {
+    summonInput.style.height = "auto";
+    summonInput.style.height = `${Math.min(summonInput.scrollHeight, 320)}px`;
+
+    const route = demoRoute(summonInput.value);
+    summonChips.forEach((chip) => {
+      chip.classList.toggle(
+        "is-active",
+        Boolean(route && route.chips.includes(chip.dataset.summonChip)),
+      );
+    });
+    if (route) {
+      summonReasonText.innerHTML = route.reason;
+      summonReason.hidden = false;
+    } else {
+      summonReason.hidden = true;
+    }
+    const time = summonInput.value.match(DEMO_TIME_REGEX);
+    if (time) {
+      summonTime.textContent = time[0];
+      summonTime.hidden = false;
+    } else {
+      summonTime.hidden = true;
+    }
+  }
+
+  function openSummon() {
+    if (!summonOverlay.hidden) return;
+    lastFocus = document.activeElement;
+    summonOverlay.hidden = false;
+    requestAnimationFrame(() => summonOverlay.classList.add("is-open"));
+    summonInput.value = "";
+    renderSummon();
+    summonInput.focus();
+  }
+
+  function closeSummon() {
+    if (summonOverlay.hidden) return;
+    summonOverlay.classList.remove("is-open");
+    window.setTimeout(() => {
+      summonOverlay.hidden = true;
+      if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+    }, prefersReduced ? 0 : 240);
+  }
+
+  window.addEventListener("keydown", (e) => {
+    const combo = (e.metaKey || e.ctrlKey) && e.shiftKey && e.code === "Space";
+    if (combo) {
+      e.preventDefault();
+      if (summonOverlay.hidden) openSummon();
+      else closeSummon();
+      return;
+    }
+    if (e.key === "Escape" && !summonOverlay.hidden) {
+      closeSummon();
+    }
+  });
+
+  summonInput.addEventListener("input", renderSummon);
+  summonOverlay.querySelector("[data-summon-close]").addEventListener("click", closeSummon);
+  if (summonPill) {
+    summonPill.addEventListener("click", openSummon);
+    // Desktop pointers only — the CSS hides it, but don't even unhide on touch.
+    if (window.matchMedia("(min-width: 900px) and (hover: hover)").matches) {
+      summonPill.hidden = false;
+    }
+  }
+}

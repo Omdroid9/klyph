@@ -4446,3 +4446,104 @@ main h2 .accent-serif {
   background: #f2a3a3;
   box-shadow: 0 0 8px rgba(242, 163, 163, 0.7);
 }
+
+/* =====================================================================
+   Summon overlay — the site performs the app's gesture. ⌘⇧Space drops
+   a capture window over whatever you're reading, exactly like the app
+   drops over your desktop. Esc (or the hotkey again) dismisses.
+   ===================================================================== */
+
+.summon-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 18vh 1.25rem 0;
+}
+
+.summon-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 4, 8, 0.55);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  opacity: 0;
+  transition: opacity 0.24s var(--ease);
+}
+
+.summon-window {
+  position: relative;
+  z-index: 1;
+  width: min(40rem, 100%);
+  opacity: 0;
+  transform: translateY(-14px) scale(0.985);
+  transition: opacity 0.22s var(--ease), transform 0.26s var(--ease);
+}
+
+.summon-overlay.is-open .summon-backdrop {
+  opacity: 1;
+}
+
+.summon-overlay.is-open .summon-window {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Floating hint pill — teaches the reflex; desktop pointers only */
+.summon-pill {
+  position: fixed;
+  right: 1.4rem;
+  bottom: 1.4rem;
+  z-index: 90;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #1d1d24, #141419);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 12px 32px rgba(0, 0, 0, 0.5);
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: color 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.summon-pill:hover {
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.summon-pill kbd {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  padding: 0.12rem 0.38rem;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom-width: 2px;
+  color: var(--text);
+}
+
+.summon-pill span {
+  margin-left: 0.15rem;
+}
+
+@media (max-width: 900px), (hover: none) {
+  .summon-pill {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .summon-backdrop,
+  .summon-window {
+    transition: none;
+  }
+}

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>404 — Chute</title>
+    <link rel="icon" href="/klyph-sphere.svg" type="image/svg+xml" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: #07070a;
+        color: rgba(245, 245, 248, 0.94);
+        font-family: "Geist", "Inter", system-ui, -apple-system, sans-serif;
+      }
+      .window {
+        width: min(26rem, 100%);
+        border-radius: 20px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0) 36%),
+                    linear-gradient(180deg, #17171d, #111116);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 70px rgba(0,0,0,0.55);
+        padding: 1.1rem 1.2rem 1rem;
+      }
+      .head { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; font-weight: 500; margin-bottom: 0.8rem; }
+      .head img { width: 16px; height: 16px; }
+      .badge { margin-left: auto; font-family: ui-monospace, "Geist Mono", monospace; font-size: 0.6rem; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(245,245,248,0.32); }
+      .capture {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.035);
+        padding: 0.8rem 0.9rem;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: rgba(245, 245, 248, 0.9);
+      }
+      .reason { display: flex; align-items: baseline; gap: 0.5rem; margin-top: 0.75rem; font-size: 0.75rem; color: rgba(245,245,248,0.48); }
+      .dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: #f2a3a3; box-shadow: 0 0 8px rgba(242,163,163,0.7); transform: translateY(-1px); }
+      .reason strong { color: rgba(245,245,248,0.9); font-weight: 500; }
+      a.chip {
+        display: inline-block;
+        margin-top: 0.9rem;
+        padding: 0.4rem 1rem;
+        border-radius: 999px;
+        background: #fafafd;
+        color: #101014;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: transform 0.18s ease;
+      }
+      a.chip:hover { transform: translateY(-1px); }
+    </style>
+  </head>
+  <body>
+    <main class="window">
+      <div class="head">
+        <img src="/klyph-sphere.svg" alt="" />
+        <span>Chute</span>
+        <span class="badge">404</span>
+      </div>
+      <div class="capture">this page, wherever it was supposed to go</div>
+      <p class="reason">
+        <span class="dot"></span>
+        <span>No destination found → <strong>nowhere</strong>. Happens to pages. Never to your thoughts.</span>
+      </p>
+      <a class="chip" href="/">Back to usechute.com</a>
+    </main>
+  </body>
+</html>
