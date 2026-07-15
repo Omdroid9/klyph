@@ -86,11 +86,19 @@ const NOTE_LENGTH_THRESHOLD = 200;
 // occupies a slot) rather than a task (a to-do with a nudge). Presence of one
 // of these alongside a time routes to a calendar event instead of Reminders.
 const EVENT_NOUN_REGEX =
-  /\b(meeting|meet|appt|appointment|call with|sync|standup|stand-up|1:1|one[- ]on[- ]one|interview|lunch|dinner|breakfast|brunch|coffee|drinks|reservation|booking|flight|train|checkup|check-up|doctor|dentist|therapy|gym|class|lesson|session|demo|webinar|conference|party|date night|haircut|viewing|showing|catch[- ]?up|review with)\b/i;
+  /\b(meeting|meet|appt|appointment|call with|sync|standup|stand-up|1:1|one[- ]on[- ]one|interview|lunch|dinner|breakfast|brunch|coffee|drinks|reservation|booking|flight|train|checkup|check-up|doctor|dentist|therapy|gym|class|lesson|session|demo|webinar|conference|party|date night|haircut|viewing|showing|catch[- ]?up|review with|biometrics|visa|embassy|consulate|dmv|notary|immigration|bloodwork|blood test|x-?ray|scan|vaccination|vaccine|physical exam|court|hearing|inspection|orientation|open house|ceremony|screening)\b/i;
 // A "with <name>" or "2-3pm" range also reads as a booked slot.
 const EVENT_WITH_REGEX = /\bwith\s+[A-Z]/;
 const TIME_RANGE_REGEX =
   /\b\d{1,2}(?::\d{2})?\s*(?:am|pm)?\s*[-–—]\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)\b|\bfrom\s+\d{1,2}.*\bto\s+\d{1,2}\b/i;
+// "get X done", "drop off X", "pick up X" at a specific time usually means
+// being somewhere — an errand slot, not a nudge.
+const EVENT_ERRAND_REGEX =
+  /\b(?:get(?:ting)?\s+(?:\w+\s+){0,3}done|drop(?:ping)?\s?-?\s?off|pick(?:ing)?\s?-?\s?up)\b/i;
+// "by/before/until 5pm" is a deadline: the time bounds the task, it does not
+// reserve the slot. Deadlines are tasks no matter what nouns appear.
+const DEADLINE_REGEX =
+  /\b(?:by|before|until|due)\s+(?:\d{1,2}(?::\d{2})?\s*(?:am|pm)?|noon|midnight|eod|end of (?:day|week)|tonight|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i;
 
 export interface EventResult {
   isEvent: boolean;
@@ -110,12 +118,22 @@ export function classifyTimedEvent(rawText: string): EventResult {
     return { isEvent: false, signal: null };
   }
 
+  // A deadline bounds a task; it never reserves a slot. "Submit the report
+  // by 5pm" and even "get biometrics done by Friday" stay to-dos.
+  if (DEADLINE_REGEX.test(text)) {
+    return { isEvent: false, signal: null };
+  }
+
   const noun = text.match(EVENT_NOUN_REGEX);
   if (noun) {
     return { isEvent: true, signal: `has "${noun[0].toLowerCase()}"` };
   }
   if (TIME_RANGE_REGEX.test(text)) {
     return { isEvent: true, signal: "spans a time range" };
+  }
+  const errand = text.match(EVENT_ERRAND_REGEX);
+  if (errand) {
+    return { isEvent: true, signal: "a timed errand" };
   }
   // "…with Sarah at 4pm" reads as a meeting only when it doesn't open with a
   // task verb ("call mom" stays a reminder even though mom is capitalized).

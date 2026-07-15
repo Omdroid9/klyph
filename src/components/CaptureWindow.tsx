@@ -443,6 +443,20 @@ export default function CaptureWindow() {
         },
       };
     }
+    if (routingDecision.source === "time-reminders") {
+      return {
+        label: "Make it an event?",
+        apply: () => {
+          setDestinations({
+            ...routingDecision.destinations,
+            reminders: false,
+            appleCalendar: IS_MACOS,
+            googleCalendar: !IS_MACOS,
+          });
+          setDestinationsTouched(true);
+        },
+      };
+    }
     if (routingDecision.source === "intent-note") {
       return {
         label: "Make it a to-do",

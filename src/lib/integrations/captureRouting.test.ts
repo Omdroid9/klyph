@@ -170,6 +170,32 @@ describe("evaluateRouting", () => {
     expect(decision.reason).toContain("appointment");
   });
 
+  it("routes a timed civic appointment (biometrics) to Apple Calendar", () => {
+    const decision = evaluateRouting(
+      input({
+        text: "lets get biometrics done tomorrow at 11am",
+        reminderTime: "2026-07-15T11:00:00",
+      }),
+    );
+
+    expect(decision.source).toBe("event-apple-calendar");
+    expect(decision.destinations.appleCalendar).toBe(true);
+    expect(decision.reason).toContain("biometrics");
+  });
+
+  it("treats a deadline ('by 5pm') as a task even with event-ish words", () => {
+    const decision = evaluateRouting(
+      input({
+        text: "get the visa paperwork done by 5pm",
+        reminderTime: "2026-07-15T17:00:00",
+      }),
+    );
+
+    expect(decision.source).toBe("time-reminders");
+    expect(decision.destinations.appleCalendar).toBe(false);
+    expect(decision.destinations.reminders).toBe(true);
+  });
+
   it("routes a timed to-do to Reminders, not a calendar", () => {
     const decision = evaluateRouting(
       input({ text: "pay rent", reminderTime: "2026-07-08T17:00:00" }),
