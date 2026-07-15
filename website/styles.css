@@ -4547,3 +4547,10 @@ main h2 .accent-serif {
     transition: none;
   }
 }
+
+/* CRITICAL: the base display:flex was overriding the hidden attribute's
+   UA display:none, leaving an invisible full-page layer that swallowed
+   every click on the site. hidden must always win. */
+.summon-overlay[hidden] {
+  display: none !important;
+}
