@@ -141,20 +141,14 @@ function WelcomeStep() {
       </div>
       <h1 className="onboard-brand mb-4">
         <span className="onboard-brand-word" style={{ animationDelay: "0ms" }}>
-          Flow
-        </span>
-        <span
-          className="onboard-brand-word onboard-brand-word-accent"
-          style={{ animationDelay: "120ms" }}
-        >
-          Capture
+          Chute
         </span>
       </h1>
       <p className="onboard-brand-tagline max-w-xs text-sm leading-6 text-[var(--text)]">
-        Capture a thought from anywhere. Send it where you need it.
+        Type once. <span className="font-serif-italic">It knows</span> where it goes.
       </p>
       <p className="onboard-brand-sub codex-muted mt-3 max-w-sm text-xs leading-5">
-        Notes, Slack, Notion, and more — one keystroke away.
+        Reminders, Notes, Calendar, Slack — one keystroke, with the reason shown.
       </p>
     </div>
   );
@@ -333,6 +327,10 @@ export default function Onboarding({ onDone }: OnboardingProps) {
   }, []);
 
   useEffect(() => {
+    // The wizard gets a tall, dead-center window — not the capture bar's
+    // Spotlight placement it would otherwise inherit.
+    void invoke("show_onboarding_window").catch(() => {});
+
     document.documentElement.dataset.theme = "dark";
     setTheme("dark");
     void setSetting("theme", "dark");
@@ -500,9 +498,9 @@ export default function Onboarding({ onDone }: OnboardingProps) {
               <div className="onboard-connect-head mb-5 shrink-0">
                 <h2 className="text-lg font-semibold tracking-tight">Connect your apps</h2>
                 <p className="codex-muted mx-auto mt-2 max-w-sm text-xs leading-5">
-                  Sign in here so Chute can send captures outward. Start the OAuth backend first
-                  with <code className="text-[10px]">npm run auth:dev</code>, then click Connect for each
-                  app. Connected apps auto-enable under Send to when you capture.
+                  Sign in so Chute can send captures outward — each Connect opens your browser
+                  for a normal sign-in. Connected apps auto-enable under Send to when you capture.
+                  The first Connect can take up to a minute while the service wakes up.
                 </p>
               </div>
 

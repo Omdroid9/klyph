@@ -152,6 +152,28 @@ pub fn hide_capture_window(app: &tauri::AppHandle) -> Result<(), String> {
   window.hide().map_err(|error| error.to_string())
 }
 
+const ONBOARDING_WIDTH: f64 = 640.0;
+const ONBOARDING_HEIGHT: f64 = 720.0;
+
+/// First-run onboarding is a wizard, not a Spotlight bar: give it a tall
+/// window dead-center on the active monitor instead of the capture overlay's
+/// top-22% compact placement.
+pub fn show_onboarding_window(app: &tauri::AppHandle) -> Result<(), String> {
+  let window = app
+    .get_webview_window(CAPTURE_WINDOW_LABEL)
+    .ok_or_else(|| "Capture window was not found".to_string())?;
+
+  window
+    .set_size(Size::Logical(LogicalSize::new(ONBOARDING_WIDTH, ONBOARDING_HEIGHT)))
+    .map_err(|error| error.to_string())?;
+  center_on_active_monitor(&window, ONBOARDING_WIDTH, ONBOARDING_HEIGHT)?;
+  window.unminimize().map_err(|error| error.to_string())?;
+  window.show().map_err(|error| error.to_string())?;
+  window.set_focus().map_err(|error| error.to_string())?;
+
+  Ok(())
+}
+
 /// Wire the library window's close button to hide instead of destroy.
 /// Closing the library should never kill the tray app.
 pub fn configure_library_window(app: &tauri::AppHandle) -> Result<(), String> {
