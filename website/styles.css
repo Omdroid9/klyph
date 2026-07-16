@@ -36,7 +36,7 @@
   --t-4xl: 4.25rem;    /* 68 — h1 */
   --t-5xl: 6rem;       /* 96 — display */
 
-  --nav-h: 3.25rem;
+  --nav-h: 3.75rem;
   --max: 68rem;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -174,43 +174,78 @@ a {
   gap: 2rem;
 }
 
+/* Wordmark carries the display face — the one place the brand's own
+   voice speaks in the nav, distinct from the Geist links beside it. */
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
-  font-size: 0.95rem;
-  letter-spacing: -0.02em;
+  gap: 0.55rem;
+  font-family: "Nohemi", var(--font);
+  font-weight: 600;
+  font-size: 1.08rem;
+  letter-spacing: -0.01em;
+  color: var(--text-strong);
 }
 
 .site-nav nav {
   display: none;
-  gap: 1.75rem;
+  gap: 2rem;
   margin-right: auto;
 }
 
+/* Refined nav links: smaller, medium weight, a hair of positive tracking
+   (reads considered on small nav text), with a quiet underline that grows
+   from the left on hover — the premium micro-interaction. */
 .site-nav nav a {
-  font-size: 0.8rem;
+  position: relative;
+  font-size: 0.82rem;
+  font-weight: 450;
+  letter-spacing: 0.01em;
   color: var(--muted);
-  transition: color 0.2s;
+  transition: color 0.22s var(--ease);
+}
+
+.site-nav nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.4rem;
+  height: 1px;
+  width: 100%;
+  background: var(--text-strong);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.28s var(--ease);
 }
 
 .site-nav nav a:hover {
-  color: var(--text);
+  color: var(--text-strong);
 }
 
+.site-nav nav a:hover::after {
+  transform: scaleX(1);
+}
+
+/* CTA echoes the hero's primary button language — a light pill with a top
+   highlight that brightens on hover, not a muddy translucent grey. */
 .nav-cta {
   margin-left: auto;
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  padding: 0.44rem 1rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  transition: background 0.2s;
+  color: var(--text-strong);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  transition: background 0.22s var(--ease), border-color 0.22s var(--ease), transform 0.22s var(--ease);
 }
 
 .nav-cta:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
 }
 
 @media (min-width: 768px) {
