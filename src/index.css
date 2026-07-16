@@ -1357,25 +1357,25 @@ html[data-theme="dark"] .list-picker-option-active {
   animation: brand-logo-in 520ms ease-out both;
 }
 
-.klyph-logo {
+.chute-logo {
   display: block;
   object-fit: contain;
   image-rendering: auto;
 }
 
-.klyph-logo-animated {
+.chute-logo-animated {
   image-rendering: auto;
 }
 
-.klyph-orb-realistic {
+.chute-orb-realistic {
   filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.45));
 }
 
-.onboard-brand-orb.klyph-logo-animated {
+.onboard-brand-orb.chute-logo-animated {
   filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.45));
 }
 
-.klyph-logo-header {
+.chute-logo-header {
   filter: drop-shadow(0 2px 8px rgba(90, 140, 255, 0.4));
 }
 

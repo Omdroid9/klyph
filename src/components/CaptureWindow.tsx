@@ -37,7 +37,7 @@ import TagChip from "./TagChip";
 import ListPicker from "./ListPicker";
 import CaptureProductTour from "./CaptureProductTour";
 import CaptureDestinationPrompt from "./CaptureDestinationPrompt";
-import KlyphLogo from "./KlyphLogo";
+import ChuteLogo from "./ChuteLogo";
 import type {
   Capture,
   CaptureDestinations,
@@ -823,7 +823,7 @@ export default function CaptureWindow() {
   }
 
   useEffect(() => {
-    const unlistenPromise = listen("klyph://show-capture", () => {
+    const unlistenPromise = listen("chute://show-capture", () => {
       setPulse((value) => value + 1);
       setAllConfirm(false);
       setUndoStrip(
@@ -1019,8 +1019,8 @@ export default function CaptureWindow() {
         if (undoRef.current?.id === captureId) {
           undoRef.current.synced = true;
         }
-        void emit("klyph://request-sync");
-        void emit("klyph://request-agent");
+        void emit("chute://request-sync");
+        void emit("chute://request-agent");
       }, SYNC_GRACE_MS);
       undoRef.current = {
         id: captureId,
@@ -1124,8 +1124,8 @@ export default function CaptureWindow() {
       undoRef.current = null;
       setUndoStrip(null);
       window.setTimeout(() => {
-        void emit("klyph://request-sync");
-        void emit("klyph://request-agent");
+        void emit("chute://request-sync");
+        void emit("chute://request-agent");
       }, SYNC_GRACE_MS);
 
       void loadRecentCaptures();
@@ -1210,7 +1210,7 @@ export default function CaptureWindow() {
       const today = await getCapturesTodayCount();
       setCapturesToday(today);
       setTotalCaptures((prev) => (prev === null || prev === 0 ? prev : prev - 1));
-      void emit("klyph://captures-changed");
+      void emit("chute://captures-changed");
       void loadRecentCaptures();
       setSavedMessage(
         last.synced && last.labels.length > 0
@@ -1256,7 +1256,7 @@ export default function CaptureWindow() {
           {/* Header — doubles as the window drag handle */}
           <div className="flex items-center justify-between" data-tauri-drag-region>
             <div className="pointer-events-none flex items-center gap-2.5">
-              <KlyphLogo size={22} className="klyph-logo-header" />
+              <ChuteLogo size={22} className="chute-logo-header" />
               <span className="codex-panel-title text-base font-medium tracking-tight">
                 Chute
               </span>

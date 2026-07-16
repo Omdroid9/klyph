@@ -13,7 +13,7 @@ use tauri::{
 };
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
-pub const TRAY_ID: &str = "klyph-tray";
+pub const TRAY_ID: &str = "chute-tray";
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum MainView {
@@ -110,7 +110,7 @@ fn main() {
 
   tauri::Builder::default()
     .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
-      let _ = app.emit("klyph://second-instance", ());
+      let _ = app.emit("chute://second-instance", ());
     }))
     .manage(AppState {
       hotkey: Mutex::new(initial_hotkey.clone()),

@@ -1,8 +1,8 @@
 [package]
-name = "klyph"
+name = "chute"
 version = "0.1.0"
-description = "Klyph desktop app"
-authors = ["Klyph"]
+description = "Chute desktop app"
+authors = ["Chute"]
 license = ""
 repository = ""
 edition = "2021"

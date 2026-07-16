@@ -26,7 +26,7 @@ import { testSlackWebhook } from "../lib/sync/slack";
 import { runSyncPass } from "../lib/sync/syncManager";
 import { isMacOS } from "../lib/platform";
 import { useAppStore } from "../store/useAppStore";
-import KlyphLogo from "./KlyphLogo";
+import ChuteLogo from "./ChuteLogo";
 import type { RoutingRule, ThemeMode } from "../types";
 
 const DEFAULT_BACKEND_URL = "https://klyph-auth.onrender.com";
@@ -250,7 +250,7 @@ export default function SettingsPanel() {
       setTheme(themeDraft);
       // Broadcast so the Library window (and any future webview) can re-skin
       // without having to poll SQLite.
-      void emit("klyph://theme-changed", { theme: themeDraft });
+      void emit("chute://theme-changed", { theme: themeDraft });
       setStatus("General settings saved.");
     } catch (error) {
       console.error(error);
@@ -302,7 +302,7 @@ export default function SettingsPanel() {
         setSetting("openai_api_key", openAiApiKey.trim()),
       ]);
       setStatus("AI agent settings saved.");
-      await emit("klyph://request-agent");
+      await emit("chute://request-agent");
     } catch (error) {
       console.error(error);
       setStatus("Failed to save AI agent settings.");
@@ -326,7 +326,7 @@ export default function SettingsPanel() {
         setSetting("google_calendar_id", googleCalendarId.trim() || "primary"),
       ]);
       setStatus("Advanced integration settings saved.");
-      await emit("klyph://request-sync");
+      await emit("chute://request-sync");
     } catch (error) {
       console.error(error);
       setStatus("Failed to save advanced integration settings.");
@@ -341,7 +341,7 @@ export default function SettingsPanel() {
     try {
       await setSetting("apple_notes_folder", appleNotesFolder.trim() || "Chute");
       setStatus("Apple Notes folder saved.");
-      await emit("klyph://request-sync");
+      await emit("chute://request-sync");
     } catch (error) {
       console.error(error);
       setStatus("Failed to save Apple Notes folder.");
@@ -356,7 +356,7 @@ export default function SettingsPanel() {
     try {
       await setSetting("apple_reminders_list", appleRemindersList.trim() || "Chute");
       setStatus("Reminders list saved.");
-      await emit("klyph://request-sync");
+      await emit("chute://request-sync");
     } catch (error) {
       console.error(error);
       setStatus("Failed to save Reminders list.");
@@ -395,7 +395,7 @@ export default function SettingsPanel() {
 
       await loadSettings();
       setSyncStatus(`${label} connected.`);
-      await emit("klyph://request-sync");
+      await emit("chute://request-sync");
     } catch (error) {
       console.error(error);
       setSyncStatus(`Connect failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -447,7 +447,7 @@ export default function SettingsPanel() {
       setSyncStatus(
         `Backfill complete. Captures synced: ${stats.capturesSynced}, attempts: ${stats.syncAttempts}, failed: ${stats.syncFailed}.`,
       );
-      await emit("klyph://request-sync");
+      await emit("chute://request-sync");
     } catch (error) {
       console.error(error);
       setSyncStatus(`Backfill failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -459,7 +459,7 @@ export default function SettingsPanel() {
   return (
     <div className="app-page h-full w-full overflow-y-auto p-5">
       <div className="mb-5 flex items-center gap-2.5">
-        <KlyphLogo size={28} />
+        <ChuteLogo size={28} />
         <h1 className="codex-panel-title text-[1.4rem] font-medium leading-none">
           Chute <span className="font-serif-italic">Settings</span>
         </h1>

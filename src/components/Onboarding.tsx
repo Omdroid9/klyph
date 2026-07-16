@@ -14,7 +14,7 @@ import {
   type ProviderConfigState,
 } from "../lib/integrations/oauthConnect";
 import ProviderLogo, { type ProviderLogoId } from "./ProviderLogo";
-import KlyphLogo from "./KlyphLogo";
+import ChuteLogo from "./ChuteLogo";
 import { providerConfigured, loadIntegrationSettings } from "../lib/integrations/connectionStatus";
 
 const DEFAULT_BACKEND_URL = "https://klyph-auth.onrender.com";
@@ -136,7 +136,7 @@ function WelcomeStep() {
       <div className="onboard-brand-hero mb-5">
         <div className="onboard-brand-smoke" aria-hidden />
         <div className="onboard-brand-orb-shell">
-          <KlyphLogo size={168} animated className="onboard-brand-orb" />
+          <ChuteLogo size={168} animated className="onboard-brand-orb" />
         </div>
       </div>
       <h1 className="onboard-brand mb-4">
@@ -377,7 +377,7 @@ export default function Onboarding({ onDone }: OnboardingProps) {
     }
 
     let hideTimer: number | undefined;
-    const unlisten = listen("klyph://show-capture", () => {
+    const unlisten = listen("chute://show-capture", () => {
       setHotkeyTried(true);
       if (hideTimer !== undefined) {
         window.clearTimeout(hideTimer);
@@ -415,7 +415,7 @@ export default function Onboarding({ onDone }: OnboardingProps) {
       );
       await refreshConnected();
       setMessage(`${label} connected.`);
-      await emit("klyph://request-sync");
+      await emit("chute://request-sync");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : String(error));
     } finally {

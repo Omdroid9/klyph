@@ -26,7 +26,7 @@ function resolveTheme(saved: string | null | undefined): ThemeMode {
 
 function App() {
   const isTauriRuntime = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
-  const forceOnboarding = import.meta.env.DEV && import.meta.env.VITE_KLYPH_FORCE_ONBOARDING === "true";
+  const forceOnboarding = import.meta.env.DEV && import.meta.env.VITE_CHUTE_FORCE_ONBOARDING === "true";
   const [ready, setReady] = useState<boolean>(() => !isTauriRuntime);
   const [initError, setInitError] = useState<string | null>(null);
   const [mainView, setMainView] = useState<MainView>(() => (forceOnboarding ? "settings" : "capture"));
@@ -83,7 +83,7 @@ function App() {
     })();
 
     const unlisten = listen<{ theme: ThemeMode }>(
-      "klyph://theme-changed",
+      "chute://theme-changed",
       (event) => {
         const next = resolveTheme(event.payload?.theme);
         document.documentElement.dataset.theme = next;
@@ -102,19 +102,19 @@ function App() {
       return;
     }
 
-    const unlistenHistory = listen("klyph://show-history", () => {
+    const unlistenHistory = listen("chute://show-history", () => {
       setMainView("history");
     });
 
-    const unlistenCapture = listen("klyph://show-capture", () => {
+    const unlistenCapture = listen("chute://show-capture", () => {
       setMainView("capture");
     });
 
-    const unlistenSettings = listen("klyph://show-settings", () => {
+    const unlistenSettings = listen("chute://show-settings", () => {
       setMainView("settings");
     });
 
-    const unlistenSecondInstance = listen("klyph://second-instance", () => {
+    const unlistenSecondInstance = listen("chute://second-instance", () => {
       void (async () => {
         const onboardingComplete = await getSetting("onboarding_complete");
         if (forceOnboarding || onboardingComplete !== "true") {
@@ -262,7 +262,7 @@ function App() {
       void syncNow();
     };
     window.addEventListener("online", onlineHandler);
-    const unlistenPromise = listen("klyph://request-sync", () => {
+    const unlistenPromise = listen("chute://request-sync", () => {
       void syncNow();
     });
 
@@ -285,7 +285,7 @@ function App() {
       try {
         const stats = await runRecurringReminderPass();
         if (active && (stats.created > 0 || stats.failed > 0)) {
-          void emit("klyph://captures-changed");
+          void emit("chute://captures-changed");
         }
       } catch (error) {
         if (active) {
@@ -335,7 +335,7 @@ function App() {
       void runAgentNow();
     }, 60_000);
 
-    const unlistenPromise = listen("klyph://request-agent", () => {
+    const unlistenPromise = listen("chute://request-agent", () => {
       void runAgentNow();
     });
 

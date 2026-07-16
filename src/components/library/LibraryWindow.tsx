@@ -202,7 +202,7 @@ export default function LibraryWindow() {
         reminderTime: capture.reminder_time,
         recurrenceRule: capture.recurrence_rule,
       });
-      await emit("klyph://request-sync");
+      await emit("chute://request-sync");
       setStatusMessage("Retrying sync.");
       void refresh();
     } catch (error) {
@@ -217,7 +217,7 @@ export default function LibraryWindow() {
     setActionBusy(`list:${capture.id}`);
     try {
       await setCaptureListName(capture.id, list);
-      await emit("klyph://request-sync");
+      await emit("chute://request-sync");
       setStatusMessage(`Moved to ${list}.`);
       void refresh();
     } catch (error) {

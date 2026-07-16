@@ -8,7 +8,7 @@ const isTauriRuntime =
 
 /**
  * Captures live in SQLite and any window can mutate them. We refresh whenever
- * something fires `klyph://request-sync` (already broadcast on save,
+ * something fires `chute://request-sync` (already broadcast on save,
  * edit, delete, retry) so the Library stays current without polling.
  */
 export function useCaptures(limit = 250) {
@@ -42,8 +42,8 @@ export function useCaptures(limit = 250) {
     const unsubscribers: Array<() => void> = [];
     const subscribe = async () => {
       for (const event of [
-        "klyph://request-sync",
-        "klyph://captures-changed",
+        "chute://request-sync",
+        "chute://captures-changed",
       ] as const) {
         const dispose = await listen(event, () => {
           void refresh();

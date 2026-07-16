@@ -105,7 +105,7 @@ pub fn show_capture_window(app: &tauri::AppHandle) -> Result<(), String> {
   }
 
   window
-    .emit("klyph://show-capture", ())
+    .emit("chute://show-capture", ())
     .map_err(|error| error.to_string())?;
 
   Ok(())
@@ -138,7 +138,7 @@ pub fn show_history_window(app: &tauri::AppHandle) -> Result<(), String> {
   window.show().map_err(|error| error.to_string())?;
   window.set_focus().map_err(|error| error.to_string())?;
   window
-    .emit("klyph://show-history", ())
+    .emit("chute://show-history", ())
     .map_err(|error| error.to_string())?;
 
   Ok(())
@@ -202,7 +202,7 @@ pub fn show_library_window(app: &tauri::AppHandle) -> Result<(), String> {
   window.show().map_err(|error| error.to_string())?;
   window.set_focus().map_err(|error| error.to_string())?;
   window
-    .emit("klyph://show-library", ())
+    .emit("chute://show-library", ())
     .map_err(|error| error.to_string())?;
 
   Ok(())
@@ -243,7 +243,7 @@ pub fn show_settings_window(app: &tauri::AppHandle) -> Result<(), String> {
   window.show().map_err(|error| error.to_string())?;
   window.set_focus().map_err(|error| error.to_string())?;
   window
-    .emit("klyph://show-settings", ())
+    .emit("chute://show-settings", ())
     .map_err(|error| error.to_string())?;
 
   Ok(())

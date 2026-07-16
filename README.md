@@ -1,6 +1,6 @@
-# Klyph
+# Chute
 
-Klyph is a Tauri v2 desktop capture app (Rust + React + TypeScript) optimized for fast thought/task capture.
+Chute is a Tauri v2 desktop capture app (Rust + React + TypeScript) optimized for fast thought/task capture.
 
 ## Features in this build
 - Global hotkey capture window (`Ctrl+Shift+Space` on Windows, `Cmd+Shift+Space` on macOS)
@@ -19,7 +19,7 @@ npm run tauri dev
 ```
 
 ## OAuth bridge server (for one-click Connect buttons)
-Klyph desktop uses a small backend service for OAuth token exchange for Slack/Discord/Notion/Google.
+Chute desktop uses a small backend service for OAuth token exchange for Slack/Discord/Notion/Google.
 
 ### 1) Install and run auth server
 ```bash
@@ -45,7 +45,7 @@ Set redirect URLs in each provider dashboard to match `.env` defaults:
 - `http://127.0.0.1:8787/oauth/google/callback`
 
 ### 4) Connect from the app
-Open Klyph Settings -> Integrations -> click `Connect` for each provider.
+Open Chute Settings -> Integrations -> click `Connect` for each provider.
 
 ## Hosting the OAuth bridge (so users don't run a local server)
 For real distribution, host the bridge once and point the app at it (Settings -> Integrations -> OAuth Backend URL).
@@ -69,7 +69,7 @@ Caveats:
 - Notion parent supports both page IDs and database IDs.
 
 ## Sync reliability semantics
-Klyph retries failed syncs and records the last error per capture (shown in History).
+Chute retries failed syncs and records the last error per capture (shown in History).
 
 - **Google Calendar is idempotent.** Events use a deterministic id derived from the capture id, so a retried request whose response was lost will not create a duplicate event.
 - **Slack, Discord, Google Tasks, and Notion are at-least-once.** These APIs expose no client-set id or idempotency key, so in the rare case where a request reaches the provider but the response is lost, a retry can create a duplicate. This is a provider limitation, not a bug.

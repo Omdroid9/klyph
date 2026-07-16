@@ -1,12 +1,12 @@
 import { useId } from "react";
 
-interface KlyphLogoStaticProps {
+interface ChuteLogoStaticProps {
   size?: number;
   className?: string;
 }
 
 /** Static smoky blue marble sphere for header and settings. */
-export default function KlyphLogoStatic({ size = 24, className = "" }: KlyphLogoStaticProps) {
+export default function ChuteLogoStatic({ size = 24, className = "" }: ChuteLogoStaticProps) {
   const id = useId().replace(/:/g, "");
   const base = `kl-${id}`;
 
@@ -18,7 +18,7 @@ export default function KlyphLogoStatic({ size = 24, className = "" }: KlyphLogo
       viewBox="0 0 128 128"
       fill="none"
       aria-hidden
-      className={`klyph-logo shrink-0 ${className}`.trim()}
+      className={`chute-logo shrink-0 ${className}`.trim()}
     >
       <defs>
         <radialGradient id={`${base}-base`} cx="36%" cy="30%" r="70%">

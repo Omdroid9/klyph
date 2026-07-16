@@ -315,8 +315,8 @@ export default function CaptureList({ onBack }: CaptureListProps) {
       setDraftReminderTime(null);
       setDraftRecurrenceRule(null);
       setStatus("Note updated.");
-      await emit("klyph://request-sync");
-      await emit("klyph://request-agent");
+      await emit("chute://request-sync");
+      await emit("chute://request-agent");
     } catch (error) {
       console.error(error);
       setStatus(`Update failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -334,7 +334,7 @@ export default function CaptureList({ onBack }: CaptureListProps) {
       await clearCaptureRecurrence(capture.id);
       await refresh();
       setStatus("Repeat stopped. Chute will not create more reminders for that item.");
-      await emit("klyph://captures-changed");
+      await emit("chute://captures-changed");
     } catch (error) {
       console.error(error);
       setStatus(`Could not stop repeat: ${error instanceof Error ? error.message : String(error)}`);
@@ -381,7 +381,7 @@ export default function CaptureList({ onBack }: CaptureListProps) {
       setRenamingList(null);
       setRenameDraft("");
       setStatus(`List renamed to "${renamedTo}".`);
-      await emit("klyph://request-sync");
+      await emit("chute://request-sync");
     } catch (error) {
       console.error(error);
       setStatus(`Rename failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -408,7 +408,7 @@ export default function CaptureList({ onBack }: CaptureListProps) {
         setListFilter("all");
       }
       setStatus(`List "${name}" deleted and notes moved to ${DEFAULT_LIST}.`);
-      await emit("klyph://request-sync");
+      await emit("chute://request-sync");
     } catch (error) {
       console.error(error);
       setStatus(`Delete failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -421,7 +421,7 @@ export default function CaptureList({ onBack }: CaptureListProps) {
     try {
       await approveAgentSuggestion(captureId);
       await refresh();
-      await emit("klyph://request-sync");
+      await emit("chute://request-sync");
       setStatus("Agent suggestion approved.");
     } catch (error) {
       console.error(error);
@@ -794,12 +794,12 @@ export default function CaptureList({ onBack }: CaptureListProps) {
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       <input
                         value={draftList}
-                        list="klyph-history-lists"
+                        list="chute-history-lists"
                         onChange={(event) => setDraftList(event.currentTarget.value)}
                         placeholder="List name"
                         className="codex-input w-full rounded-lg px-2 py-1.5 text-xs outline-none"
                       />
-                      <datalist id="klyph-history-lists">
+                      <datalist id="chute-history-lists">
                         {sortListNames(managedLists).map((name) => (
                           <option key={name} value={name} />
                         ))}

@@ -110,9 +110,9 @@ export const logos = {
     </svg>
   `,
 
-  // Klyph's own "On Device" mark — the orb itself. The product is the
+  // Chute's own "On Device" mark — the orb itself. The product is the
   // destination, so it wears its own face beside the brand logos.
-  local: `<img src="/klyph-sphere.svg" alt="" style="width:100%;height:100%;display:block" />`,
+  local: `<img src="/chute-sphere.svg" alt="" style="width:100%;height:100%;display:block" />`,
 };
 
 export function injectLogos(root = document) {

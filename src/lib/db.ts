@@ -10,7 +10,7 @@ import type {
   RoutingRuleField,
 } from "../types";
 
-const DB_URL = "sqlite:klyph.db";
+const DB_URL = "sqlite:chute.db";
 const SECURE_STORE_PATH = "secure-settings.json";
 const DEFAULT_LIST_NAME = "Inbox";
 const DISTRACTION_LIST_NAME = "Parking Lot";

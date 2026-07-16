@@ -1,16 +1,16 @@
 import { useId, useMemo } from "react";
-import KlyphLogoStatic from "./KlyphLogoStatic";
+import ChuteLogoStatic from "./ChuteLogoStatic";
 
-interface KlyphAnimatedSphereProps {
+interface ChuteAnimatedSphereProps {
   size?: number;
   className?: string;
 }
 
 /** Realistic glass orb with a subtle drift animation for the onboarding hero. */
-export default function KlyphAnimatedSphere({
+export default function ChuteAnimatedSphere({
   size = 168,
   className = "",
-}: KlyphAnimatedSphereProps) {
+}: ChuteAnimatedSphereProps) {
   const id = useId().replace(/:/g, "");
   const reduceMotion = useMemo(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -18,7 +18,7 @@ export default function KlyphAnimatedSphere({
   );
 
   if (reduceMotion) {
-    return <KlyphLogoStatic size={size} className={className} />;
+    return <ChuteLogoStatic size={size} className={className} />;
   }
   const base = `kla-${id}`;
 
@@ -30,7 +30,7 @@ export default function KlyphAnimatedSphere({
       viewBox="0 0 128 128"
       fill="none"
       aria-hidden
-      className={`klyph-logo klyph-logo-animated klyph-orb-realistic shrink-0 ${className}`.trim()}
+      className={`chute-logo chute-logo-animated chute-orb-realistic shrink-0 ${className}`.trim()}
     >
       <defs>
         <radialGradient id={`${base}-base`} cx="36%" cy="30%" r="70%">

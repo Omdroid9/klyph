@@ -4,7 +4,7 @@ This project now includes a starter local bridge for Apple Notes using the exist
 
 ## Why this approach
 
-Apple Notes does not expose a stable cross-platform public cloud API, so Klyph sync uses local macOS automation instead:
+Apple Notes does not expose a stable cross-platform public cloud API, so Chute sync uses local macOS automation instead:
 
 - `AppleScript` via `osascript` (default)
 - `Shortcuts` CLI via `/usr/bin/shortcuts`
@@ -43,12 +43,12 @@ Request:
 {
   "title": "Buy camera batteries",
   "body": "Need AA + AAA for trip.",
-  "folder": "Klyph",
+  "folder": "Chute",
   "tags": ["personal", "Inbox"],
   "createdAt": "2026-05-04T22:10:00.000Z",
-  "sourceUrl": "klyph://capture/abc-123",
+  "sourceUrl": "chute://capture/abc-123",
   "method": "applescript",
-  "shortcutName": "Klyph Save Note"
+  "shortcutName": "Chute Save Note"
 }
 ```
 
@@ -100,7 +100,7 @@ Behavior:
 The bridge can call:
 
 ```bash
-shortcuts run "Klyph Save Note" --input-type text --input-path <json-file>
+shortcuts run "Chute Save Note" --input-type text --input-path <json-file>
 ```
 
 Expected shortcut input JSON shape:
@@ -122,7 +122,7 @@ Recommended shortcut actions:
 2. Read `title`, `body`, and `folder`
 3. `Create Note` in Apple Notes
 
-## Klyph app settings
+## Chute app settings
 
 Open Settings -> Integrations -> Show Advanced, then configure:
 
@@ -143,7 +143,7 @@ npm run package:apple-bridge
 
 Output file:
 
-- `dist/klyph-apple-notes-bridge-macos-v0.1.0.zip`
+- `dist/chute-apple-notes-bridge-macos-v0.1.0.zip`
 
 Inside the zip, testers run:
 

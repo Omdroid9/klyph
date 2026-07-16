@@ -1,4 +1,4 @@
-# Klyph beta — quick start (Mac)
+# Chute beta — quick start (Mac)
 
 Thanks for trying this out. About 5 min to install, 2 min to set up, then it
 just sits in your menu bar.
@@ -27,10 +27,10 @@ Marketing page (screenshots, no install needed): **{{ MARKETING_URL }}**
 
 ## Install
 
-1. Download **`Klyph_0.1.0_universal.dmg`** (the file I sent).
-2. Double-click the `.dmg` to open it. Drag **Klyph** into the **Applications**
+1. Download **`Chute_0.1.0_universal.dmg`** (the file I sent).
+2. Double-click the `.dmg` to open it. Drag **Chute** into the **Applications**
    folder. Eject the disk image.
-3. Open **Applications** in Finder. **Right-click Klyph → Open** (don't
+3. Open **Applications** in Finder. **Right-click Chute → Open** (don't
    double-click the first time). macOS will warn that it's from an
    unidentified developer — click **Open**.
 
@@ -38,7 +38,7 @@ Marketing page (screenshots, no install needed): **{{ MARKETING_URL }}**
    > Right-click → Open is macOS's escape hatch for unsigned dev builds.
    > Standard double-click will work for every launch after the first one.
 
-4. Klyph appears in your menu bar (top-right of the screen) as a small icon.
+4. Chute appears in your menu bar (top-right of the screen) as a small icon.
 
 ---
 
@@ -52,7 +52,7 @@ On that screen you'll see Apple Notes in the destinations list. Click
 
 macOS will show this prompt:
 
-> **"Klyph" wants access to control "Notes".**
+> **"Chute" wants access to control "Notes".**
 > Allowing control will provide access to documents and data in "Notes", and
 > to perform actions within that app.
 >
@@ -61,11 +61,11 @@ macOS will show this prompt:
 **Click OK.**
 
 > If you accidentally click Don't Allow: open **System Settings → Privacy &
-> Security → Automation → Klyph** and toggle **Notes** on. Then click Enable
-> in Klyph again.
+> Security → Automation → Chute** and toggle **Notes** on. Then click Enable
+> in Chute again.
 
-Klyph creates a test note in Apple Notes. Open the **Notes** app and confirm
-there's a "Klyph test note" in a folder called **Klyph**. If you see it,
+Chute creates a test note in Apple Notes. Open the **Notes** app and confirm
+there's a "Chute test note" in a folder called **Chute**. If you see it,
 Apple Notes is wired up. Text me a thumbs up.
 
 The other destinations on that screen (Slack, Discord, Notion, Google) are
@@ -75,12 +75,12 @@ If you want them, the OAuth backend is at: **{{ OAUTH_BACKEND_URL }}**
 After step 3, you'll see step 4 about the **capture hotkey** (`Cmd+Shift+Space`
 by default). The first time you press it, macOS may show this prompt:
 
-> **Klyph would like to use Accessibility features.**
+> **Chute would like to use Accessibility features.**
 >
 > [Don't Allow]  [Open System Settings]
 
 This is for the global hotkey. Click **Open System Settings**, then toggle
-**Klyph** on in the Accessibility list. Come back to Klyph, press the hotkey
+**Chute** on in the Accessibility list. Come back to Chute, press the hotkey
 again — the capture box will appear.
 
 ---
@@ -90,9 +90,9 @@ again — the capture box will appear.
 Once setup is done, do this so we both know it works end-to-end:
 
 1. Press **`Cmd+Shift+Space`** from anywhere (a browser, Finder, wherever).
-2. Type exactly: **"Klyph beta test from <your name>"**
+2. Type exactly: **"Chute beta test from <your name>"**
 3. Press **Enter**.
-4. Open the **Apple Notes** app. Look in the **Klyph** folder.
+4. Open the **Apple Notes** app. Look in the **Chute** folder.
 5. You should see your test note there.
 
 Text me **yes** or **no**. If no, jump to the Recovery section below.
@@ -147,35 +147,35 @@ Run through this checklist top to bottom; one of these will be it.
 **1. Is the Apple Notes app set up?**
 
 Open **Notes.app** from Applications. If it asks you to sign in or pick an
-account, do that. Klyph needs at least one Notes account configured. iCloud
+account, do that. Chute needs at least one Notes account configured. iCloud
 is fine; "On My Mac" is fine.
 
-**2. Did you allow Notes automation for Klyph?**
+**2. Did you allow Notes automation for Chute?**
 
-Open **System Settings → Privacy & Security → Automation**. Look for **Klyph**
-in the list. Underneath Klyph, you should see **Notes** with a toggle. The
+Open **System Settings → Privacy & Security → Automation**. Look for **Chute**
+in the list. Underneath Chute, you should see **Notes** with a toggle. The
 toggle must be **on**.
 
-If Klyph isn't in the list at all, the prompt never fired — go back to
+If Chute isn't in the list at all, the prompt never fired — go back to
 onboarding step 3 and click Enable next to Apple Notes again.
 
-**3. Is the bundle identifier `app.klyph`?**
+**3. Is the bundle identifier `com.usechute.app`?**
 
-In Finder, right-click `Klyph.app` → Show Package Contents → Contents →
-Info.plist. The `CFBundleIdentifier` should be `app.klyph`. If it's
+In Finder, right-click `Chute.app` → Show Package Contents → Contents →
+Info.plist. The `CFBundleIdentifier` should be `com.usechute.app`. If it's
 something else, you downloaded the wrong build — text me and I'll send the
 right `.dmg`.
 
 **4. Force-quit and relaunch.**
 
-Sometimes macOS caches stale permission state. Right-click the Klyph menu
+Sometimes macOS caches stale permission state. Right-click the Chute menu
 bar icon → Quit. Reopen from Applications. Try the test note again.
 
 **5. Nothing worked.**
 
 Text me with:
 - A screenshot of the System Settings → Privacy & Security → Automation page
-- The exact error text you see in Klyph (if any)
+- The exact error text you see in Chute (if any)
 - What you saw at each onboarding step
 
 I'll likely have a fix within an hour.
@@ -185,21 +185,21 @@ I'll likely have a fix within an hour.
 ## Reset or uninstall
 
 - **Reset onboarding** (start over): Settings has a reset button at the
-  bottom. Or, with Klyph quit: delete `~/Library/Application Support/app.klyph/`,
+  bottom. Or, with Chute quit: delete `~/Library/Application Support/com.usechute.app/`,
   then relaunch.
-- **Uninstall**: drag `Klyph.app` from Applications to Trash. To clean up
-  completely: also delete `~/Library/Application Support/app.klyph/` and
-  remove Klyph from System Settings → Privacy & Security → Automation
+- **Uninstall**: drag `Chute.app` from Applications to Trash. To clean up
+  completely: also delete `~/Library/Application Support/com.usechute.app/` and
+  remove Chute from System Settings → Privacy & Security → Automation
   and Accessibility.
 
 ---
 
 ## Privacy
 
-- All captures live in `~/Library/Application Support/app.klyph/klyph.db` on
+- All captures live in `~/Library/Application Support/com.usechute.app/chute.db` on
   your Mac. It's a local SQLite file. Nothing gets uploaded except to the
   destinations you enable (Apple Notes, optionally Slack/Notion/etc.).
-- Apple Notes traffic is **entirely local** — Klyph talks to the Notes app
+- Apple Notes traffic is **entirely local** — Chute talks to the Notes app
   via AppleScript on your machine. No server in the loop.
 - OAuth tokens (for Slack/Notion/etc., if you enable them) are stored
   encrypted in a separate local file.

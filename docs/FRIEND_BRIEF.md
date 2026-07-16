@@ -1,4 +1,4 @@
-# Klyph beta — quick start
+# Chute beta — quick start
 
 Thanks for trying this out. Should take ~5 min to install and ~5 to set up,
 then it just sits in your tray.
@@ -25,11 +25,11 @@ Marketing site with screenshots: **{{ MARKETING_URL }}**
 
 ## Install (Windows)
 
-1. Download **`Klyph_0.1.0_x64-setup.exe`** (the file I sent).
+1. Download **`Chute_0.1.0_x64-setup.exe`** (the file I sent).
 2. Double-click. Windows SmartScreen will yell at you. Click **More info**
    then **Run anyway**. Standard stuff for unsigned beta builds; I'll code-sign
    before any wider release.
-3. Launch **Klyph** from the Start menu or the system tray.
+3. Launch **Chute** from the Start menu or the system tray.
 
 If your antivirus flags it, that's also expected for unsigned builds. Whitelist
 once and you're set.
@@ -97,15 +97,15 @@ Text these to me casually as you notice them, no need for a structured report.
 ## Reset or uninstall
 
 - **Reset onboarding** (start over): Settings has a reset button at the
-  bottom. Or close the app, delete `%APPDATA%\app.klyph\`, relaunch.
-- **Uninstall**: Windows Settings, Apps, Klyph, Uninstall. Clean, no
+  bottom. Or close the app, delete `%APPDATA%\com.usechute.app\`, relaunch.
+- **Uninstall**: Windows Settings, Apps, Chute, Uninstall. Clean, no
   registry junk left behind.
 
 ---
 
 ## Privacy
 
-- All captures live in `%APPDATA%\app.klyph\klyph.db` on your
+- All captures live in `%APPDATA%\com.usechute.app\chute.db` on your
   machine. It's a local SQLite file. Nothing gets uploaded to anyone except the
   destinations you enable (Notion, Calendar, etc.).
 - OAuth tokens are stored encrypted in a separate local file.

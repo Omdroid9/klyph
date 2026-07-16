@@ -1,4 +1,4 @@
-# Klyph Apple Notes Bridge (macOS Installer Bundle)
+# Chute Apple Notes Bridge (macOS Installer Bundle)
 
 This bundle installs the Apple Notes bridge as a per-user macOS LaunchAgent.
 
@@ -20,7 +20,7 @@ chmod +x install.sh uninstall.sh
 Optional install flags:
 
 ```bash
-./install.sh --port 8787 --shortcut-name "Klyph Save Note"
+./install.sh --port 8787 --shortcut-name "Chute Save Note"
 ```
 
 ## Verify
@@ -31,11 +31,11 @@ curl http://127.0.0.1:8787/api/apple-notes/status
 
 ## App settings
 
-In Klyph settings:
+In Chute settings:
 
 - Apple Notes Bridge URL: `http://127.0.0.1:8787`
 - Apple Notes Method: `applescript` (or `shortcut`)
-- Apple Notes Folder: `Klyph`
+- Apple Notes Folder: `Chute`
 
 ## Uninstall
 

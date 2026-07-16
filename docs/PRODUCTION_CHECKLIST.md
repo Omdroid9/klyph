@@ -1,6 +1,6 @@
-# Klyph Production Checklist (Small Beta)
+# Chute Production Checklist (Small Beta)
 
-Use this checklist to ship Klyph safely to a small set of users (friends, team, pilot customers) with low/no fixed cost.
+Use this checklist to ship Chute safely to a small set of users (friends, team, pilot customers) with low/no fixed cost.
 
 ## Phase 1: Security Baseline (must pass before sharing binaries)
 

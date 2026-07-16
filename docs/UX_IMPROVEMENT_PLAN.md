@@ -1,7 +1,7 @@
-# Klyph — UX & Product Improvement Plan
+# Chute — UX & Product Improvement Plan
 
 > Source: full UX/PM review of the capture window (July 2026) + market analysis.
-> Principle behind every item: **Klyph is a reflex, not a destination.** Anything
+> Principle behind every item: **Chute is a reflex, not a destination.** Anything
 > that adds friction between thought and Enter is a bug, even if it's pretty.
 
 ---
@@ -36,7 +36,7 @@ ambiguous, and several details read as unfinished or user-hostile.
 |---|------|--------|-------|
 | 2.1 | Destination chip contrast | Active chips get filled accent treatment; inactive stay ghost. Unmistakable at a glance. | `index.css`, `CaptureWindow.tsx` |
 | 2.2 | Saved toast with Undo | After Enter: "✓ Reminders · tomorrow 5 PM — Undo" (~5s). Undo deletes the capture. Requires a short sync grace period for undoable captures (delay the `request-sync` emit ~5s, or mark capture `pending` until toast expires) so Undo wins the race against the sync engine. | `CaptureWindow.tsx`, `syncManager.ts`, `db.ts` |
-| 2.3 | Brand + copy cleanup | Pick one name (recommend **Klyph** everywhere; "FlowCapture" dies). Placeholder rewrite; kill the "CAPTURE" badge or make it functional (sync status). | `CaptureWindow.tsx` |
+| 2.3 | Brand + copy cleanup | Pick one name (recommend **Chute** everywhere; "FlowCapture" dies). Placeholder rewrite; kill the "CAPTURE" badge or make it functional (sync status). | `CaptureWindow.tsx` |
 | 2.4 | Defuse "All" | Move behind confirm or into an overflow menu — one accidental click currently sprays a private thought to every connected app. | `CaptureWindow.tsx` |
 | 2.5 | Rename "Distraction" | User-facing label → "Park it" (list stays "Parking Lot"). First-run tooltip explains it. | `CaptureWindow.tsx` |
 | 2.6 | Char limit sanity | 280 → 2000. Counter hidden until < 100 remaining. | `CaptureWindow.tsx`, `db.ts` (no schema change; TEXT already) |
@@ -55,7 +55,7 @@ leave home row. Parsing is invisible until the preview line.
 |---|------|--------|
 | 3.1 | Inline token syntax | `#work` → tag, `/slack` (or `>slack`) → destination, existing `@time`. Tokens stripped from saved content, applied as metadata. Extend `parser.ts`; reuse routing engine. |
 | 3.2 | Autocomplete popover | Typing `#` or `/` opens a keyboard-navigable suggestion list (tags, lists, connected destinations). |
-| 3.3 | Parse feedback highlight | Recognized tokens get a highlight layer behind the transparent textarea (standard overlay trick) so users *see* Klyph understanding them — the Todoist/Fantastical wow. Full pill editing is out of scope for v1. |
+| 3.3 | Parse feedback highlight | Recognized tokens get a highlight layer behind the transparent textarea (standard overlay trick) so users *see* Chute understanding them — the Todoist/Fantastical wow. Full pill editing is out of scope for v1. |
 | 3.4 | Cheap shortcuts now | `Cmd+1/2/3` tags, `Cmd+D` cycle destination presets. Can ship inside WS2 if desired. |
 
 **Effort:** 2–3 sessions. **Risk:** medium-high (overlay alignment across webviews).
@@ -66,7 +66,7 @@ leave home row. Parsing is invisible until the preview line.
 ## Workstream 4 — Voice Capture (P1, the launch headline)
 
 **Problem/opportunity:** Dictation apps (Superwhisper, Wispr Flow) are booming
-but stop at transcription; Klyph's routing engine is the missing half. On-device
+but stop at transcription; Chute's routing engine is the missing half. On-device
 keeps the privacy story intact.
 
 | # | Task | Detail |
@@ -82,7 +82,7 @@ keeps the privacy story intact.
 
 ## Workstream 5 — Recall & Lock-in (P2, retention layer)
 
-**Problem:** Klyph is a write-only chute; nothing accumulates value, so nothing
+**Problem:** Chute is a write-only chute; nothing accumulates value, so nothing
 prevents churn.
 
 | # | Task | Detail |
@@ -117,7 +117,7 @@ Unchanged from the July roadmap; listed so sequencing is honest:
 
 ## Open decisions (need Omkar's call)
 
-1. **Brand:** Klyph everywhere, or is "FlowCapture" the intended product name?
+1. **Brand:** Chute everywhere, or is "FlowCapture" the intended product name?
 2. **"All" button:** confirm-dialog, overflow menu, or delete entirely?
 3. **Char limit:** 2000 OK?
 4. **Voice model:** auto-download `base.en` on first use vs. explicit opt-in download in Settings?

@@ -1,6 +1,6 @@
 # Friend testing guide
 
-Use this when sending Klyph to someone who is **not** setting up the dev environment.
+Use this when sending Chute to someone who is **not** setting up the dev environment.
 
 ## What you send
 
@@ -42,7 +42,7 @@ They can also set this during onboarding step 3 if you tell them the URL upfront
 ### Install
 
 1. Run the installer (Windows may show SmartScreen for unsigned builds — “More info” → “Run anyway” is normal for beta).
-2. Launch **Klyph** from the Start menu or tray.
+2. Launch **Chute** from the Start menu or tray.
 
 ### First run
 
