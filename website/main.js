@@ -606,11 +606,15 @@ if (ctaForm) {
       return;
     }
     // No backend by design: hand off to the visitor's mail app, prefilled.
-    // The reason strip says exactly what happened and what's left to do.
+    // Warm, self-contained, no fill-in blanks (people just hit send) — we
+    // collect OS/use-case in the reply. The typed email is captured in case
+    // they send from a different account than they want us to reach.
     try {
-      const sub = encodeURIComponent("Chute beta access");
+      const sub = encodeURIComponent("Chute beta — count me in");
       const body = encodeURIComponent(
-        `Hi — I'd like to try Chute.\n\nEmail: ${email}\nOS: Mac or Windows?\nHow I'd use it: `,
+        `Hi Omkar,\n\n` +
+          `I'd love early access to Chute. You can reach me at ${email}.\n\n` +
+          `Sent from usechute.com`,
       );
       window.location.href = `mailto:hello@usechute.com?subject=${sub}&body=${body}`;
       setReason("Your mail app just opened — hit send there and you're in", "sent");
