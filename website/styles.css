@@ -4670,7 +4670,9 @@ main h2 .accent-serif {
 
 .desktop-stage {
   position: relative;
-  padding: 2.6rem 2rem 2.2rem;
+  /* Extra headroom so the floating history card overlaps only the demo
+     window's header corner — never the text being typed. */
+  padding: 3.4rem 2rem 2.2rem;
 }
 
 /* The window sits on the wallpaper like the real app; hint reads on glass */
@@ -4686,13 +4688,23 @@ main h2 .accent-serif {
 
 /* Floating layers tuck against the frame instead of raw page space */
 .desktop-stage .demo-history {
-  top: -0.6rem;
-  left: -0.4rem;
+  /* Bottom-anchored like a second window on the desktop: it may clip the
+     demo window's footer chrome, but never the text being typed. */
+  top: auto;
+  bottom: 0.9rem;
+  left: 0.75rem;
+  width: 13.5rem;
+  transform: rotate(-1.5deg);
+}
+
+.desktop-stage .routing-demo-hint {
+  text-align: right;
+  padding-right: 0.5rem;
 }
 
 .desktop-stage .demo-toast {
-  top: 0.4rem;
-  right: 0.2rem;
+  top: 0.45rem;
+  right: 0.75rem;
 }
 
 @media (max-width: 900px) {

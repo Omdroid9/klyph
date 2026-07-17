@@ -816,7 +816,8 @@ if (demoInput) {
     li.querySelector(".demo-history-text").textContent = oneLine;
     li.querySelector(".demo-history-dest").textContent = dest;
     historyList.prepend(li);
-    while (historyList.children.length > 3) {
+    // Two entries max: taller cards started covering the demo input.
+    while (historyList.children.length > 2) {
       historyList.removeChild(historyList.lastChild);
     }
     if (historyCard) historyCard.hidden = false;
