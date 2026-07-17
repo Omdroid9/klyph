@@ -1027,3 +1027,16 @@ if (summonOverlay) {
     }
   }
 }
+
+/* ---------- Menu-bar clock: the nav doubles as a Mac menu bar ---------- */
+const macTime = document.querySelector("[data-mac-time]");
+if (macTime) {
+  const tickClock = () => {
+    const now = new Date();
+    const day = now.toLocaleDateString("en-US", { weekday: "short" });
+    const time = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    macTime.textContent = `${day} ${time}`;
+  };
+  tickClock();
+  setInterval(tickClock, 30_000);
+}
