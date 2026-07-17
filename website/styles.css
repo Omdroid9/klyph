@@ -15,9 +15,11 @@
   --accent-deep: #5b8ad8;
   --accent-warm: #e8c97a;
 
-  /* Fonts — Geist (sans) for system voice, Geist Mono for keys &
-     numbers, Instrument Serif italic for the considered moments. */
-  --font: "Geist", "Inter Display", "Inter", system-ui, -apple-system,
+  /* Fonts — Nohemi is the single brand voice across the whole site
+     (nav, body, footer, buttons — everywhere). Geist Mono stays for keys,
+     times, and numbers (Nohemi has no monospace); Instrument Serif italic
+     for the considered moments. Geist is only a loading fallback now. */
+  --font: "Nohemi", "Geist", "Inter", system-ui, -apple-system,
     "Segoe UI", sans-serif;
   --mono: "Geist Mono", ui-monospace, "JetBrains Mono", "SF Mono", Menlo,
     Consolas, monospace;
@@ -3802,6 +3804,19 @@ main h2 {
   src: url("/fonts/nohemi/Nohemi-SemiBold.woff2") format("woff2");
   font-weight: 600;
   font-display: swap;
+}
+
+@font-face {
+  font-family: "Nohemi";
+  src: url("/fonts/nohemi/Nohemi-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* Nohemi runs a touch wide at body sizes; a hair of negative tracking
+   keeps paragraph and UI text tight without losing its character. */
+body {
+  letter-spacing: -0.006em;
 }
 
 .hero-title,
