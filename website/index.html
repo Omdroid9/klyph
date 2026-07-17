@@ -117,7 +117,21 @@
         </div>
 
         <div class="hero-visual hero-visual-demo" data-reveal data-reveal-delay="2">
-          <div class="glow glow-hero" aria-hidden="true"></div>
+          <!-- The product's native habitat: a Mac. Wallpaper, menu bar, and
+               the live demo window sitting on it like the real app. -->
+          <div class="desktop-frame">
+            <div class="desktop-menubar" aria-hidden="true">
+              <span class="desktop-menubar-app">
+                <img src="/chute-sphere.svg" alt="" width="13" height="13" />
+                <strong>Chute</strong>
+              </span>
+              <span class="desktop-menubar-items"><span>File</span><span>Edit</span><span>View</span><span>Window</span></span>
+              <span class="desktop-menubar-right">
+                <span class="desktop-menubar-keys">⌘⇧Space</span>
+                <span class="desktop-menubar-time">Wed 9:41</span>
+              </span>
+            </div>
+            <div class="desktop-stage">
           <div class="routing-demo routing-demo-hero">
             <!-- Floating layers — driven by the live demo, not painted on -->
             <aside class="demo-history" data-demo-history hidden aria-hidden="true">
@@ -168,7 +182,18 @@
               <button type="button" class="routing-demo-try" data-demo-try>Try your own thought</button>
             </p>
           </div>
+            </div>
+          </div>
         </div>
+      </section>
+
+      <!-- Spec strip — the facts, stated like a utility, not a pitch -->
+      <section class="spec-strip" aria-label="Product facts">
+        <div class="spec-item"><span class="spec-key">Summon</span><span class="spec-val">⌘⇧Space · global</span></div>
+        <div class="spec-item"><span class="spec-key">Storage</span><span class="spec-val">Local SQLite · on device</span></div>
+        <div class="spec-item"><span class="spec-key">Updates</span><span class="spec-val">Signed · automatic</span></div>
+        <div class="spec-item"><span class="spec-key">Account</span><span class="spec-val">None required</span></div>
+        <div class="spec-item"><span class="spec-key">Destinations</span><span class="spec-val">8 built in</span></div>
       </section>
 
       <!-- How it works -->
@@ -432,6 +457,37 @@
       </section>
 
       <!-- CTA -->
+      <!-- Changelog — a product that ships, shown shipping -->
+      <section class="section section-changelog" id="changelog" aria-labelledby="changelog-title">
+        <div class="changelog-head" data-reveal>
+          <p class="eyebrow">Changelog</p>
+          <h2 id="changelog-title">Built in public.<br />Shipped <span class="accent-serif">weekly.</span></h2>
+        </div>
+        <ol class="changelog-list" data-reveal data-reveal-delay="1">
+          <li class="changelog-row">
+            <span class="changelog-date">Jul 16</span>
+            <div class="changelog-body">
+              <span class="changelog-tag">v0.2</span>
+              <p><strong>Appointments know they're appointments.</strong> "Get biometrics done at 11am" becomes a calendar event; "…done by 5pm" stays a reminder. Deadlines and bookings route differently now.</p>
+            </div>
+          </li>
+          <li class="changelog-row">
+            <span class="changelog-date">Jul 14</span>
+            <div class="changelog-body">
+              <span class="changelog-tag">v0.2</span>
+              <p><strong>Split on send.</strong> A mixed capture fans out — action lines become individual reminders, prose stays together as one note.</p>
+            </div>
+          </li>
+          <li class="changelog-row">
+            <span class="changelog-date">Jul 12</span>
+            <div class="changelog-body">
+              <span class="changelog-tag">v0.2</span>
+              <p><strong>Updates itself.</strong> Signed builds download quietly in the background; restart whenever you feel like it.</p>
+            </div>
+          </li>
+        </ol>
+      </section>
+
       <section class="section section-cta" id="download" aria-labelledby="cta-title">
         <div class="cta-inner" data-reveal>
           <h2 id="cta-title">Capture your <span class="accent-serif">first thought.</span></h2>
