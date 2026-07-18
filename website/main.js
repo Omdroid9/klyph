@@ -807,6 +807,14 @@ if (demoInput) {
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toast.classList.remove("is-in"), 1700);
 
+    // The routed app's dock icon bounces, exactly like macOS.
+    const dockApp = document.querySelector(`[data-dock="${route.chips[0]}"]`);
+    if (dockApp && !prefersReduced) {
+      dockApp.classList.remove("is-bounce");
+      void dockApp.offsetWidth;
+      dockApp.classList.add("is-bounce");
+    }
+
     const li = document.createElement("li");
     const oneLine = text.replace(/\n+/g, " · ");
     li.innerHTML =

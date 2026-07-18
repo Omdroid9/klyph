@@ -125,6 +125,8 @@
               </span>
               <span class="desktop-menubar-items"><span>File</span><span>Edit</span><span>View</span><span>Window</span></span>
               <span class="desktop-menubar-right">
+                <svg class="menubar-glyph" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0 1 14.08 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+                <svg class="menubar-glyph" viewBox="0 0 28 14" width="17" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1.5" width="22" height="11" rx="3"/><path d="M25.5 5v4" stroke-linecap="round"/><rect x="3" y="3.5" width="14" height="7" rx="1.6" fill="currentColor" stroke="none"/></svg>
                 <span class="desktop-menubar-keys">⌘⇧Space</span>
                 <span class="desktop-menubar-time" data-mac-time>Wed 9:41</span>
               </span>
@@ -175,13 +177,26 @@
                 </span>
               </div>
             </div>
-            <p class="routing-demo-hint">
-              The app's actual routing brain, running in your browser.
-              <button type="button" class="routing-demo-try" data-demo-try>Try your own thought</button>
-            </p>
+          </div>
+
+          <!-- The Dock — Chute's destinations as apps. The routed one
+               bounces when the demo sends, exactly like macOS. -->
+          <div class="desktop-dock" aria-hidden="true">
+            <span class="dock-app" data-dock="reminders"><span class="brand-logo" data-logo="reminders"></span></span>
+            <span class="dock-app" data-dock="notes"><span class="brand-logo" data-logo="notes"></span></span>
+            <span class="dock-app" data-dock="calendar"><span class="brand-logo" data-logo="gcal"></span></span>
+            <span class="dock-app" data-dock="slack"><span class="brand-logo" data-logo="slack"></span></span>
+            <span class="dock-app"><span class="brand-logo" data-logo="notion"></span></span>
+            <span class="dock-app"><span class="brand-logo" data-logo="discord"></span></span>
+            <span class="dock-sep"></span>
+            <span class="dock-app dock-app-chute"><img src="/chute-sphere.svg" alt="" width="34" height="34" /></span>
           </div>
             </div>
           </div>
+          <p class="routing-demo-hint hero-frame-hint">
+            The app's actual routing brain, running in your browser.
+            <button type="button" class="routing-demo-try" data-demo-try>Try your own thought</button>
+          </p>
         </div>
       </section>
 
