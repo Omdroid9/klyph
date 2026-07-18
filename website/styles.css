@@ -4908,17 +4908,30 @@ main h2 .accent-serif {
 
 /* Floating layers live on the wallpaper, clear of the window */
 .hero-stacked .desktop-stage .demo-history {
-  /* Clips only the window's footer corner — never chips or typed text */
+  /* Lives fully on the wallpaper beside the window — zero overlap.
+     Below 1250px there is no side strip, so it hides instead. */
   top: auto;
-  bottom: 0.9rem;
-  left: 1.6rem;
+  bottom: 6.5rem;
+  left: 2.2rem;
   width: 13.5rem;
   transform: rotate(-2deg);
+  display: none;
 }
 
 .hero-stacked .desktop-stage .demo-toast {
-  top: 0.9rem;
-  right: 1.4rem;
+  top: 4.6rem;
+  right: 2.2rem;
+  display: none;
+}
+
+@media (min-width: 1250px) {
+  .hero-stacked .desktop-stage .demo-history,
+  .hero-stacked .desktop-stage .demo-toast {
+    display: inline-flex;
+  }
+  .hero-stacked .desktop-stage .demo-history {
+    display: block;
+  }
 }
 
 .hero-stacked .desktop-stage .routing-demo-hint {
@@ -5087,7 +5100,8 @@ main h2 .accent-serif {
 
 .hero-stacked {
   max-width: none;
-  padding-inline: max(1.5rem, calc((100vw - 92rem) / 2));
+  /* The screen sits at ~80% of the viewport — display, not wallpaper */
+  padding-inline: max(1.5rem, 10vw);
 }
 
 .hero-stacked .hero-copy {
@@ -5127,4 +5141,167 @@ main h2 .accent-serif {
 
 .hero-stacked .desktop-frame {
   width: 100%;
+}
+
+/* =====================================================================
+   The summon moment — scroll in and the keys press themselves, then
+   the bar drops with a routed thought. The CTA invites the real thing:
+   this site actually answers ⌘⇧Space.
+   ===================================================================== */
+
+.section-summon {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.016), rgba(255, 255, 255, 0));
+  padding: 5.5rem 1.5rem;
+  margin: 6rem 0;
+}
+
+.summon-band-inner {
+  max-width: var(--max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .summon-band-inner {
+    grid-template-columns: 1.1fr 1fr;
+  }
+}
+
+/* Stage: keys press in sequence, bar drops after */
+.summon-band-keys {
+  display: flex;
+  gap: 0.7rem;
+  margin-bottom: 2rem;
+}
+
+.skey {
+  font-family: var(--mono);
+  font-size: 1.5rem;
+  padding: 0.85rem 1.4rem;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #23232b, #17171d);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom-width: 4px;
+  color: var(--text-strong);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+}
+
+[data-summon-band].in-view .skey-1 { animation: skey-press 0.55s var(--ease) 0.15s both; }
+[data-summon-band].in-view .skey-2 { animation: skey-press 0.55s var(--ease) 0.3s both; }
+[data-summon-band].in-view .skey-3 { animation: skey-press 0.55s var(--ease) 0.45s both; }
+
+@keyframes skey-press {
+  0%, 100% { transform: translateY(0); border-bottom-width: 4px; }
+  45% { transform: translateY(3px); border-bottom-width: 1px; }
+}
+
+.summon-band-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: 26rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #1b1b22, #131318);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 18px 50px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transform: translateY(-12px);
+}
+
+[data-summon-band].in-view .summon-band-bar {
+  animation: sband-drop 0.5s var(--ease) 0.95s both;
+}
+
+@keyframes sband-drop {
+  from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.summon-band-text {
+  flex: 1;
+  font-size: 0.95rem;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.summon-band-chip {
+  flex: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: var(--text-strong);
+  color: #101014;
+}
+
+.summon-band-reason {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0.8rem 0 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+  opacity: 0;
+}
+
+[data-summon-band].in-view .summon-band-reason {
+  animation: sband-drop 0.4s var(--ease) 1.3s both;
+}
+
+.summon-band-reason strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.summon-band-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(122, 169, 238, 0.7);
+  transform: translateY(-1px);
+}
+
+/* Copy column */
+.summon-band-copy h2 {
+  font-size: var(--t-3xl);
+  line-height: 1.04;
+  margin: 0.75rem 0 1rem;
+}
+
+.summon-band-copy p {
+  color: var(--muted);
+  line-height: 1.65;
+  max-width: 30rem;
+}
+
+.summon-band-cta {
+  margin-top: 1.6rem;
+}
+
+/* The real hotkey only exists on desktop pointers */
+@media (max-width: 900px), (hover: none) {
+  .summon-band-cta {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-summon-band].in-view .skey,
+  [data-summon-band].in-view .summon-band-bar,
+  [data-summon-band].in-view .summon-band-reason {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }

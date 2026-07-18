@@ -964,7 +964,8 @@ if (summonOverlay) {
   const summonReasonText = summonOverlay.querySelector("[data-summon-reason-text]");
   const summonChips = summonOverlay.querySelectorAll("[data-summon-chip]");
   const summonTime = summonOverlay.querySelector("[data-summon-time]");
-  const summonPill = document.querySelector("[data-summon-open]");
+  const summonOpeners = document.querySelectorAll("[data-summon-open]");
+  const summonPill = summonOpeners[0] || null;
   let lastFocus = null;
 
   function renderSummon() {
@@ -1027,12 +1028,10 @@ if (summonOverlay) {
 
   summonInput.addEventListener("input", renderSummon);
   summonOverlay.querySelector("[data-summon-close]").addEventListener("click", closeSummon);
-  if (summonPill) {
-    summonPill.addEventListener("click", openSummon);
+  summonOpeners.forEach((el) => el.addEventListener("click", openSummon));
+  if (summonPill && window.matchMedia("(min-width: 900px) and (hover: hover)").matches) {
     // Desktop pointers only — the CSS hides it, but don't even unhide on touch.
-    if (window.matchMedia("(min-width: 900px) and (hover: hover)").matches) {
-      summonPill.hidden = false;
-    }
+    summonPill.hidden = false;
   }
 }
 
@@ -1047,4 +1046,22 @@ if (macTime) {
   };
   tickClock();
   setInterval(tickClock, 30_000);
+}
+
+
+/* ---------- Summon band: keys press themselves when scrolled into view ---------- */
+const summonBand = document.querySelector("[data-summon-band]");
+if (summonBand) {
+  const bandObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          summonBand.classList.add("in-view");
+          bandObserver.disconnect();
+        }
+      }
+    },
+    { threshold: 0.45 },
+  );
+  bandObserver.observe(summonBand);
 }
