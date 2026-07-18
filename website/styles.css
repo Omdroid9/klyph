@@ -5305,3 +5305,60 @@ main h2 .accent-serif {
     transform: none;
   }
 }
+
+
+/* --- Definitive fix: the demo container spans the full stage, so the
+   floating cards anchor to the real wallpaper gutter (~280px each side
+   at 80% width) instead of the shrink-wrapped window. Cards only show
+   when that gutter can hold them without touching the window. --- */
+.hero-stacked .routing-demo-hero {
+  width: 100%;
+  max-width: none;   /* base .routing-demo caps at 33rem; unlock it here */
+  margin: 0;
+}
+
+.hero-stacked .desktop-stage .demo-history,
+.hero-stacked .desktop-stage .demo-toast {
+  display: none;
+}
+
+.hero-stacked .desktop-stage .demo-history {
+  top: auto;
+  bottom: 3rem;
+  left: 0;
+  width: 12rem;
+  transform: rotate(-2deg);
+}
+
+.hero-stacked .desktop-stage .demo-toast {
+  top: 2.4rem;
+  right: 0;
+}
+
+/* Honest math: gutter = (80vw - stage padding - 40rem window) / 2.
+   A 12rem card + breathing room needs ~1440px of viewport. Below that
+   the desktop shows a single clean window — no collision, ever. */
+@media (min-width: 1440px) {
+  .hero-stacked .desktop-stage .demo-history { display: block; }
+  .hero-stacked .desktop-stage .demo-toast { display: inline-flex; }
+}
+
+/* Apple menu logo + refined menu-bar rhythm (extracted from real macOS) */
+.menubar-apple {
+  color: rgba(255, 255, 255, 0.92);
+  margin-right: 0.15rem;
+}
+
+.desktop-menubar .desktop-menubar-app {
+  margin-left: 0;
+}
+
+/* Dock: subtle top-edge highlight so icons rest on a shelf, like macOS */
+.desktop-dock::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 40%);
+  pointer-events: none;
+}
