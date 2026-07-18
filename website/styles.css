@@ -4852,163 +4852,89 @@ main h2 .accent-serif {
   }
 }
 
+
+
+
 /* =====================================================================
-   Full-bleed desktop hero — the first frame IS a Mac running Chute.
-   The site nav doubles as the menu bar; wallpaper spans the viewport;
-   the live demo window sits on the desktop with its floating layers.
+   Stacked hero — headline first, then the product on its Mac as one
+   big framed scene. The wide stage finally gives the floating cards
+   wallpaper to live on instead of the window itself.
    ===================================================================== */
 
-.hero-desktop {
-  position: relative;
-  min-height: 100svh;
-  display: grid;
-  align-items: center;
-  /* True full-bleed: the wallpaper spans the viewport while the content
-     stays aligned to the site container via symmetric inline padding. */
-  max-width: none;
-  padding-top: calc(var(--nav-h) + 2rem);
-  padding-bottom: 3.5rem;
-  padding-inline: max(1.5rem, calc((100vw - var(--max)) / 2));
+.hero-stacked {
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  text-align: center;
+  min-height: auto;
+  padding-top: calc(var(--nav-h) + 5rem);
 }
 
-.hero-desktop-bg {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(120% 90% at 15% 0%, #3b5bd9 0%, transparent 55%),
-    radial-gradient(130% 100% at 90% 10%, #7048c9 0%, transparent 60%),
-    radial-gradient(120% 120% at 70% 105%, #d96f4e 0%, transparent 55%),
-    linear-gradient(165deg, #24356f 0%, #472f6e 48%, #1c2340 100%);
+.hero-stacked .hero-copy {
+  max-width: 46rem;
+  margin: 0 auto;
 }
 
-/* Legibility scrim behind the copy column, fading into the wallpaper */
-.hero-desktop-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(100deg, rgba(7, 8, 16, 0.66) 0%, rgba(7, 8, 16, 0.38) 38%, transparent 62%),
-    linear-gradient(0deg, rgba(7, 7, 10, 0.55) 0%, transparent 22%);
-}
-
-.hero-desktop > *:not(.hero-desktop-bg) {
-  position: relative;
-  z-index: 1;
-}
-
-/* Copy sits on the wallpaper — lift it to white with soft depth */
-.hero-desktop .hero-lead {
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.hero-desktop .eyebrow {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.hero-desktop .hero-note {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.hero-desktop .hero-title {
-  text-shadow: 0 2px 24px rgba(10, 12, 30, 0.35);
-}
-
-.hero-desktop .btn-ghost {
-  border-color: rgba(255, 255, 255, 0.35);
-  color: #fff;
-}
-
-.hero-desktop .btn-ghost:hover {
-  border-color: rgba(255, 255, 255, 0.6);
-}
-
-/* The demo's supporting text reads on glass */
-.hero-desktop .routing-demo-hint {
-  color: rgba(255, 255, 255, 0.78);
-  text-shadow: 0 1px 8px rgba(10, 12, 30, 0.5);
-  text-align: right;
-  padding-right: 0.5rem;
-}
-
-.hero-desktop .routing-demo-try {
-  color: #fff;
-  border-bottom-color: rgba(255, 255, 255, 0.5);
-}
-
-/* Floating layers anchor to the demo like windows on the desktop */
-.hero-desktop .demo-history {
-  top: auto;
-  bottom: -1.4rem;
-  left: -1.8rem;
-  width: 13.5rem;
-  transform: rotate(-1.5deg);
-}
-
-.hero-desktop .demo-toast {
-  top: -1rem;
-  right: -0.8rem;
-}
-
-/* --- Nav as the menu bar while over the hero --- */
-.site-nav:not(.is-scrolled) {
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: saturate(160%) blur(20px);
-  -webkit-backdrop-filter: saturate(160%) blur(20px);
-  border-bottom-color: rgba(255, 255, 255, 0.12);
-}
-
-.site-nav:not(.is-scrolled) .brand {
-  color: #fff;
-}
-
-.site-nav:not(.is-scrolled) nav a {
-  color: rgba(255, 255, 255, 0.78);
-}
-
-.site-nav:not(.is-scrolled) nav a:hover {
-  color: #fff;
-}
-
-.site-nav:not(.is-scrolled) nav a::after {
-  background: #fff;
-}
-
-.site-nav:not(.is-scrolled) .nav-cta {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.28);
-}
-
-.nav-mac {
-  display: none;
-  align-items: center;
-  gap: 0.9rem;
+.hero-stacked .hero-lead {
   margin-left: auto;
-  font-family: var(--mono);
-  font-size: 0.68rem;
-  color: rgba(255, 255, 255, 0.72);
-  font-feature-settings: "tnum" 1;
+  margin-right: auto;
 }
 
-.site-nav.is-scrolled .nav-mac {
-  color: var(--muted);
+.hero-stacked .hero-actions {
+  justify-content: center;
 }
 
-@media (min-width: 900px) {
-  .nav-mac {
-    display: inline-flex;
-  }
-  .nav-mac + .nav-cta {
-    margin-left: 0;
-  }
+.hero-stacked .eyebrow::before {
+  display: none;
+}
+
+.hero-stacked .hero-visual {
+  width: 100%;
+}
+
+.hero-stacked .desktop-frame {
+  max-width: 66rem;
+  margin: 0 auto;
+}
+
+.hero-stacked .desktop-stage {
+  padding: 3.2rem 3rem 2.4rem;
+}
+
+/* Window centered on the desktop with air on both sides */
+.hero-stacked .desktop-stage .routing-demo-window {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+/* Floating layers live on the wallpaper, clear of the window */
+.hero-stacked .desktop-stage .demo-history {
+  /* Clips only the window's footer corner — never chips or typed text */
+  top: auto;
+  bottom: 0.9rem;
+  left: 1.6rem;
+  width: 13.5rem;
+  transform: rotate(-2deg);
+}
+
+.hero-stacked .desktop-stage .demo-toast {
+  top: 0.9rem;
+  right: 1.4rem;
+}
+
+.hero-stacked .desktop-stage .routing-demo-hint {
+  text-align: center;
+  padding-right: 0;
 }
 
 @media (max-width: 900px) {
-  .hero-desktop {
-    min-height: auto;
+  .hero-stacked {
+    padding-top: calc(var(--nav-h) + 3rem);
   }
-  .hero-desktop .demo-history,
-  .hero-desktop .demo-toast {
+  .hero-stacked .desktop-stage {
+    padding: 1.6rem 1rem 1.4rem;
+  }
+  .hero-stacked .desktop-stage .demo-history,
+  .hero-stacked .desktop-stage .demo-toast {
     display: none;
   }
 }

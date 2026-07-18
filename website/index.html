@@ -87,18 +87,13 @@
           <a href="#integrations">Integrations</a>
           <a href="#privacy">Privacy</a>
         </nav>
-        <span class="nav-mac" aria-hidden="true">
-          <span class="nav-mac-keys">⌘⇧Space</span>
-          <span class="nav-mac-time" data-mac-time>9:41</span>
-        </span>
         <a class="nav-cta magnetic" href="#download"><span>Request access</span></a>
       </div>
     </header>
 
     <main id="main">
-      <!-- Hero — the whole first frame IS a Mac running Chute -->
-      <section class="hero hero-demo-layout hero-desktop" aria-labelledby="hero-title">
-        <div class="hero-desktop-bg" aria-hidden="true"></div>
+      <!-- Hero — headline, then the product on its Mac, one big frame -->
+      <section class="hero hero-stacked" aria-labelledby="hero-title">
         <div class="hero-copy">
           <p class="eyebrow" data-reveal>One keystroke, from any app</p>
           <h1 id="hero-title" class="hero-title">
@@ -122,6 +117,19 @@
         </div>
 
         <div class="hero-visual hero-visual-demo" data-reveal data-reveal-delay="2">
+          <div class="desktop-frame">
+            <div class="desktop-menubar" aria-hidden="true">
+              <span class="desktop-menubar-app">
+                <img src="/chute-sphere.svg" alt="" width="13" height="13" />
+                <strong>Chute</strong>
+              </span>
+              <span class="desktop-menubar-items"><span>File</span><span>Edit</span><span>View</span><span>Window</span></span>
+              <span class="desktop-menubar-right">
+                <span class="desktop-menubar-keys">⌘⇧Space</span>
+                <span class="desktop-menubar-time" data-mac-time>Wed 9:41</span>
+              </span>
+            </div>
+            <div class="desktop-stage">
           <div class="routing-demo routing-demo-hero">
             <!-- Floating layers — driven by the live demo, not painted on -->
             <aside class="demo-history" data-demo-history hidden aria-hidden="true">
@@ -171,6 +179,8 @@
               The app's actual routing brain, running in your browser.
               <button type="button" class="routing-demo-try" data-demo-try>Try your own thought</button>
             </p>
+          </div>
+            </div>
           </div>
         </div>
       </section>
