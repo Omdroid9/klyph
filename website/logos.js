@@ -2,6 +2,82 @@
 // Use via <span class="brand-logo" data-logo="slack"></span>
 
 export const logos = {
+  // --- Everyday macOS apps for the hero dock (simplified, recognizable) ---
+  finder: `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="24" height="24" rx="5.5" fill="#ffffff"/>
+      <path d="M12.6 0H18.5A5.5 5.5 0 0 1 24 5.5v13a5.5 5.5 0 0 1-5.5 5.5h-5.9c-1.3-2.5-2-5.3-2-8.2 0-1 .08-2 .24-2.9H8.6a.8.8 0 0 1 0-1.6h2.6C11.6 7.5 12 3.6 12.6 0z" fill="#36a4f4"/>
+      <path d="M6.5 7.2v2.2M17.5 7.2v2.2" stroke="#12385c" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M5.5 15.5c2 1.8 4.2 2.7 6.5 2.7s4.5-.9 6.5-2.7" stroke="#12385c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    </svg>
+  `,
+
+  safari: `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="24" height="24" rx="5.5" fill="#ffffff"/>
+      <circle cx="12" cy="12" r="9.2" fill="#3fa9f5"/>
+      <circle cx="12" cy="12" r="9.2" fill="none" stroke="#2b86d6" stroke-width="0.5"/>
+      <path d="M17.8 6.2 10.4 10.4 6.2 17.8l7.4-4.2z" fill="#ffffff"/>
+      <path d="M17.8 6.2 13.6 13.6l-3.2-3.2z" fill="#ff5150"/>
+    </svg>
+  `,
+
+  messages: `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="msg-g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#6bf17d"/>
+          <stop offset="100%" stop-color="#26c62f"/>
+        </linearGradient>
+      </defs>
+      <rect width="24" height="24" rx="5.5" fill="url(#msg-g)"/>
+      <path d="M12 5.4c-4.2 0-7.6 2.8-7.6 6.3 0 2 1.1 3.7 2.9 4.9-.1.9-.5 1.7-1.2 2.4 1.2-.1 2.3-.5 3.2-1.1.9.3 1.8.4 2.7.4 4.2 0 7.6-2.8 7.6-6.6S16.2 5.4 12 5.4z" fill="#ffffff"/>
+    </svg>
+  `,
+
+  mail: `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="mail-g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#63b0f8"/>
+          <stop offset="100%" stop-color="#1d6ef2"/>
+        </linearGradient>
+      </defs>
+      <rect width="24" height="24" rx="5.5" fill="url(#mail-g)"/>
+      <rect x="4" y="7" width="16" height="10.5" rx="1.6" fill="#ffffff"/>
+      <path d="m4.6 7.8 7.4 5.6 7.4-5.6" fill="none" stroke="#9fc2ef" stroke-width="1.1" stroke-linejoin="round"/>
+    </svg>
+  `,
+
+  photos: `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="24" height="24" rx="5.5" fill="#ffffff"/>
+      <g transform="translate(12 12)">
+        <ellipse rx="2" ry="4.4" cy="-4.4" fill="#f6c445" opacity="0.9"/>
+        <ellipse rx="2" ry="4.4" cy="-4.4" fill="#ef8c33" opacity="0.9" transform="rotate(45)"/>
+        <ellipse rx="2" ry="4.4" cy="-4.4" fill="#e4544f" opacity="0.9" transform="rotate(90)"/>
+        <ellipse rx="2" ry="4.4" cy="-4.4" fill="#d2418f" opacity="0.9" transform="rotate(135)"/>
+        <ellipse rx="2" ry="4.4" cy="-4.4" fill="#8e5bc0" opacity="0.9" transform="rotate(180)"/>
+        <ellipse rx="2" ry="4.4" cy="-4.4" fill="#3a7de0" opacity="0.9" transform="rotate(225)"/>
+        <ellipse rx="2" ry="4.4" cy="-4.4" fill="#3fb6ba" opacity="0.9" transform="rotate(270)"/>
+        <ellipse rx="2" ry="4.4" cy="-4.4" fill="#71bf4b" opacity="0.9" transform="rotate(315)"/>
+      </g>
+    </svg>
+  `,
+
+  music: `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="mus-g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fb5c74"/>
+          <stop offset="100%" stop-color="#fa233b"/>
+        </linearGradient>
+      </defs>
+      <rect width="24" height="24" rx="5.5" fill="url(#mus-g)"/>
+      <path d="M16.8 5.2 9.9 6.7v7.7a2.6 2.6 0 1 0 1.4 2.3V9.6l4.1-.9v4a2.6 2.6 0 1 0 1.4 2.3z" fill="#ffffff"/>
+    </svg>
+  `,
+
   slack: `
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <path d="M5.04 15.16a2.52 2.52 0 1 1-2.52-2.52h2.52v2.52z" fill="#E01E5A"/>

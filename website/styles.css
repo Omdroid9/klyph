@@ -5078,3 +5078,53 @@ main h2 .accent-serif {
     padding-bottom: 1.6rem;
   }
 }
+
+/* =====================================================================
+   Wider screen + stable height. The frame breaks out of the text
+   container like a real display, and the stage height is FIXED so the
+   demo's growing window never shifts the sections below.
+   ===================================================================== */
+
+.hero-stacked {
+  max-width: none;
+  padding-inline: max(1.5rem, calc((100vw - 92rem) / 2));
+}
+
+.hero-stacked .hero-copy {
+  max-width: 46rem;
+}
+
+@media (min-width: 900px) {
+  .hero-stacked .desktop-stage {
+    height: 34rem;
+    min-height: 0;
+    padding-bottom: 0;
+  }
+}
+
+/* Everyday-app tiles carry their own tile art — no white backing needed */
+.dock-app [data-logo="finder"],
+.dock-app [data-logo="safari"],
+.dock-app [data-logo="messages"],
+.dock-app [data-logo="mail"],
+.dock-app [data-logo="photos"],
+.dock-app [data-logo="music"] {
+  background: transparent;
+}
+
+/* The old two-column hero capped .hero-visual at a column width; the
+   stacked screen needs the full container. */
+.hero-stacked .hero-visual {
+  max-width: none;
+  width: 100%;
+}
+
+/* hero-visual was display:flex from the two-col era, which made the
+   frame a shrink-to-content flex item. Block + full width = the screen. */
+.hero-stacked .hero-visual {
+  display: block;
+}
+
+.hero-stacked .desktop-frame {
+  width: 100%;
+}
