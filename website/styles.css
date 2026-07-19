@@ -354,8 +354,10 @@ h3 {
 }
 
 .btn-ghost {
+  background: transparent;   /* <button> defaults to a light UA background */
   border: 1px solid var(--border);
   color: var(--text);
+  cursor: pointer;
 }
 
 .btn-ghost:hover {
@@ -5150,11 +5152,22 @@ main h2 .accent-serif {
    ===================================================================== */
 
 .section-summon {
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.016), rgba(255, 255, 255, 0));
-  padding: 5.5rem 1.5rem;
-  margin: 6rem 0;
+  position: relative;
+  padding: 4rem 1.5rem;
+  margin: 5rem 0;
+}
+
+/* A soft glow anchors the scene instead of hairline rules */
+.section-summon::before {
+  content: "";
+  position: absolute;
+  left: 8%;
+  top: 50%;
+  width: 34rem;
+  height: 24rem;
+  transform: translateY(-50%);
+  background: radial-gradient(closest-side, rgba(122, 169, 238, 0.10), transparent 75%);
+  pointer-events: none;
 }
 
 .summon-band-inner {
