@@ -3539,7 +3539,7 @@ h3 {
 
 .routing-demo-hero {
   margin: 0;
-  max-width: 33rem;
+  max-width: 40rem;
   width: 100%;
   margin-inline: auto;
 }
@@ -3851,79 +3851,6 @@ main h2 {
   padding: 0.34rem 0.85rem;
 }
 
-/* App chrome inside the demo window — mirrors the real capture window:
-   Focus/Distraction lanes, Work/Personal/Idea tags, Inbox + send toolbar. */
-.demo-lanes {
-  display: inline-flex;
-  gap: 0.2rem;
-  padding: 0.18rem;
-  margin-bottom: 0.7rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.demo-lane {
-  font-size: var(--t-2xs);
-  letter-spacing: 0.02em;
-  padding: 0.24rem 0.72rem;
-  border-radius: 999px;
-  color: var(--muted);
-}
-
-.demo-lane.is-active {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-strong);
-  font-weight: 600;
-}
-
-.demo-tags {
-  display: flex;
-  gap: 0.4rem;
-  margin-top: 0.7rem;
-}
-
-.demo-tag {
-  font-size: var(--t-2xs);
-  padding: 0.24rem 0.66rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--muted);
-}
-
-.routing-demo-chips-label {
-  align-self: center;
-  font-family: var(--mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--muted-deep);
-  margin-right: 0.15rem;
-}
-
-.demo-list-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: var(--t-2xs);
-  padding: 0.26rem 0.7rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--muted);
-}
-
-.demo-send-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--text-strong);
-  color: #101014;
-  flex: none;
-}
-
 .routing-demo-hint {
   color: var(--muted-deep);
 }
@@ -4024,88 +3951,6 @@ main h2 .accent-serif {
     0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Floating history card — overlaps the window's top-left corner */
-.demo-history {
-  position: absolute;
-  z-index: 3;
-  top: -3.4rem;
-  left: -2.6rem;
-  width: 15.5rem;
-  transform: rotate(-2.5deg);
-  background: linear-gradient(180deg, #1c1c23 0%, #14141a 100%);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 16px;
-  padding: 0.8rem 0.95rem 0.65rem;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.06) inset,
-    0 18px 48px rgba(0, 0, 0, 0.55);
-  animation: demo-card-in 0.5s var(--ease) both;
-}
-
-@keyframes demo-card-in {
-  from { opacity: 0; transform: rotate(-2.5deg) translateY(8px); }
-  to { opacity: 1; transform: rotate(-2.5deg) translateY(0); }
-}
-
-.demo-history-title {
-  margin: 0 0 0.45rem;
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted-deep);
-}
-
-.demo-history ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.demo-history li {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.32rem 0;
-  font-size: 0.75rem;
-  color: var(--muted);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  animation: demo-row-in 0.4s var(--ease) both;
-}
-
-.demo-history li:first-child {
-  border-top: none;
-}
-
-@keyframes demo-row-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.demo-history-dot {
-  flex: none;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #6ee7a0;
-  box-shadow: 0 0 6px rgba(110, 231, 160, 0.7);
-}
-
-.demo-history-text {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.demo-history-dest {
-  flex: none;
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--accent);
-}
-
 /* Sent toast — pops over the top-right edge when an example completes */
 .demo-toast {
   position: absolute;
@@ -4200,9 +4045,8 @@ main h2 .accent-serif {
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* The floating layers need breathing room on small screens — hide them */
+/* The toast needs breathing room on small screens — hide it */
 @media (max-width: 900px) {
-  .demo-history,
   .demo-toast {
     display: none;
   }
@@ -4749,268 +4593,6 @@ main h2 .accent-serif {
   display: none !important;
 }
 
-/* =====================================================================
-   Solid pass — the product in its native habitat, documented like a
-   shipping tool. Hero becomes a Mac (wallpaper + menu bar + the live
-   window); sections get hairline architecture; facts get a spec strip;
-   momentum gets a changelog.
-   ===================================================================== */
-
-/* --- The desktop frame: Chute's world is a Mac, so show a Mac --- */
-.desktop-frame {
-  position: relative;
-  border-radius: 20px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.1) inset,
-    0 40px 100px rgba(0, 0, 0, 0.6),
-    0 12px 36px rgba(0, 0, 0, 0.45);
-  background:
-    radial-gradient(120% 90% at 15% 0%, #3b5bd9 0%, transparent 55%),
-    radial-gradient(130% 100% at 90% 10%, #7048c9 0%, transparent 60%),
-    radial-gradient(120% 120% at 70% 105%, #d96f4e 0%, transparent 55%),
-    linear-gradient(165deg, #24356f 0%, #472f6e 48%, #1c2340 100%);
-}
-
-.desktop-menubar {
-  display: flex;
-  align-items: center;
-  gap: 1.1rem;
-  padding: 0.42rem 1rem;
-  background: rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.desktop-menubar-app {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.desktop-menubar-app strong {
-  font-weight: 600;
-}
-
-.desktop-menubar-items {
-  display: inline-flex;
-  gap: 0.9rem;
-  color: rgba(255, 255, 255, 0.62);
-}
-
-.desktop-menubar-right {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.9rem;
-  color: rgba(255, 255, 255, 0.66);
-}
-
-.desktop-menubar-keys,
-.desktop-menubar-time {
-  font-family: var(--mono);
-  font-size: 0.66rem;
-  font-feature-settings: "tnum" 1;
-}
-
-.desktop-stage {
-  position: relative;
-  /* Extra headroom so the floating history card overlaps only the demo
-     window's header corner — never the text being typed. */
-  padding: 3.4rem 2rem 2.2rem;
-}
-
-/* The window sits on the wallpaper like the real app; hint reads on glass */
-.desktop-stage /* App chrome inside the demo window — mirrors the real capture window:
-   Focus/Distraction lanes, Work/Personal/Idea tags, Inbox + send toolbar. */
-.demo-lanes {
-  display: inline-flex;
-  gap: 0.2rem;
-  padding: 0.18rem;
-  margin-bottom: 0.7rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.demo-lane {
-  font-size: var(--t-2xs);
-  letter-spacing: 0.02em;
-  padding: 0.24rem 0.72rem;
-  border-radius: 999px;
-  color: var(--muted);
-}
-
-.demo-lane.is-active {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-strong);
-  font-weight: 600;
-}
-
-.demo-tags {
-  display: flex;
-  gap: 0.4rem;
-  margin-top: 0.7rem;
-}
-
-.demo-tag {
-  font-size: var(--t-2xs);
-  padding: 0.24rem 0.66rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--muted);
-}
-
-.routing-demo-chips-label {
-  align-self: center;
-  font-family: var(--mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--muted-deep);
-  margin-right: 0.15rem;
-}
-
-.demo-list-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: var(--t-2xs);
-  padding: 0.26rem 0.7rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--muted);
-}
-
-.demo-send-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--text-strong);
-  color: #101014;
-  flex: none;
-}
-
-.routing-demo-hint {
-  color: rgba(255, 255, 255, 0.78);
-  text-shadow: 0 1px 8px rgba(10, 12, 30, 0.5);
-}
-
-.desktop-stage .routing-demo-try {
-  color: #fff;
-  border-bottom-color: rgba(255, 255, 255, 0.5);
-}
-
-/* Floating layers tuck against the frame instead of raw page space */
-.desktop-stage .demo-history {
-  /* Bottom-anchored like a second window on the desktop: it may clip the
-     demo window's footer chrome, but never the text being typed. */
-  top: auto;
-  bottom: 0.9rem;
-  left: 0.75rem;
-  width: 13.5rem;
-  transform: rotate(-1.5deg);
-}
-
-.desktop-stage /* App chrome inside the demo window — mirrors the real capture window:
-   Focus/Distraction lanes, Work/Personal/Idea tags, Inbox + send toolbar. */
-.demo-lanes {
-  display: inline-flex;
-  gap: 0.2rem;
-  padding: 0.18rem;
-  margin-bottom: 0.7rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.demo-lane {
-  font-size: var(--t-2xs);
-  letter-spacing: 0.02em;
-  padding: 0.24rem 0.72rem;
-  border-radius: 999px;
-  color: var(--muted);
-}
-
-.demo-lane.is-active {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-strong);
-  font-weight: 600;
-}
-
-.demo-tags {
-  display: flex;
-  gap: 0.4rem;
-  margin-top: 0.7rem;
-}
-
-.demo-tag {
-  font-size: var(--t-2xs);
-  padding: 0.24rem 0.66rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--muted);
-}
-
-.routing-demo-chips-label {
-  align-self: center;
-  font-family: var(--mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--muted-deep);
-  margin-right: 0.15rem;
-}
-
-.demo-list-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: var(--t-2xs);
-  padding: 0.26rem 0.7rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--muted);
-}
-
-.demo-send-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--text-strong);
-  color: #101014;
-  flex: none;
-}
-
-.routing-demo-hint {
-  text-align: right;
-  padding-right: 0.5rem;
-}
-
-.desktop-stage .demo-toast {
-  top: 0.45rem;
-  right: 0.75rem;
-}
-
-@media (max-width: 900px) {
-  .desktop-stage {
-    padding: 1.4rem 0.9rem 1.2rem;
-  }
-  .desktop-menubar-items {
-    display: none;
-  }
-}
-
 /* --- Spec strip: the facts, set like an instrument panel --- */
 .spec-strip {
   max-width: var(--max);
@@ -5186,278 +4768,16 @@ main h2 .accent-serif {
   width: 100%;
 }
 
-.hero-stacked .desktop-frame {
-  max-width: 66rem;
-  margin: 0 auto;
-}
-
-.hero-stacked .desktop-stage {
-  padding: 3.2rem 3rem 2.4rem;
-}
-
-/* Window centered on the desktop with air on both sides */
-.hero-stacked .desktop-stage .routing-demo-window {
-  max-width: 40rem;
-  margin: 0 auto;
-}
-
-/* Floating layers live on the wallpaper, clear of the window */
-.hero-stacked .desktop-stage .demo-history {
-  /* Lives fully on the wallpaper beside the window — zero overlap.
-     Below 1250px there is no side strip, so it hides instead. */
-  top: auto;
-  bottom: 6.5rem;
-  left: 2.2rem;
-  width: 13.5rem;
-  transform: rotate(-2deg);
-  display: none;
-}
-
-.hero-stacked .desktop-stage .demo-toast {
-  top: 4.6rem;
-  right: 2.2rem;
-  display: none;
-}
-
-@media (min-width: 1250px) {
-  .hero-stacked .desktop-stage .demo-history,
-  .hero-stacked .desktop-stage .demo-toast {
-    display: inline-flex;
-  }
-  .hero-stacked .desktop-stage .demo-history {
-    display: block;
-  }
-}
-
-.hero-stacked .desktop-stage /* App chrome inside the demo window — mirrors the real capture window:
-   Focus/Distraction lanes, Work/Personal/Idea tags, Inbox + send toolbar. */
-.demo-lanes {
-  display: inline-flex;
-  gap: 0.2rem;
-  padding: 0.18rem;
-  margin-bottom: 0.7rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.demo-lane {
-  font-size: var(--t-2xs);
-  letter-spacing: 0.02em;
-  padding: 0.24rem 0.72rem;
-  border-radius: 999px;
-  color: var(--muted);
-}
-
-.demo-lane.is-active {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-strong);
-  font-weight: 600;
-}
-
-.demo-tags {
-  display: flex;
-  gap: 0.4rem;
-  margin-top: 0.7rem;
-}
-
-.demo-tag {
-  font-size: var(--t-2xs);
-  padding: 0.24rem 0.66rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--muted);
-}
-
-.routing-demo-chips-label {
-  align-self: center;
-  font-family: var(--mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--muted-deep);
-  margin-right: 0.15rem;
-}
-
-.demo-list-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: var(--t-2xs);
-  padding: 0.26rem 0.7rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--muted);
-}
-
-.demo-send-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--text-strong);
-  color: #101014;
-  flex: none;
-}
-
-.routing-demo-hint {
-  text-align: center;
-  padding-right: 0;
-}
-
 @media (max-width: 900px) {
   .hero-stacked {
     padding-top: calc(var(--nav-h) + 3rem);
   }
-  .hero-stacked .desktop-stage {
-    padding: 1.6rem 1rem 1.4rem;
-  }
-  .hero-stacked .desktop-stage .demo-history,
-  .hero-stacked .desktop-stage .demo-toast {
-    display: none;
-  }
-}
-
-/* =====================================================================
-   The full screen experience — bigger frame, status glyphs, and the
-   Dock. The dock apps are Chute's destinations; the routed one bounces
-   when the demo sends, exactly like macOS.
-   ===================================================================== */
-
-.hero-stacked .desktop-frame {
-  max-width: none;
-  border-radius: 22px;
-}
-
-.hero-stacked .desktop-stage {
-  padding: 3.6rem 3rem 7.5rem;
-  min-height: 30rem;
-}
-
-.menubar-glyph {
-  opacity: 0.7;
-}
-
-/* --- The Dock --- */
-.desktop-dock {
-  position: absolute;
-  bottom: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.18) inset,
-    0 14px 40px rgba(10, 10, 24, 0.4);
-}
-
-.dock-app {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 2.8rem;
-  height: 2.8rem;
-  transition: transform 0.22s var(--ease);
-  will-change: transform;
-}
-
-.dock-app:hover {
-  transform: translateY(-8px) scale(1.28);
-}
-
-.dock-app .brand-logo,
-.dock-app img {
-  width: 2.35rem;
-  height: 2.35rem;
-  border-radius: 10px;
-  overflow: hidden;
-  display: block;
-}
-
-.dock-app .brand-logo svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-/* Slack's pinwheel has no tile of its own — give it the white app tile */
-.dock-app [data-logo="slack"] {
-  background: #fff;
-  padding: 0.42rem;
-  box-sizing: border-box;
-}
-
-.dock-sep {
-  width: 1px;
-  height: 2.5rem;
-  background: rgba(255, 255, 255, 0.28);
-  margin: 0 0.15rem;
-}
-
-/* macOS dock bounce when a capture routes to that app */
-@keyframes dock-bounce {
-  0%, 100% { transform: translateY(0); }
-  28% { transform: translateY(-16px); }
-  52% { transform: translateY(0); }
-  72% { transform: translateY(-8px); }
-}
-
-.dock-app.is-bounce {
-  animation: dock-bounce 0.85s var(--ease) 2;
-}
-
-/* Running-app dot under the bounced icon */
-.dock-app.is-bounce::after,
-.dock-app-chute::after {
-  content: "";
-  position: absolute;
-  bottom: -0.42rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
 }
 
 /* Hint sits below the frame as a quiet caption again */
 .hero-frame-hint {
   margin-top: 1.15rem;
   text-align: center;
-}
-
-@media (max-width: 900px) {
-  .hero-stacked .desktop-stage {
-    padding: 1.6rem 1rem 5.6rem;
-    min-height: 0;
-  }
-  .dock-app {
-    width: 2.2rem;
-    height: 2.2rem;
-  }
-  .dock-app .brand-logo,
-  .dock-app img {
-    width: 1.85rem;
-    height: 1.85rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .desktop-dock {
-    display: none;
-  }
-  .hero-stacked .desktop-stage {
-    padding-bottom: 1.6rem;
-  }
 }
 
 /* =====================================================================
@@ -5476,24 +4796,6 @@ main h2 .accent-serif {
   max-width: 46rem;
 }
 
-@media (min-width: 900px) {
-  .hero-stacked .desktop-stage {
-    height: 34rem;
-    min-height: 0;
-    padding-bottom: 0;
-  }
-}
-
-/* Everyday-app tiles carry their own tile art — no white backing needed */
-.dock-app [data-logo="finder"],
-.dock-app [data-logo="safari"],
-.dock-app [data-logo="messages"],
-.dock-app [data-logo="mail"],
-.dock-app [data-logo="photos"],
-.dock-app [data-logo="music"] {
-  background: transparent;
-}
-
 /* The old two-column hero capped .hero-visual at a column width; the
    stacked screen needs the full container. */
 .hero-stacked .hero-visual {
@@ -5505,10 +4807,6 @@ main h2 .accent-serif {
    frame a shrink-to-content flex item. Block + full width = the screen. */
 .hero-stacked .hero-visual {
   display: block;
-}
-
-.hero-stacked .desktop-frame {
-  width: 100%;
 }
 
 /* =====================================================================
@@ -5686,58 +4984,103 @@ main h2 .accent-serif {
 }
 
 
-/* --- Definitive fix: the demo container spans the full stage, so the
-   floating cards anchor to the real wallpaper gutter (~280px each side
-   at 80% width) instead of the shrink-wrapped window. Cards only show
-   when that gutter can hold them without touching the window. --- */
-.hero-stacked .routing-demo-hero {
+/* =====================================================================
+   Clean product hero — the live window is the object. A soft halo
+   behind it, destinations beneath it; the routed one lights and pops.
+   ===================================================================== */
+
+.hero-visual-demo {
+  position: relative;
+}
+
+.demo-halo {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: min(54rem, 94vw);
+  height: 30rem;
+  transform: translate(-50%, -50%);
+  background:
+    radial-gradient(closest-side, rgba(122, 169, 238, 0.12), transparent 70%),
+    radial-gradient(closest-side, rgba(167, 139, 250, 0.06), transparent 78%);
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+.dest-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-top: 2rem;
+}
+
+.dest-app {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  opacity: 0.45;
+  filter: saturate(0.35);
+  transition:
+    opacity 0.35s var(--ease),
+    filter 0.35s var(--ease),
+    transform 0.35s var(--ease);
+}
+
+.dest-app:hover {
+  opacity: 0.85;
+  filter: saturate(0.9);
+}
+
+.dest-app .brand-logo,
+.dest-app .brand-logo svg {
   width: 100%;
-  max-width: none;   /* base .routing-demo caps at 33rem; unlock it here */
-  margin: 0;
+  height: 100%;
+  display: block;
+  border-radius: 8px;
 }
 
-.hero-stacked .desktop-stage .demo-history,
-.hero-stacked .desktop-stage .demo-toast {
-  display: none;
+.dest-app [data-logo="slack"] {
+  background: #fff;
+  padding: 0.3rem;
+  box-sizing: border-box;
+  border-radius: 8px;
 }
 
-.hero-stacked .desktop-stage .demo-history {
-  top: auto;
-  bottom: 3rem;
-  left: 0;
-  width: 12rem;
-  transform: rotate(-2deg);
+@keyframes dest-pop {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-7px) scale(1.14); }
+  62% { transform: translateY(0) scale(1); }
+  82% { transform: translateY(-3px); }
 }
 
-.hero-stacked .desktop-stage .demo-toast {
-  top: 2.4rem;
-  right: 0;
+/* The routed app stays lit until the next capture routes elsewhere */
+.dest-app.is-bounce {
+  opacity: 1;
+  filter: saturate(1);
+  animation: dest-pop 0.8s var(--ease);
 }
 
-/* Honest math: gutter = (80vw - stage padding - 40rem window) / 2.
-   A 12rem card + breathing room needs ~1440px of viewport. Below that
-   the desktop shows a single clean window — no collision, ever. */
-@media (min-width: 1440px) {
-  .hero-stacked .desktop-stage .demo-history { display: block; }
-  .hero-stacked .desktop-stage .demo-toast { display: inline-flex; }
-}
-
-/* Apple menu logo + refined menu-bar rhythm (extracted from real macOS) */
-.menubar-apple {
-  color: rgba(255, 255, 255, 0.92);
-  margin-right: 0.15rem;
-}
-
-.desktop-menubar .desktop-menubar-app {
-  margin-left: 0;
-}
-
-/* Dock: subtle top-edge highlight so icons rest on a shelf, like macOS */
-.desktop-dock::before {
+.dest-app.is-bounce::after {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 40%);
-  pointer-events: none;
+  bottom: -0.55rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+@media (max-width: 600px) {
+  .dest-row {
+    gap: 0.9rem;
+  }
+  .dest-app {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
 }

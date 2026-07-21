@@ -782,8 +782,6 @@ if (demoInput) {
   const timePill = document.querySelector("[data-demo-time]");
   const toast = document.querySelector("[data-demo-toast]");
   const toastDest = document.querySelector("[data-demo-toast-dest]");
-  const historyCard = document.querySelector("[data-demo-history]");
-  const historyList = document.querySelector("[data-demo-history-list]");
 
   const DEST_LABELS = {
     reminders: "Reminders",
@@ -795,10 +793,10 @@ if (demoInput) {
   let toastTimer = null;
 
   // "Send" a finished example: pop the toast with the routed destination and
-  // stack the capture into the floating history card (newest first, keep 3).
+  // light up that destination in the row under the window.
   function finishExample(text) {
     const route = demoRoute(text);
-    if (!route || !toast || !historyList) return;
+    if (!route || !toast) return;
     const dest = DEST_LABELS[route.chips[0]] || "Reminders";
 
     toastDest.textContent = dest;
@@ -807,28 +805,18 @@ if (demoInput) {
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toast.classList.remove("is-in"), 1700);
 
-    // The routed app's dock icon bounces, exactly like macOS.
-    const dockApp = document.querySelector(`[data-dock="${route.chips[0]}"]`);
-    if (dockApp && !prefersReduced) {
-      dockApp.classList.remove("is-bounce");
-      void dockApp.offsetWidth;
-      dockApp.classList.add("is-bounce");
+    // The routed destination pops; the others stay dim until their turn.
+    const destApp = document.querySelector(`[data-dock="${route.chips[0]}"]`);
+    if (destApp) {
+      document.querySelectorAll(".dest-app.is-bounce").forEach((el) => {
+        if (el !== destApp) el.classList.remove("is-bounce");
+      });
+      if (!prefersReduced) {
+        destApp.classList.remove("is-bounce");
+        void destApp.offsetWidth;
+      }
+      destApp.classList.add("is-bounce");
     }
-
-    const li = document.createElement("li");
-    const oneLine = text.replace(/\n+/g, " · ");
-    li.innerHTML =
-      '<span class="demo-history-dot"></span>' +
-      `<span class="demo-history-text"></span>` +
-      `<span class="demo-history-dest"></span>`;
-    li.querySelector(".demo-history-text").textContent = oneLine;
-    li.querySelector(".demo-history-dest").textContent = dest;
-    historyList.prepend(li);
-    // Two entries max: taller cards started covering the demo input.
-    while (historyList.children.length > 2) {
-      historyList.removeChild(historyList.lastChild);
-    }
-    if (historyCard) historyCard.hidden = false;
   }
 
   const DEMO_EXAMPLES = [
