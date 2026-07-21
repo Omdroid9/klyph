@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import { parseReminderSyntax } from "../lib/parser";
+import { continueListOnNewline } from "../lib/listContinuation";
 import { useAutoUpdater } from "../lib/updater";
 import {
   createManagedList,
@@ -614,24 +615,19 @@ export default function CaptureWindow() {
     });
   }
 
-  function currentLinePrefix(value: string, cursor: number): string {
-    const uptoCursor = value.slice(0, cursor);
-    const line = uptoCursor.split("\n").pop() ?? "";
+  function applyTextEdit(nextValue: string, cursor: number) {
+    const field = inputRef.current;
+    const clamped = nextValue.slice(0, MAX_CHARS);
+    setText(clamped);
 
-    if (/^\s*- \[[ xX]\]\s+/.test(line)) {
-      const indent = line.match(/^\s*/)?.[0] ?? "";
-      return `${indent}- [ ] `;
-    }
-    if (/^\s*[-*]\s+/.test(line)) {
-      return line.match(/^\s*[-*]\s+/)?.[0] ?? "";
-    }
-    if (/^\s*\d+\.\s+/.test(line)) {
-      const match = line.match(/^(\s*)(\d+)(\.\s+)/);
-      if (!match) return "";
-      const nextNum = Number(match[2]) + 1;
-      return `${match[1]}${nextNum}${match[3]}`;
-    }
-    return "";
+    requestAnimationFrame(() => {
+      if (!field) {
+        return;
+      }
+      const next = Math.min(cursor, clamped.length);
+      field.setSelectionRange(next, next);
+      field.focus();
+    });
   }
 
   function insertListPrefix(prefix: string) {
@@ -1469,22 +1465,27 @@ export default function CaptureWindow() {
                 }
 
                 if (event.shiftKey && event.key === "Enter") {
+                  // Newline that respects what the user typed: continues a
+                  // list only if this line already is one, exits on an empty
+                  // item, and never invents a "- " on a plain line.
                   event.preventDefault();
-                  const cursor = inputRef.current?.selectionStart ?? text.length;
-                  const prefix = currentLinePrefix(text, cursor);
-                  if (prefix.length > 0) {
-                    insertAtCursor(`\n${prefix}`);
+                  const field = inputRef.current;
+                  const hasSelection =
+                    field != null && field.selectionStart !== field.selectionEnd;
+                  const cursor = field?.selectionStart ?? text.length;
+                  const continued = hasSelection ? null : continueListOnNewline(text, cursor);
+                  if (continued) {
+                    applyTextEdit(continued.value, continued.cursor);
                   } else {
-                    insertAtCursor("\n- ");
+                    insertAtCursor("\n");
                   }
                   return;
                 }
 
                 if (event.altKey && event.key === "Enter") {
+                  // Escape hatch: a plain newline even mid-list.
                   event.preventDefault();
-                  const cursor = inputRef.current?.selectionStart ?? text.length;
-                  const prefix = currentLinePrefix(text, cursor);
-                  insertAtCursor(`\n${prefix}`);
+                  insertAtCursor("\n");
                   return;
                 }
 
@@ -1551,8 +1552,7 @@ export default function CaptureWindow() {
                   // effect fire once the cleaned text commits to state.
                   const cursor = inputRef.current?.selectionStart ?? text.length;
                   const bounds = currentLineBounds(text, cursor);
-                  const prefix = currentLinePrefix(text, cursor);
-                  if (prefix.length > 0) {
+                  if (/^\s*(?:- \[[ xX]\]\s+|[-*]\s+|\d+\.\s+)/.test(bounds.line)) {
                     const lineBody = bounds.line
                       .replace(/^\s*(?:- \[[ xX]\]\s+|[-*]\s+|\d+\.\s+)/, "")
                       .trim();
