@@ -29,6 +29,11 @@ pub fn configure_capture_window(app: &tauri::AppHandle) -> Result<(), String> {
   // Force a fully transparent background explicitly.
   let _ = window.set_background_color(Some(tauri::window::Color(0, 0, 0, 0)));
 
+  // macOS draws its drop shadow from the window's *rectangular* frame, so on a
+  // transparent frameless window it bleeds past the shell's rounded corners as
+  // faint square edges. The CSS shadow already follows the rounded shape.
+  let _ = window.set_shadow(false);
+
   let clone = window.clone();
   window.on_window_event(move |event| {
     match event {
