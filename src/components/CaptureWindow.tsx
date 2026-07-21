@@ -428,6 +428,9 @@ export default function CaptureWindow() {
   );
   const previewPrimaryDestination = previewDestinationLabels[0] ?? "Local only";
   const previewTitle = firstLineTitle(previewContent);
+  const previewLineCount = previewContent
+    .split("\n")
+    .filter((line) => line.trim().length > 0).length;
   const previewReason = destinationsTouched
     ? "You chose these"
     : routingDecision?.reason ?? "Ready to capture";
@@ -1673,7 +1676,9 @@ export default function CaptureWindow() {
                     <div className="codex-muted truncate text-[11px]">
                       {effectivePreviewLabel ? `${effectivePreviewLabel} · ` : ""}
                       {effectiveRecurrenceLabel ? `${effectiveRecurrenceLabel} · ` : ""}
-                      Title: "{previewTitle.slice(0, 72)}"
+                      {previewLineCount > 1
+                        ? `"${previewTitle.slice(0, 48)}" · ${previewLineCount} lines`
+                        : `Title: "${previewTitle.slice(0, 72)}"`}
                     </div>
                   </div>
                 </div>

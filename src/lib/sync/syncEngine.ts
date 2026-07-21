@@ -1,5 +1,6 @@
 import { setSetting } from "../db";
 import { createAppleNote } from "./appleNotes";
+import { appleNoteBody } from "./noteFormat";
 import { createAppleReminder } from "./appleRemindersSync";
 import { createAppleCalendarEvent } from "./appleCalendar";
 import type { Capture } from "../../types";
@@ -124,22 +125,6 @@ function appleNoteTitle(content: string): string {
     return "Chute";
   }
   return normalized.slice(0, 80);
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-function appleNoteBody(capture: Capture): string {
-  const paragraphs = capture.content
-    .split("\n")
-    .map((line) => `<div>${escapeHtml(line) || "<br>"}</div>`)
-    .join("");
-  const footer = `<div><br></div><div><i>${escapeHtml(capture.list_name)} • ${escapeHtml(capture.tag)}</i></div>`;
-  return `${paragraphs}${footer}`;
 }
 
 function appleReminderBody(capture: Capture): string {
@@ -329,7 +314,7 @@ export async function syncCapture(capture: Capture, config: SyncConfig): Promise
     ? await attempt("Apple Notes", () =>
         createAppleNote({
           title: appleNoteTitle(capture.content),
-          body: appleNoteBody(capture),
+          body: appleNoteBody(capture.content, capture.list_name, capture.tag),
           folder: config.appleNotesFolder,
         }),
       )
