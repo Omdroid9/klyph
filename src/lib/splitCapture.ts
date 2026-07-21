@@ -82,9 +82,9 @@ function classifyLine(raw: string): ClassifiedLine | null {
 }
 
 /**
- * Returns a split when the text genuinely mixes reminder-like and note-like
- * lines (at least one of each across 2+ content lines); null otherwise so
- * single-intent captures keep the normal routing path.
+ * Returns a split when the text genuinely mixes destinations — at least two
+ * of the three buckets (events / reminders / notes) are non-empty; null
+ * otherwise so single-intent captures keep the normal routing path.
  */
 export function splitCaptureLines(text: string): CaptureSplit | null {
   const rawLines = text.split("\n");
@@ -111,7 +111,9 @@ export function splitCaptureLines(text: string): CaptureSplit | null {
   const reminders = lines.filter((line) => line.kind === "reminder");
   const notes = lines.filter((line) => line.kind === "note");
 
-  if (events.length + reminders.length === 0 || notes.length === 0) {
+  const bucketsInUse =
+    Number(events.length > 0) + Number(reminders.length > 0) + Number(notes.length > 0);
+  if (bucketsInUse < 2) {
     return null;
   }
 

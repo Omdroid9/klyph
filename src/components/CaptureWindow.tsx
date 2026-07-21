@@ -1634,8 +1634,12 @@ export default function CaptureWindow() {
                             {captureSplit.reminders.length === 1 ? "" : "s"} → Reminders
                           </>
                         ) : null}
-                        {" "}· {captureSplit.notes.length} line
-                        {captureSplit.notes.length === 1 ? "" : "s"} → Apple Notes
+                        {captureSplit.notes.length > 0 ? (
+                          <>
+                            {" "}· {captureSplit.notes.length} line
+                            {captureSplit.notes.length === 1 ? "" : "s"} → Apple Notes
+                          </>
+                        ) : null}
                       </span>
                     </div>
                     <div className="codex-muted truncate text-[11px]">
@@ -1763,8 +1767,8 @@ export default function CaptureWindow() {
 
           {/* Destinations row — appears with the routing suggestion once there is text */}
           {!isEmpty ? (
-          <div className="flex shrink-0 flex-wrap items-center gap-1.5" data-tour="destinations">
-            <span className="codex-muted mr-0.5 text-[11px] font-medium uppercase tracking-[0.1em]">
+          <div className="flex shrink-0 flex-nowrap items-center gap-1" data-tour="destinations">
+            <span className="codex-muted mr-0.5 shrink-0 text-[10px] font-medium uppercase tracking-[0.08em]">
               Send to
             </span>
             {TARGET_META.map((target) => {
@@ -1777,7 +1781,7 @@ export default function CaptureWindow() {
                   title={target.available ? target.label : `${target.label} is only available on macOS.`}
                   onClick={() => toggleDestination(target.key)}
                   className={[
-                    "rounded-full border px-2.5 py-1 text-[11px] transition",
+                    "whitespace-nowrap rounded-full border px-2 py-1 text-[11px] transition",
                     active ? "codex-chip-active" : "codex-chip",
                     !target.available ? "cursor-not-allowed opacity-45" : "",
                   ].join(" ")}
@@ -1807,7 +1811,7 @@ export default function CaptureWindow() {
                 }, 3000);
               }}
               className={[
-                "ml-auto text-[11px] underline-offset-2 hover:underline",
+                "ml-auto shrink-0 whitespace-nowrap text-[11px] underline-offset-2 hover:underline",
                 allConfirm
                   ? "font-semibold text-amber-500"
                   : "codex-muted hover:text-[var(--text)]",

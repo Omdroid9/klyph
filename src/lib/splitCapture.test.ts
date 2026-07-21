@@ -46,14 +46,25 @@ describe("splitCaptureLines", () => {
 
   it("returns null when every line is the same kind", () => {
     expect(splitCaptureLines("- thought one\n- thought two")).toBeNull();
-    expect(splitCaptureLines("- call mom tomorrow at 5pm\n- dentist friday 9am")).toBeNull();
+    // Two timed tasks (no event nouns) are one kind — no split.
+    expect(splitCaptureLines("- call mom tomorrow at 5pm\n- pay rent friday 9am")).toBeNull();
     expect(splitCaptureLines("single line")).toBeNull();
   });
 
-  it("routes a 'Meeting with...' line to events, not reminders", () => {
-    // Regression: this exact mix previously sent the meeting to Reminders
-    // because splitCaptureLines only checked for a parseable time, never
-    // whether the line reads as an appointment vs a task.
+  it("splits an event + reminder mix even with no prose lines", () => {
+    const split = splitCaptureLines(
+      ["- dentist friday 9am", "- pay rent tomorrow at noon"].join("\n"),
+    );
+
+    expect(split).not.toBeNull();
+    expect(split!.events.map((line) => line.content)).toEqual(["dentist friday 9am"]);
+    expect(split!.reminders.map((line) => line.content)).toEqual(["pay rent tomorrow at noon"]);
+  });
+
+  it("routes the reported 4-line mix: meetings to events, errands to reminders", () => {
+    // Regression for the reported capture. With weekend/after-work parsing
+    // and per-line event classification, every line lands where its meaning
+    // says: meetings (slots) -> events, errands/deadlines -> reminders.
     const split = splitCaptureLines(
       [
         "- groceries after work",
@@ -64,14 +75,15 @@ describe("splitCaptureLines", () => {
     );
 
     expect(split).not.toBeNull();
-    expect(split!.events.map((line) => line.content)).toEqual(["Meeting with Mark tomorrow at 2pm"]);
-    expect(split!.reminders.map((line) => line.content)).toEqual([
-      "make sure to do the laundry by tonight",
-    ]);
-    expect(split!.notes.map((line) => line.content)).toEqual([
-      "groceries after work",
+    expect(split!.events.map((line) => line.content)).toEqual([
+      "Meeting with Mark tomorrow at 2pm",
       "Lets meet with Sundar this weekend to pitch",
     ]);
+    expect(split!.reminders.map((line) => line.content)).toEqual([
+      "groceries after work",
+      "make sure to do the laundry by tonight",
+    ]);
+    expect(split!.notes).toHaveLength(0);
   });
 
   it("keeps a deadline line ('by tonight') as a reminder, not an event", () => {

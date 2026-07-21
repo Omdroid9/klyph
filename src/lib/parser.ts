@@ -19,7 +19,7 @@ const REMINDER_MARKER_REGEX =
   /(^|\s)@\s*(today|tomorrow|tonight|next|mon(?:day)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?|\d{1,2}(?::\d{2})?\s*(?:am|pm)?)(?=\b|$)/gi;
 const EXPLICIT_MARKER_REGEX = /(?:^|\s)@/;
 const TEMPORAL_HINT_REGEX =
-  /\b(today|tomorrow|tonight|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun|am|pm|noon|midnight|eod|end of day|this evening|next business day|all day|throughout the day|anytime|in\s+(?:a|an|one|two|three|four|five|ten|fifteen|thirty|\d{1,3})\s+(?:s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours)|\d{1,2}:\d{2}|\d{1,2}\s?(am|pm)|\d{1,2}(st|nd|rd|th)|\d{4}-\d{1,2}-\d{1,2}|\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)\b/i;
+  /\b(today|tomorrow|tonight|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun|am|pm|noon|midnight|eod|end of day|this evening|next business day|all day|throughout the day|anytime|weekend|after work|in\s+(?:a|an|one|two|three|four|five|ten|fifteen|thirty|\d{1,3})\s+(?:s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours)|\d{1,2}:\d{2}|\d{1,2}\s?(am|pm)|\d{1,2}(st|nd|rd|th)|\d{4}-\d{1,2}-\d{1,2}|\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)\b/i;
 const TIME_12H_REGEX = /\b(\d{1,2})(?::([0-5]\d))?\s*(am|pm)\b/i;
 const TIME_24H_REGEX = /\b([01]?\d|2[0-3]):([0-5]\d)\b/;
 const ORDINAL_DAY_REGEX = /\b(?:on\s+)?(?:the\s+)?([12]?\d|3[01])(st|nd|rd|th)\b/i;
@@ -386,7 +386,7 @@ function applyDeterministicPhraseOverrides(
   reminder: Date,
   normalizedText: string,
   now: Date,
-): { reminder: Date; usedRule: string | null; allDay: boolean } {
+): { reminder: Date; usedRule: string | null; allDay: boolean; matchedText: string | null } {
   const normalizedLower = normalizedText.toLowerCase();
 
   if (/\bnext business day\b/i.test(normalizedLower)) {
@@ -394,6 +394,41 @@ function applyDeterministicPhraseOverrides(
       reminder: nextBusinessDayAt(9, 0, now),
       usedRule: "next_business_day",
       allDay: false,
+      matchedText: "next business day",
+    };
+  }
+
+  // "after work" reads as early evening — 6pm today, tomorrow if already past.
+  if (/\bafter work\b/i.test(normalizedLower)) {
+    const next = new Date(now);
+    next.setHours(18, 0, 0, 0);
+    if (next.getTime() <= now.getTime()) {
+      next.setDate(next.getDate() + 1);
+    }
+    return { reminder: next, usedRule: "after_work", allDay: false, matchedText: "after work" };
+  }
+
+  // "(this) weekend" -> the upcoming Saturday morning; "next weekend" skips a
+  // week. Chrono does not resolve these phrases, so without this rule a plan
+  // like "meet Sundar this weekend" carried no date and fell through to Notes.
+  const weekendMatch = normalizedLower.match(/\b(this\s+|next\s+)?weekend\b/);
+  if (weekendMatch) {
+    const next = new Date(now);
+    const day = next.getDay();
+    let daysUntilSaturday = (6 - day + 7) % 7;
+    if (daysUntilSaturday === 0 && next.getHours() >= 18) {
+      daysUntilSaturday = 7;
+    }
+    if ((weekendMatch[1] ?? "").trim() === "next") {
+      daysUntilSaturday += 7;
+    }
+    next.setDate(next.getDate() + daysUntilSaturday);
+    next.setHours(10, 0, 0, 0);
+    return {
+      reminder: next,
+      usedRule: "weekend",
+      allDay: false,
+      matchedText: weekendMatch[0].trim(),
     };
   }
 
@@ -408,6 +443,7 @@ function applyDeterministicPhraseOverrides(
       reminder: next,
       usedRule: "eod",
       allDay: false,
+      matchedText: null,
     };
   }
 
@@ -422,6 +458,7 @@ function applyDeterministicPhraseOverrides(
       reminder: next,
       usedRule: "this_evening",
       allDay: false,
+      matchedText: null,
     };
   }
 
@@ -436,6 +473,7 @@ function applyDeterministicPhraseOverrides(
       reminder: next,
       usedRule: "tonight",
       allDay: false,
+      matchedText: null,
     };
   }
 
@@ -446,6 +484,7 @@ function applyDeterministicPhraseOverrides(
       reminder: next,
       usedRule: "all_day_hint",
       allDay: true,
+      matchedText: null,
     };
   }
 
@@ -453,6 +492,7 @@ function applyDeterministicPhraseOverrides(
     reminder,
     usedRule: null,
     allDay: false,
+    matchedText: null,
   };
 }
 
@@ -550,12 +590,15 @@ export function parseReminderSyntax(content: string): ParsedReminder {
   }
 
   const parsed = pickBestParsedResult(parse(normalized, now, { forwardDate: true }));
-  if (!parsed && !recurrence) {
+  // Phrases chrono can't resolve ("this weekend", "after work") still carry a
+  // date — probe the deterministic rules before giving up.
+  const phraseProbe = applyDeterministicPhraseOverrides(new Date(now), normalized, now);
+  if (!parsed && !recurrence && !phraseProbe.usedRule) {
     return noReminder(trimmed, `Parse failed for normalized text: ${normalized}`);
   }
 
-  const sourceText = parsed?.text?.trim() ?? recurrence?.text ?? "";
-  let reminder = parsed?.start?.date() ?? null;
+  const sourceText = parsed?.text?.trim() ?? recurrence?.text ?? phraseProbe.matchedText ?? "";
+  let reminder = parsed?.start?.date() ?? (phraseProbe.usedRule ? phraseProbe.reminder : null);
   if (!reminder && recurrence) {
     reminder = new Date(now.getTime() + recurrenceMs(recurrence));
   }
@@ -583,7 +626,7 @@ export function parseReminderSyntax(content: string): ParsedReminder {
     Boolean(explicitTime) ||
     Boolean(recurrence) ||
     Boolean(parsed?.start.isCertain("hour")) ||
-    ["eod", "this_evening", "tonight", "next_business_day"].includes(deterministic.usedRule ?? "");
+    ["eod", "this_evening", "tonight", "next_business_day", "after_work"].includes(deterministic.usedRule ?? "");
 
   const isAmbiguous = !deterministic.allDay && !hasResolvedTime;
   const confidence = parsed
