@@ -18,6 +18,18 @@ if (progress) {
   window.addEventListener("scroll", updateProgress, { passive: true });
 }
 
+/* ---------- Back to top ---------- */
+const backToTop = document.querySelector("[data-back-to-top]");
+if (backToTop) {
+  const toggleTop = () =>
+    backToTop.classList.toggle("is-visible", window.scrollY > window.innerHeight);
+  toggleTop();
+  window.addEventListener("scroll", toggleTop, { passive: true });
+  backToTop.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: prefersReduced ? "auto" : "smooth" });
+  });
+}
+
 /* ---------- Nav background on scroll ---------- */
 const nav = document.querySelector(".site-nav");
 window.addEventListener(

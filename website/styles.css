@@ -4532,7 +4532,7 @@ main h2 .accent-serif {
 /* Floating hint pill — teaches the reflex; desktop pointers only */
 .summon-pill {
   position: fixed;
-  right: 1.4rem;
+  left: 1.4rem;
   bottom: 1.4rem;
   z-index: 90;
   display: inline-flex;
@@ -5008,3 +5008,45 @@ main h2 .accent-serif {
 }
 
 
+
+
+/* Back to top — a quiet arrow that earns its place after a scroll */
+.back-to-top {
+  position: fixed;
+  right: 1.4rem;
+  bottom: 1.4rem;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  appearance: none;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #1d1d24, #141419);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 12px 32px rgba(0, 0, 0, 0.5);
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition:
+    opacity 0.25s var(--ease),
+    transform 0.25s var(--ease),
+    color 0.2s var(--ease),
+    border-color 0.2s var(--ease);
+}
+
+.back-to-top.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.back-to-top:hover {
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.2);
+}
