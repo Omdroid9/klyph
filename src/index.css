@@ -298,6 +298,9 @@ html[data-theme="dark"] .hint-chip:focus-visible {
   border: 1px solid var(--border);
   background: var(--btn-soft);
   color: var(--muted);
+  /* Same weight as .codex-chip-active: a weight change would resize the chip
+     and reflow the wrapped row, bumping the last chip to the next line. */
+  font-weight: 600;
 }
 
 .codex-chip:hover {

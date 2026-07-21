@@ -394,12 +394,34 @@ export default function CaptureWindow() {
     text,
   ]);
 
+  // Mixed capture: some lines are actionable, some are prose. When active,
+  // sending fans events out to Apple Calendar, actions to Reminders, and keeps
+  // the prose as one Apple Note — no extra click. Manual destination picks or
+  // "Keep together" turn it off for this draft.
+  const captureSplit = useMemo(
+    () => (IS_MACOS ? splitCaptureLines(text) : null),
+    [text],
+  );
+  const splitActive = Boolean(captureSplit) && !splitDisabled && !destinationsTouched;
+
   const previewDestinations = useMemo(() => {
     if (destinationsTouched) {
       return destinations;
     }
+    // In split mode the send bypasses `destinations` entirely and routes each
+    // line itself, so the chips must mirror what the split will actually do —
+    // otherwise they under-report and invite a manual toggle, which silently
+    // switches the split off.
+    if (splitActive && captureSplit) {
+      return {
+        ...DEFAULT_DESTINATIONS,
+        appleCalendar: captureSplit.events.length > 0,
+        reminders: captureSplit.reminders.length > 0,
+        appleReminders: captureSplit.notes.length > 0,
+      };
+    }
     return routingDecision?.destinations ?? destinations;
-  }, [destinations, destinationsTouched, routingDecision]);
+  }, [captureSplit, destinations, destinationsTouched, routingDecision, splitActive]);
   const previewDestinationLabels = useMemo(
     () => destinationLabels(previewDestinations),
     [previewDestinations],
@@ -1057,16 +1079,6 @@ export default function CaptureWindow() {
       setSaving(false);
     }
   }
-
-  // Mixed capture: some lines are actionable, some are prose. When active,
-  // sending fans the action lines out to Reminders and keeps the prose as one
-  // Apple Note — no extra click. Manual destination picks or "Keep together"
-  // turn it off for this draft.
-  const captureSplit = useMemo(
-    () => (IS_MACOS ? splitCaptureLines(text) : null),
-    [text],
-  );
-  const splitActive = Boolean(captureSplit) && !splitDisabled && !destinationsTouched;
 
   async function persistSplitCapture(keepOpen: boolean) {
     if (!captureSplit || saving) {
