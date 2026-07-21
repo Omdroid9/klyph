@@ -1029,19 +1029,32 @@ h3 {
 }
 
 .section-cta {
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  padding-bottom: 6rem;
+  position: relative;
+  padding-bottom: 7rem;
+}
+
+/* Same halo language as the hero — glow instead of a bordered banner */
+.section-cta::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: min(50rem, 92vw);
+  height: 26rem;
+  transform: translate(-50%, -50%);
+  background:
+    radial-gradient(closest-side, rgba(122, 169, 238, 0.11), transparent 70%),
+    radial-gradient(closest-side, rgba(167, 139, 250, 0.05), transparent 78%);
+  filter: blur(8px);
+  pointer-events: none;
 }
 
 .cta-inner {
+  position: relative;
   text-align: center;
   max-width: 36rem;
   margin: 0 auto;
-  padding: 3rem 1.5rem;
-  border-radius: 1.5rem;
-  background: radial-gradient(ellipse at center top, rgba(107, 157, 232, 0.12), transparent 60%),
-    var(--bg-elevated);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 3rem 1.5rem 0;
 }
 
 .cta-orb {
@@ -3549,7 +3562,21 @@ h3 {
 }
 
 .routing-demo-hero .routing-demo-input {
-  min-height: 6.2rem;
+  /* Floor fits the tallest cycling example: 4 lines × 26.35px line-height
+     + 25.6px padding + 2px border = 133px. The window holds one steady
+     height across the whole demo loop instead of pumping the page. */
+  min-height: 8.5rem;
+}
+
+.routing-demo-hero .routing-demo-reason[hidden] {
+  display: flex;
+  visibility: hidden;
+}
+
+.routing-demo-hero .routing-demo-reason {
+  /* Exactly one text line (1.5 × 13px) so the row is the same height
+     empty, hidden, or filled — the window never moves at all. */
+  min-height: 1.5em;
 }
 
 @media (max-width: 959px) {
@@ -4352,8 +4379,8 @@ main h2 .accent-serif {
    ===================================================================== */
 
 .cta-window {
-  max-width: 26rem;
-  margin: 2.2rem auto 0;
+  max-width: 28rem;
+  margin: 2.4rem auto 0;
   text-align: left;
   border-radius: 20px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0) 36%), linear-gradient(180deg, #17171d, #111116);
