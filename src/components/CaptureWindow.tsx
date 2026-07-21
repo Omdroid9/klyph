@@ -1079,6 +1079,20 @@ export default function CaptureWindow() {
     try {
       const noteContent = noteContentFromSplit(captureSplit);
 
+      for (const line of captureSplit.events) {
+        await insertCapture({
+          id: crypto.randomUUID(),
+          content: line.cleanedContent.slice(0, MAX_CHARS),
+          tag: selectedTag,
+          lane: captureLane,
+          listName,
+          destinations: { ...DEFAULT_DESTINATIONS, appleCalendar: true },
+          reminderTime: line.reminderTime,
+          routingSource: "split",
+          routingReason: line.signal ? `Line ${line.signal} → Apple Calendar` : "Reads as an event → Apple Calendar",
+        });
+      }
+
       for (const line of captureSplit.reminders) {
         await insertCapture({
           id: crypto.randomUUID(),
@@ -1091,7 +1105,9 @@ export default function CaptureWindow() {
           routingSource: "split",
           routingReason: line.reminderTime
             ? "Line has a time → Reminders"
-            : "Action line → Reminders",
+            : line.signal
+              ? `Line ${line.signal} → Reminders`
+              : "Action line → Reminders",
         });
       }
 
@@ -1111,7 +1127,8 @@ export default function CaptureWindow() {
 
       const today = await getCapturesTodayCount();
       setCapturesToday(today);
-      const added = captureSplit.reminders.length + (noteContent ? 1 : 0);
+      const added =
+        captureSplit.events.length + captureSplit.reminders.length + (noteContent ? 1 : 0);
       setTotalCaptures((prev) => (prev === null ? prev : prev + added));
 
       await invoke("update_tray_tooltip", {
@@ -1130,9 +1147,12 @@ export default function CaptureWindow() {
 
       void loadRecentCaptures();
       void loadManagedLists();
-      setSavedMessage(
-        `Split: ${captureSplit.reminders.length} → Reminders${noteContent ? " · note → Apple Notes" : ""}`,
-      );
+      const savedParts = [
+        captureSplit.events.length > 0 ? `${captureSplit.events.length} → Calendar` : null,
+        captureSplit.reminders.length > 0 ? `${captureSplit.reminders.length} → Reminders` : null,
+        noteContent ? "note → Apple Notes" : null,
+      ].filter(Boolean);
+      setSavedMessage(`Split: ${savedParts.join(" · ")}`);
       window.setTimeout(() => setSavedMessage(""), 1800);
 
       resetDraft();
@@ -1590,8 +1610,18 @@ export default function CaptureWindow() {
                     <div className="truncate text-xs font-medium text-[var(--text)]">
                       Split on send
                       <span className="codex-muted font-normal">
-                        {" "}· {captureSplit.reminders.length} action
-                        {captureSplit.reminders.length === 1 ? "" : "s"} → Reminders
+                        {captureSplit.events.length > 0 ? (
+                          <>
+                            {" "}· {captureSplit.events.length} event
+                            {captureSplit.events.length === 1 ? "" : "s"} → Calendar
+                          </>
+                        ) : null}
+                        {captureSplit.reminders.length > 0 ? (
+                          <>
+                            {" "}· {captureSplit.reminders.length} action
+                            {captureSplit.reminders.length === 1 ? "" : "s"} → Reminders
+                          </>
+                        ) : null}
                         {" "}· {captureSplit.notes.length} line
                         {captureSplit.notes.length === 1 ? "" : "s"} → Apple Notes
                       </span>
