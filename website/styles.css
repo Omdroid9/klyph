@@ -3289,8 +3289,7 @@ h3 {
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 14px;
   padding: 0.8rem 0.95rem;
-  font-family: "Kameron", "Iowan Old Style", Georgia, serif;
-  letter-spacing: 0.002em;
+  font-family: var(--font);
   font-size: var(--t-md);
   line-height: 1.55;
   color: var(--text-strong);
