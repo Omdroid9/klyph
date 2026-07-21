@@ -3289,7 +3289,8 @@ h3 {
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 14px;
   padding: 0.8rem 0.95rem;
-  font-family: var(--font);
+  font-family: "Kameron", "Iowan Old Style", Georgia, serif;
+  letter-spacing: 0.002em;
   font-size: var(--t-md);
   line-height: 1.55;
   color: var(--text-strong);
@@ -3363,6 +3364,79 @@ h3 {
   color: #101014;
   font-weight: 600;
   transform: translateY(-1px);
+}
+
+/* App chrome inside the demo window — mirrors the real capture window:
+   Focus/Distraction lanes, Work/Personal/Idea tags, Inbox + send toolbar. */
+.demo-lanes {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.18rem;
+  margin-bottom: 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.demo-lane {
+  font-size: var(--t-2xs);
+  letter-spacing: 0.02em;
+  padding: 0.24rem 0.72rem;
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.demo-lane.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+.demo-tags {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.demo-tag {
+  font-size: var(--t-2xs);
+  padding: 0.24rem 0.66rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+}
+
+.routing-demo-chips-label {
+  align-self: center;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted-deep);
+  margin-right: 0.15rem;
+}
+
+.demo-list-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--t-2xs);
+  padding: 0.26rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+}
+
+.demo-send-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--text-strong);
+  color: #101014;
+  flex: none;
 }
 
 .routing-demo-hint {
@@ -3778,6 +3852,79 @@ main h2 {
   padding: 0.34rem 0.85rem;
 }
 
+/* App chrome inside the demo window — mirrors the real capture window:
+   Focus/Distraction lanes, Work/Personal/Idea tags, Inbox + send toolbar. */
+.demo-lanes {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.18rem;
+  margin-bottom: 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.demo-lane {
+  font-size: var(--t-2xs);
+  letter-spacing: 0.02em;
+  padding: 0.24rem 0.72rem;
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.demo-lane.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+.demo-tags {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.demo-tag {
+  font-size: var(--t-2xs);
+  padding: 0.24rem 0.66rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+}
+
+.routing-demo-chips-label {
+  align-self: center;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted-deep);
+  margin-right: 0.15rem;
+}
+
+.demo-list-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--t-2xs);
+  padding: 0.26rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+}
+
+.demo-send-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--text-strong);
+  color: #101014;
+  flex: none;
+}
+
 .routing-demo-hint {
   color: var(--muted-deep);
 }
@@ -4022,7 +4169,7 @@ main h2 .accent-serif {
 .routing-demo-foot {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 0.6rem;
   margin-top: 0.9rem;
   padding-top: 0.75rem;
   border-top: 1px solid rgba(255, 255, 255, 0.055);
@@ -4034,6 +4181,7 @@ main h2 .accent-serif {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  margin-left: auto;
 }
 
 .routing-demo-keys kbd {
@@ -4678,7 +4826,80 @@ main h2 .accent-serif {
 }
 
 /* The window sits on the wallpaper like the real app; hint reads on glass */
-.desktop-stage .routing-demo-hint {
+.desktop-stage /* App chrome inside the demo window — mirrors the real capture window:
+   Focus/Distraction lanes, Work/Personal/Idea tags, Inbox + send toolbar. */
+.demo-lanes {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.18rem;
+  margin-bottom: 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.demo-lane {
+  font-size: var(--t-2xs);
+  letter-spacing: 0.02em;
+  padding: 0.24rem 0.72rem;
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.demo-lane.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+.demo-tags {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.demo-tag {
+  font-size: var(--t-2xs);
+  padding: 0.24rem 0.66rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+}
+
+.routing-demo-chips-label {
+  align-self: center;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted-deep);
+  margin-right: 0.15rem;
+}
+
+.demo-list-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--t-2xs);
+  padding: 0.26rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+}
+
+.demo-send-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--text-strong);
+  color: #101014;
+  flex: none;
+}
+
+.routing-demo-hint {
   color: rgba(255, 255, 255, 0.78);
   text-shadow: 0 1px 8px rgba(10, 12, 30, 0.5);
 }
@@ -4699,7 +4920,80 @@ main h2 .accent-serif {
   transform: rotate(-1.5deg);
 }
 
-.desktop-stage .routing-demo-hint {
+.desktop-stage /* App chrome inside the demo window — mirrors the real capture window:
+   Focus/Distraction lanes, Work/Personal/Idea tags, Inbox + send toolbar. */
+.demo-lanes {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.18rem;
+  margin-bottom: 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.demo-lane {
+  font-size: var(--t-2xs);
+  letter-spacing: 0.02em;
+  padding: 0.24rem 0.72rem;
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.demo-lane.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+.demo-tags {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.demo-tag {
+  font-size: var(--t-2xs);
+  padding: 0.24rem 0.66rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+}
+
+.routing-demo-chips-label {
+  align-self: center;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted-deep);
+  margin-right: 0.15rem;
+}
+
+.demo-list-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--t-2xs);
+  padding: 0.26rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+}
+
+.demo-send-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--text-strong);
+  color: #101014;
+  flex: none;
+}
+
+.routing-demo-hint {
   text-align: right;
   padding-right: 0.5rem;
 }
@@ -4936,7 +5230,80 @@ main h2 .accent-serif {
   }
 }
 
-.hero-stacked .desktop-stage .routing-demo-hint {
+.hero-stacked .desktop-stage /* App chrome inside the demo window — mirrors the real capture window:
+   Focus/Distraction lanes, Work/Personal/Idea tags, Inbox + send toolbar. */
+.demo-lanes {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.18rem;
+  margin-bottom: 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.demo-lane {
+  font-size: var(--t-2xs);
+  letter-spacing: 0.02em;
+  padding: 0.24rem 0.72rem;
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.demo-lane.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+.demo-tags {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.demo-tag {
+  font-size: var(--t-2xs);
+  padding: 0.24rem 0.66rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+}
+
+.routing-demo-chips-label {
+  align-self: center;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted-deep);
+  margin-right: 0.15rem;
+}
+
+.demo-list-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--t-2xs);
+  padding: 0.26rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+}
+
+.demo-send-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--text-strong);
+  color: #101014;
+  flex: none;
+}
+
+.routing-demo-hint {
   text-align: center;
   padding-right: 0;
 }

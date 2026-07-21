@@ -64,7 +64,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Kameron:wght@400;500&display=swap"
       rel="stylesheet"
     />
   </head>
@@ -150,6 +150,10 @@
                 <span>Chute</span>
                 <span class="routing-demo-live"><span class="routing-demo-live-dot"></span>live demo</span>
               </div>
+              <div class="demo-lanes" aria-hidden="true">
+                <span class="demo-lane is-active">Focus</span>
+                <span class="demo-lane">Distraction</span>
+              </div>
               <label class="sr-only" for="routing-demo-input">Type a thought to see where Chute routes it</label>
               <textarea
                 id="routing-demo-input"
@@ -159,11 +163,17 @@
                 autocomplete="off"
                 placeholder="Type a thought…"
               ></textarea>
+              <div class="demo-tags" aria-hidden="true">
+                <span class="demo-tag">Work</span>
+                <span class="demo-tag">Personal</span>
+                <span class="demo-tag">Idea</span>
+              </div>
               <div class="routing-demo-reason" data-demo-reason hidden>
                 <span class="routing-demo-dot" aria-hidden="true"></span>
                 <span data-demo-reason-text></span>
               </div>
               <div class="routing-demo-chips" aria-label="Suggested destinations">
+                <span class="routing-demo-chips-label" aria-hidden="true">Send to</span>
                 <span class="routing-demo-chip" data-demo-chip="reminders">Reminders</span>
                 <span class="routing-demo-chip" data-demo-chip="notes">Apple Notes</span>
                 <span class="routing-demo-chip" data-demo-chip="calendar">Calendar</span>
@@ -171,12 +181,16 @@
                 <span class="routing-demo-time" data-demo-time hidden></span>
               </div>
               <div class="routing-demo-foot" aria-hidden="true">
-                <span class="routing-demo-foot-label">Send to</span>
+                <span class="demo-list-pill">
+                  <svg viewBox="0 0 24 24" width="11" height="11"><path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  Inbox
+                </span>
                 <span class="routing-demo-keys">
                   <kbd>Enter</kbd> send
                   <span class="routing-demo-keys-sep"></span>
                   <kbd>Esc</kbd> dismiss
                 </span>
+                <span class="demo-send-btn"><svg viewBox="0 0 24 24" width="13" height="13"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               </div>
             </div>
           </div>
