@@ -804,19 +804,6 @@ if (demoInput) {
     requestAnimationFrame(() => toast.classList.add("is-in"));
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toast.classList.remove("is-in"), 1700);
-
-    // The routed destination pops; the others stay dim until their turn.
-    const destApp = document.querySelector(`[data-dock="${route.chips[0]}"]`);
-    if (destApp) {
-      document.querySelectorAll(".dest-app.is-bounce").forEach((el) => {
-        if (el !== destApp) el.classList.remove("is-bounce");
-      });
-      if (!prefersReduced) {
-        destApp.classList.remove("is-bounce");
-        void destApp.offsetWidth;
-      }
-      destApp.classList.add("is-bounce");
-    }
   }
 
   const DEMO_EXAMPLES = [
