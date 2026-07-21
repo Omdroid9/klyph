@@ -43,9 +43,53 @@ const FEATURE_SLIDES = [
     visual: "lists" as const,
   },
   {
-    title: "Send to your apps",
-    body: "Push captures to Slack, Discord, Notion, Google, or Apple Notes.",
-    visual: "destinations" as const,
+    title: "Apple Notes — thoughts land here",
+    body: "The default home. Ideas, links, questions — anything without a deadline files itself as a note. Zero setup.",
+    visual: "app" as const,
+    example: "ideas for dad's birthday",
+    dest: "Apple Notes",
+  },
+  {
+    title: "Reminders — to-dos that ping you",
+    body: "Anything with a time, or phrased like a task, becomes a reminder with the right due date. \"Remind me to…\" always lands here.",
+    visual: "app" as const,
+    example: "pay rent tomorrow at 9am",
+    dest: "Reminders",
+  },
+  {
+    title: "Apple Calendar — plans become events",
+    body: "Meetings, lunches, appointments — anything that occupies a slot goes on your calendar, not your to-do list.",
+    visual: "app" as const,
+    example: "lunch with Priya Friday 1pm",
+    dest: "Apple Calendar",
+  },
+  {
+    title: "Slack — post without switching",
+    body: "Send a capture straight to a channel: standup lines, quick updates. Connect your workspace in the next step.",
+    visual: "app" as const,
+    example: "standup: shipped the routing fix",
+    dest: "Slack",
+  },
+  {
+    title: "Discord — same, for your server",
+    body: "Drop a capture into a Discord channel without opening the app.",
+    visual: "app" as const,
+    example: "patch notes draft for v0.2",
+    dest: "Discord",
+  },
+  {
+    title: "Notion — file it in your workspace",
+    body: "Append captures to a page or database — reference material and longer notes organize themselves.",
+    visual: "app" as const,
+    example: "competitor pricing research",
+    dest: "Notion",
+  },
+  {
+    title: "Google Tasks & Calendar",
+    body: "Google-first? Tasks and timed captures can sync to your Google account instead — one sign-in in the next step.",
+    visual: "app" as const,
+    example: "ship the beta Friday 5pm",
+    dest: "Google Calendar",
   },
   {
     title: "Browse history",
@@ -154,7 +198,33 @@ function WelcomeStep() {
   );
 }
 
-function TourMock({ visual }: { visual: (typeof FEATURE_SLIDES)[number]["visual"] }) {
+type FeatureSlide = (typeof FEATURE_SLIDES)[number];
+
+function TourMock({ slide }: { slide: FeatureSlide }) {
+  const visual = slide.visual;
+
+  if (visual === "app") {
+    return (
+      <div className="tour-mock">
+        <div className="tour-mock-bar">
+          <span className="tour-mock-title">Chute</span>
+          <span className="tour-mock-pill">
+            <span className="tour-mock-dot" />
+            {slide.dest}
+          </span>
+        </div>
+        <div className="tour-mock-body">
+          <div className="tour-mock-chips" style={{ marginTop: 0 }}>
+            <span className="tour-mock-chip">{slide.example}</span>
+          </div>
+          <div className="tour-mock-chips">
+            <span className="tour-mock-chip tour-mock-chip-active">→ {slide.dest}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (visual === "capture") {
     return (
       <div className="tour-mock">
@@ -225,22 +295,6 @@ function TourMock({ visual }: { visual: (typeof FEATURE_SLIDES)[number]["visual"
     );
   }
 
-  if (visual === "destinations") {
-    return (
-      <div className="tour-mock">
-        <div className="tour-mock-pill" style={{ marginBottom: "0.55rem" }}>
-          Send to
-        </div>
-        <div className="tour-mock-chips" style={{ marginTop: 0 }}>
-          <span className="tour-mock-chip tour-mock-chip-active">Slack</span>
-          <span className="tour-mock-chip tour-mock-chip-active">Notion</span>
-          <span className="tour-mock-chip">Discord</span>
-          <span className="tour-mock-chip">GTasks</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="tour-mock">
       <div className="tour-mock-bar">
@@ -277,7 +331,7 @@ function FeaturesTourStep({
 
   return (
     <div className="tour-slide-shell onboard-panel mx-auto w-full">
-      <TourMock visual={slide.visual} key={slide.visual} />
+      <TourMock slide={slide} key={slide.title} />
       <div className="tour-slide-copy max-w-xs" key={slide.title}>
         <h2 className="text-base font-semibold tracking-tight">{slide.title}</h2>
         <p className="codex-muted mt-2 text-xs leading-5">{slide.body}</p>
@@ -285,7 +339,7 @@ function FeaturesTourStep({
       <div className="tour-slide-dots" aria-label="Feature slides">
         {FEATURE_SLIDES.map((item, index) => (
           <button
-            key={item.visual}
+            key={item.title}
             type="button"
             aria-label={`Show ${item.title}`}
             aria-current={index === slideIndex ? "true" : undefined}
